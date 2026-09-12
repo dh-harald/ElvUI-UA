@@ -1,3 +1,10 @@
+## [0.1.2](https://github.com/dh-harald/ElvUI-UA/compare/v0.1.1...v0.1.2) (2026-09-12)
+
+
+### Bug Fixes
+
+* .pkgmeta ([7ee9636](https://github.com/dh-harald/ElvUI-UA/commit/7ee9636c07532e4c8ed4f8803a914302e374d410))
+
 ## [0.1.1](https://github.com/dh-harald/ElvUI-UA/compare/v0.1.0...v0.1.1) (2026-09-12)
 
 
