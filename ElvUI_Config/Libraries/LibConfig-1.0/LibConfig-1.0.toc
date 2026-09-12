@@ -1,6 +1,0 @@
-## Interface: 11200
-## Title: LibConfig-1.0
-## Notes: Vanilla (1.12.1) options-window library. Renders an AceConfig-format options table into its own window, replacing the broken Blizzard Interface Options frame on Unreal Azeroth. Embedded minor (LibStub), loaded by host addons via LibConfig-1.0.xml.
-## Version: 1.0
-
-LibConfig-1.0.xml

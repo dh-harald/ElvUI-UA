@@ -1,7 +1,7 @@
 ## Interface: 11200
 ## Title: |cff175581E|r|cffC4C4C4lvUI|r |cff175581C|r|cffC4C4C4onfig|r
 ## Notes: Options window for ElvUI.
-## Version: 0.0.1
+## Version: @project-version@
 ## RequiredDeps: ElvUI
 
 Libraries\Load_Libraries.xml

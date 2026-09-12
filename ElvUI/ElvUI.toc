@@ -1,7 +1,7 @@
 ## Interface: 11200
 ## Title: |cff175581E|r|cffC4C4C4lvUI|r
 ## Notes: ElvUI rewrite targeting WoW 1.12.1 and Unreal Azeroth.
-## Version: 0.0.1
+## Version: @project-version@
 ## SavedVariables: ElvDB, ElvPrivateDB, GAME_LOCALE
 ## SavedVariablesPerCharacter: ElvCharacterDB
 

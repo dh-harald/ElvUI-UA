@@ -499,17 +499,21 @@ function M:Initialize()
 
 	-- MOUSEOVER visibility: hooked (not SetScript) so we don't clobber
 	-- whatever native OnEnter/OnLeave the Minimap widget already has (e.g.
-	-- its own tooltip) -- same reasoning/pattern as Core/GameMenu.lua's
-	-- use of E:HookScript instead of a bare SetScript/HookScript call.
-	-- Unverified on UA (first time this module hooks Minimap's own mouse
-	-- events, distinct from the wheel-catcher's separate ScrollFrame).
-	E:HookScript(Minimap, "OnEnter", function()
+	-- its own tooltip). AceHook-3.0's own :HookScript refuses Minimap here
+	-- (its :HasScript("OnEnter"/"OnLeave") wrongly returns false on this
+	-- client even though :GetScript/:SetScript both work fine on the same
+	-- frame+script) -- same binding-level bug already seen on HonorFrame.
+	-- Use Skins' fallback-aware S:TryHookScript instead of a bare
+	-- E:HookScript: it tries AceHook first, then falls back to a manual
+	-- native :SetScript chain that preserves any existing handler.
+	local S = E:GetModule("Skins")
+	S:TryHookScript(Minimap, "OnEnter", function()
 		self.mouseOver = true
 		if E.db.general.minimap.locationText == "MOUSEOVER" and self.zoneText then
 			self.zoneText:Show()
 		end
 	end)
-	E:HookScript(Minimap, "OnLeave", function()
+	S:TryHookScript(Minimap, "OnLeave", function()
 		self.mouseOver = false
 		if E.db.general.minimap.locationText == "MOUSEOVER" and self.zoneText then
 			self.zoneText:Hide()
