@@ -101,6 +101,7 @@ V.skins = {
 		greeting = true,
 		merchant = true,
 		taxi = true,
+		inspect = true,
 		stable = true,
 		talent = true,
 		tradeskill = true,

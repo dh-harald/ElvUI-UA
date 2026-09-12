@@ -79,6 +79,7 @@ E.Options.args.skins = {
 				greeting = { type = "toggle", name = "Greeting Frame", desc = SKIN_DESC },
 				merchant = { type = "toggle", name = "Merchant", desc = SKIN_DESC },
 				taxi = { type = "toggle", name = "Taxi Frame", desc = SKIN_DESC },
+				inspect = { type = "toggle", name = "Inspect", desc = SKIN_DESC },
 				stable = { type = "toggle", name = "Stable", desc = SKIN_DESC },
 				talent = { type = "toggle", name = "Talents", desc = SKIN_DESC },
 				tradeskill = { type = "toggle", name = "Tradeskills", desc = SKIN_DESC },
