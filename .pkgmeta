@@ -1,0 +1,20 @@
+package-as: ElvUI
+
+manual-changelog: CHANGELOG.md
+
+externals:
+  ElvUI/Libraries/LibStub: https://github.com/laytya/LibStub
+  ElvUI/Libraries/CallbackHandler-1.0: https://github.com/laytya/CallbackHandler-1.0
+  ElvUI/Libraries/AceAddon-3.0: https://github.com/laytya/Ace3v/AceAddon-3.0
+  ElvUI/Libraries/AceEvent-3.0: https://github.com/laytya/Ace3v/AceEvent-3.0
+  ElvUI/Libraries/AceConsole-3.0: https://github.com/laytya/Ace3v/AceConsole-3.0
+  ElvUI/Libraries/AceTimer-3.0: https://github.com/laytya/Ace3v/AceTimer-3.0
+  ElvUI/Libraries/AceHook-3.0: https://github.com/laytya/Ace3v/AceHook-3.0
+  ElvUI/Libraries/AceDB-3.0: https://github.com/laytya/Ace3v/AceDB-3.0
+  ElvUI/Libraries/AceLocale-3.0: https://github.com/laytya/Ace3v/AceLocale-3.0
+  ElvUI/Libraries/LibDataBroker-1.1: https://github.com/dh-harald/LibDataBroker-1.1
+  ElvUI_Config/Libraries/LibConfig-1.0: https://github.com/dh-harald/LibConfig-1.0
+
+move-folders:
+  ElvUI/ElvUI: ElvUI
+  ElvUI/ElvUI_Config: ElvUI_Config
