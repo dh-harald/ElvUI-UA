@@ -2601,6 +2601,30 @@ function S:ClearNativeBackdrop(frame)
 	-- Swapping a working mechanism on a working client to fix the other
 	-- one's bug is how a fix turns into two bugs.
 	if ElvUI.Compat and ElvUI.Compat.isUA then
+		-- The layer switch takes every region on it, not only the backdrop:
+		-- FontStrings the XML put on BACKGROUND/BORDER would vanish with it
+		-- while still reporting `IsShown() == true` (measured on UA:
+		-- `CharacterLevelText`/`InspectLevelText` share `PaperDollFrame`'s /
+		-- `InspectPaperDollFrame`'s BACKGROUND layer with the quadrant art,
+		-- and this frame reports a backdrop here). Moving them to OVERLAY
+		-- first keeps them drawn; the textures on those layers are left in
+		-- place, since they are the art being suppressed. `GetDrawLayer`/
+		-- `SetDrawLayer` both work on the region objects `GetRegions()`
+		-- returns on this client (measured).
+		local okRegions, regions = pcall(function() return { frame:GetRegions() } end)
+		if okRegions and type(regions) == "table" then
+			local i
+			for i = 1, table.getn(regions) do
+				local region = regions[i]
+				local okType, regionType = pcall(region.GetObjectType, region)
+				if okType and regionType == "FontString" then
+					local okLayer, layer = pcall(region.GetDrawLayer, region)
+					if okLayer and (layer == "BACKGROUND" or layer == "BORDER") then
+						pcall(region.SetDrawLayer, region, "OVERLAY")
+					end
+				end
+			end
+		end
 		pcall(frame.DisableDrawLayer, frame, "BACKGROUND")
 		pcall(frame.DisableDrawLayer, frame, "BORDER")
 	else
