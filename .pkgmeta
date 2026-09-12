@@ -5,6 +5,7 @@ manual-changelog: CHANGELOG.md
 externals:
   ElvUI/Libraries/LibStub: https://github.com/laytya/LibStub
   ElvUI/Libraries/CallbackHandler-1.0: https://github.com/laytya/CallbackHandler-1.0
+  ElvUI/Libraries/AceCore-3.0: https://github.com/laytya/Ace3v/AceCore-3.0
   ElvUI/Libraries/AceAddon-3.0: https://github.com/laytya/Ace3v/AceAddon-3.0
   ElvUI/Libraries/AceEvent-3.0: https://github.com/laytya/Ace3v/AceEvent-3.0
   ElvUI/Libraries/AceConsole-3.0: https://github.com/laytya/Ace3v/AceConsole-3.0
@@ -18,3 +19,9 @@ externals:
 move-folders:
   ElvUI/ElvUI: ElvUI
   ElvUI/ElvUI_Config: ElvUI_Config
+
+ignore:
+  - release.config.js
+  - media
+  - README.md
+  - LICENSE
