@@ -791,7 +791,7 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 				overlay = {
 					type = "toggle",
 					name = L["Overlay"],
-					desc = L["The portrait overlays the Health bar (behind it) instead of sitting beside it. Combine with Colors > Transparent Health to actually see it through the bar."],
+					desc = L["The portrait overlays the Health bar instead of sitting beside it."],
 					order = 5,
 					get = function() return unitTable().portrait.overlay end,
 					set = function(_, value) unitTable().portrait.overlay = value end,

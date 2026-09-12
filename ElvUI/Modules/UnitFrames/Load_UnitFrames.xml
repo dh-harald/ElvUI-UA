@@ -1,5 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
 	<Script file="UnitFrames.lua"/>
+	<Script file="PortraitUA.lua"/>
+	<Script file="PortraitLegacy.lua"/>
 	<Script file="DebuffDurations.lua"/>
 	<!-- Real 1.12.1 cannot load a <Script> from a subdirectory (silent
 	     "Error loading Units\Player.lua" in Logs\FrameXML.log). <Include>

@@ -39,9 +39,8 @@
 -- Core/Profiles.lua's own comment on this.
 --
 -- THIRD PASS: portrait simplified to ONLY real
--- ElvUI's own fields (enable/width/style/overlay -- see
--- Construct_Portrait's own comment for the SetCamera(0) finding that
--- made this possible without any custom zoom/offset knobs), the shared
+-- ElvUI's own fields (enable/width/style/overlay; the element itself is
+-- implemented per client in PortraitUA.lua / PortraitLegacy.lua), the shared
 -- color/update logic generalized to any unit (not hardcoded `.player`),
 -- and a second unit (Target) added.
 
@@ -107,6 +106,8 @@ local HEALTH_BG_COLOR = {0.1, 0.1, 0.1, 1}
 local POWER_BG_COLOR = {0.1, 0.1, 0.1, 1}
 local DEAD_COLOR = {0.5, 0.5, 0.5}
 local INSET = 2
+-- Shared with the per-client portrait files (PortraitUA.lua/PortraitLegacy.lua).
+UF.INSET = INSET
 -- Fixed alpha for colors.transparentHealth/transparentPower -- see the
 -- defaults block above for why this is a simplified uniform-alpha
 -- stand-in for real ElvUI's own inverted-fill masking technique.
@@ -241,42 +242,9 @@ function UF:Construct_NameText(frame)
 	return text
 end
 
--- frame.Portrait -- both a 2D Texture (SetPortraitTexture) and a 3D
--- PlayerModel (SetUnit) are built; `db.portrait.style` ("2D"/"3D",
--- matching real ElvUI's own field) picks which one is shown at update
--- time, the other stays hidden.
---
--- source/UnrealUI/modules/unitframes.lua's own header comment documents
--- a CONFIRMED crash from a live 3D PlayerModel portrait on UA
--- (knowledge.json / unitframes.portrait_model_crash). Independently
--- re-tested via a standalone throwaway frame
--- (`CreateFrame("PlayerModel", ...)` + `SetUnit("player")`, nothing
--- else): **no crash, rendered correctly**. Since UnrealUI's own finding
--- no longer holds for at least this simple case on this client build, 3D
--- support is wired up for real rather than staying permanently
--- 2D-forced. Genuinely untested so far: 3D specifically INSIDE this
--- module's own nested-frame construction (unlike the isolated standalone
--- test) -- if THIS specific wiring crashes despite the standalone test
--- not, that's a new, narrower data point worth its own note here, not a
--- reason to distrust the standalone result.
-function UF:Construct_Portrait(frame, size)
-	local box = CreateFrame("Frame", nil, frame)
-	box:SetWidth(size)
-	box:SetHeight(size)
-
-	local tex = box:CreateTexture(nil, "ARTWORK")
-	tex:SetAllPoints(box)
-	box.texture = tex
-
-	local model = CreateFrame("PlayerModel", nil, box)
-	model:SetAllPoints(box)
-	model:Hide()
-	box.model = model
-
-	box:Hide()
-	frame.Portrait = box
-	return box
-end
+-- UF:Construct_Portrait / Update_Portrait / PostUpdateHealth_Portrait are
+-- defined per client: PortraitUA.lua (Unreal Azeroth) and PortraitLegacy.lua
+-- (1.12.1). The method contract is at the top of PortraitUA.lua.
 
 -- A small square icon texture (RestIcon/CombatIcon share this shape).
 -- Parented to `parent` (a raised child layer, NOT `frame` directly) so it
@@ -1874,147 +1842,13 @@ function UF:UpdateFrame(frame)
 	end
 	frame:Show()
 
-	-- Portrait reflow -- width the health/power bars leave for a
-	-- portrait square on the frame's left edge, when enabled.
-	--
-	-- BUG FIXED -- symptom: the 2D portrait flickers. `SetPortraitTexture` was called
-	-- unconditionally on EVERY UpdateFrame call -- 5x/second via the
-	-- 0.2s poll, more during combat (every health/mana event also
-	-- triggers a full UpdateAll). The API evidently redraws/reloads the
-	-- portrait each call, so hammering it that often produced a visible
-	-- flicker. Fixed to edge-triggered: only call it the moment the
-	-- portrait transitions from hidden to shown, tracked via
-	-- `frame.Portrait.shown2D`/`.shown3D` (one per style, so switching
-	-- style re-triggers the newly-selected one). Known tradeoff, not
-	-- handled: a portrait won't refresh again on its own afterward (e.g.
-	-- a Druid shifting form) -- not implemented, revisit only if that
-	-- turns out to matter in practice.
-	-- Overlay: matches real ElvUI's own field/behavior
-	-- exactly. The portrait spans the HEALTH bar's own rect, behind it,
-	-- instead of sitting beside it (real ElvUI's own desc: "will overlay
-	-- the Healthbar" -- Power is deliberately untouched, matching real
-	-- ElvUI, which has no equivalent for Power). The bars keep their
-	-- FULL width either way (`portraitWidth` stays 0, no side reflow)
-	-- and the portrait's frame level is dropped below Health's so the
-	-- bar draws on top of it; real `colors.transparentHealth` (below, in
-	-- the color-resolve step) dims the BAR so the portrait underneath
-	-- actually shows through it.
-	--
-	-- SIMPLIFIED to get this same result using ONLY
-	-- real-ElvUI-supported toggles: this project had briefly grown
-	-- `fullOverlay`/`portrait.alpha`/`modelScale`/`modelOffsetZ`, none
-	-- of them real ElvUI fields, while chasing a working overlay
-	-- portrait on UA. All four are GONE now -- once `SetCamera(0)` (see
-	-- below) was added, scale=1/position=(0,0,0) (real oUF/ElvUI's own
-	-- stock, untouched values) turned out to look correct on their own,
-	-- so the manual zoom/offset hack wasn't actually needed once the
-	-- rotation bug was fixed.
+	-- Portrait layout and content, per client (PortraitUA.lua /
+	-- PortraitLegacy.lua). Returns the width the bars leave free on the
+	-- left. Guarded so a portrait file that failed to load costs only the
+	-- portrait, not the whole frame update.
 	local portraitWidth = 0
-	if frame.Portrait then
-		local pdb = settings.portrait
-		if pdb and pdb.enable then
-			frame.Portrait:ClearAllPoints()
-
-			if pdb.overlay then
-				frame.Portrait:SetPoint("TOPLEFT", frame, "TOPLEFT", INSET, -INSET)
-				frame.Portrait:SetWidth(frame:GetWidth() - INSET * 2)
-				frame.Portrait:SetHeight(frame.Health:GetHeight())
-
-				-- Explicit `frame`-relative level (frame's own base + 1),
-				-- NOT computed relative to Health's level -- Health/Power
-				-- are explicitly at frame's base + 2 (Construct_HealthBar/
-				-- Construct_PowerBar), so this is always unambiguously
-				-- between the panel's opaque backdrop and the bars,
-				-- regardless of what auto-assignment would have given
-				-- either of them. (Bug found live: computing this
-				-- relative to Health's own un-pinned level could land the
-				-- portrait AT the backdrop's own level, making it
-				-- invisible behind an opaque panel.)
-				local ok, frameLevel = pcall(frame.GetFrameLevel, frame)
-				if ok and tonumber(frameLevel) then
-					pcall(frame.Portrait.SetFrameLevel, frame.Portrait, frameLevel + 1)
-				end
-			else
-				portraitWidth = pdb.width
-				frame.Portrait:SetWidth(portraitWidth)
-				frame.Portrait:SetHeight(portraitWidth)
-				frame.Portrait:SetPoint("TOPLEFT", frame, "TOPLEFT", INSET, -INSET)
-			end
-
-			-- BUG FIXED -- symptom: target frame's 3D
-			-- model doesn't change when switching targets. The
-			-- shown2D/shown3D edge-trigger above only re-fires
-			-- SetUnit/SetPortraitTexture on a hidden->shown transition
-			-- of the portrait BOX itself -- fine for Player (unit
-			-- token never changes) but wrong for Target/TargetTarget/
-			-- Pet/PetTarget, whose frame usually stays continuously
-			-- shown across a target swap (never re-hides), so the OLD
-			-- model/texture just sat there. Fixed by also tracking the
-			-- resolved unit's identity and forcing a re-fire whenever it
-			-- changes, regardless of the shown/hidden transition.
-			--
-			-- SECOND ATTEMPT: the first attempt used `UnitGUID(unit)`,
-			-- but that's a retail-era API -- absent from both this
-			-- client generation's UA docs and real ElvUI-vanilla's own
-			-- oUF library (grepped, zero hits either place). `pcall
-			-- (UnitGUID, unit)` was silently failing every single call,
-			-- so `guid` was always `nil`, and `lastGUID ~= guid`
-			-- (nil ~= nil) never once evaluated true -- a total no-op
-			-- disguised as a fix. Switched to `UnitName(unit)` instead,
-			-- matching this project's own established precedent for
-			-- exactly this situation (DebuffDurations.lua already keys
-			-- its own aura stamps by unit NAME, not GUID, for the same
-			-- "no GUID API on this client generation" reason). Not
-			-- perfectly unique (two same-named mobs would be
-			-- indistinguishable), but sufficient for "should this
-			-- portrait redraw" -- same tradeoff this project already
-			-- accepted elsewhere.
-			local okName, unitName = pcall(UnitName, unit)
-			unitName = okName and unitName or nil
-			if frame.Portrait.lastGUID ~= unitName then
-				frame.Portrait.shown2D = false
-				frame.Portrait.shown3D = false
-				frame.Portrait.lastGUID = unitName
-			end
-
-			if pdb.style == "3D" then
-				frame.Portrait.texture:Hide()
-				if not frame.Portrait.shown3D then
-					pcall(frame.Portrait.model.SetUnit, frame.Portrait.model, unit)
-					-- Real oUF's own stock Portrait element
-					-- (Libraries/oUF/elements/portrait.lua) always calls
-					-- SetModelScale(1)/SetPosition(0,0,0)/SetCamera(0)
-					-- alongside SetUnit -- this project only had
-					-- SetUnit at first. `SetCamera(0)` (selects the
-					-- model's built-in default portrait camera) fixed a
-					-- live-reported rotation bug ("szerintem egy kicsit
-					-- forgat rajta") on its own -- once it was in place,
-					-- the stock scale/position values (1, 0,0,0) turned
-					-- out to already look right, matching real ElvUI's
-					-- own values exactly, no custom zoom/offset needed.
-					pcall(frame.Portrait.model.SetModelScale, frame.Portrait.model, 1)
-					pcall(frame.Portrait.model.SetPosition, frame.Portrait.model, 0, 0, 0)
-					pcall(frame.Portrait.model.SetCamera, frame.Portrait.model, 0)
-					frame.Portrait.shown3D = true
-				end
-				frame.Portrait.shown2D = false
-				frame.Portrait.model:Show()
-			else
-				frame.Portrait.model:Hide()
-				if not frame.Portrait.shown2D then
-					pcall(SetPortraitTexture, frame.Portrait.texture, unit)
-					frame.Portrait.shown2D = true
-				end
-				frame.Portrait.shown3D = false
-				frame.Portrait.texture:Show()
-			end
-
-			frame.Portrait:Show()
-		else
-			frame.Portrait:Hide()
-			frame.Portrait.shown2D = false
-			frame.Portrait.shown3D = false
-		end
+	if self.Update_Portrait then
+		portraitWidth = self:Update_Portrait(frame, settings, unit) or 0
 	end
 
 	local barLeft = INSET + (portraitWidth > 0 and (portraitWidth + INSET) or 0)
@@ -2042,10 +1876,10 @@ function UF:UpdateFrame(frame)
 	-- (Util.CreateStatusBar). Upstream declares no default for it per unit, so
 	-- nil/false means "flat", which is what this project has always drawn.
 	-- Waived in scripts/config-exceptions.lua's `reads` table.
+	local bgTex = settings.health and settings.health.bgUseBarTexture
+	local bgTexturePath = bgTex and GetBarTexture() or "Interface\\Buttons\\WHITE8x8"
 	if frame.Health.barBgTexture then
-		local bgTex = settings.health and settings.health.bgUseBarTexture
-		pcall(frame.Health.barBgTexture.SetTexture, frame.Health.barBgTexture,
-			bgTex and GetBarTexture() or "Interface\\Buttons\\WHITE8x8")
+		pcall(frame.Health.barBgTexture.SetTexture, frame.Health.barBgTexture, bgTexturePath)
 	end
 
 	if frame.Power then
@@ -2080,6 +1914,12 @@ function UF:UpdateFrame(frame)
 		ElvUI.Util.SetStatusBarBackgroundColor(frame.Health, bgR, bgG, bgB, healthAlpha)
 	else
 		ElvUI.Util.SetStatusBarBackgroundColor(frame.Health, HEALTH_BG_COLOR[1], HEALTH_BG_COLOR[2], HEALTH_BG_COLOR[3], healthAlpha)
+	end
+	-- The overlay portrait mirrors this bar's state above the portrait
+	-- (PortraitUA.lua / PortraitLegacy.lua).
+	if self.PostUpdateHealth_Portrait then
+		self:PostUpdateHealth_Portrait(frame, bgR or HEALTH_BG_COLOR[1], bgG or HEALTH_BG_COLOR[2],
+			bgB or HEALTH_BG_COLOR[3], healthAlpha, bgTexturePath, r, g, b, GetBarTexture())
 	end
 
 	local power, powerMax, powerToken = 0, 0, "MANA"

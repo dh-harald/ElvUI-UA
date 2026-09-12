@@ -10,10 +10,8 @@ local UF = E.UnitFrames
 -- `health.text_format`/`power.text_format`/`name.text_format` go through
 -- UnitFrames.lua's own small tag substitution engine (NOT real ElvUI's tag
 -- DSL) -- see that file's header comment for the exact tag list.
--- `orientation` and `portrait.overlay` are stored for schema fidelity but
--- not read (they need the portrait-aware layout math this pass doesn't
--- implement). `portrait.style` ("2D"/"3D") IS read -- see
--- UnitFrames.lua's `Construct_Portrait`.
+-- `orientation` is stored for schema fidelity but not read. `portrait.*` is
+-- read by the per-client portrait files (PortraitUA.lua/PortraitLegacy.lua).
 
 -- Hides the native PlayerFrame the same way ActionBars.lua's own
 -- HideFrame() hides Blizzard chrome: UnregisterAllEvents (harmless even
