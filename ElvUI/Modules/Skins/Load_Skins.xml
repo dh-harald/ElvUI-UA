@@ -1,0 +1,6 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="Skins.lua"/>
+	<!-- Subdirectory <Script> does not load on real 1.12.1; see the
+	     comment in Modules\UnitFrames\Load_UnitFrames.xml. -->
+	<Include file="Blizzard\Load_Blizzard.xml"/>
+</Ui>

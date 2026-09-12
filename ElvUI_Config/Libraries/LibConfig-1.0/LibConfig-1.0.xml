@@ -1,0 +1,8 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/FrameXML\UI.xsd">
+    <!-- Real 1.12.1 cannot load a <Script> from a subdirectory: it logs
+         "Error loading Compat\Lua50.lua" to Logs\FrameXML.log and silently
+         carries on without the compat layer. <Include> of a subdirectory
+         XML does work, so go through a directory-local loader XML. -->
+    <Include file="Compat\Load_Compat.xml"/>
+    <Script file="LibConfig-1.0.lua"/>
+</Ui>

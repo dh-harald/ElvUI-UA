@@ -1,0 +1,15 @@
+## Interface: 11200
+## Title: |cff175581E|r|cffC4C4C4lvUI|r
+## Notes: ElvUI rewrite targeting WoW 1.12.1 and Unreal Azeroth.
+## Version: 0.0.1
+## SavedVariables: ElvDB, ElvPrivateDB, GAME_LOCALE
+## SavedVariablesPerCharacter: ElvCharacterDB
+
+Libraries\Load_Libraries.xml
+Locales\Load_Locales.xml
+Media\Load_Media.xml
+Init.lua
+Settings\Load_Config.xml
+Core\Load_Core.xml
+Layout\Load_Layout.xml
+Modules\Load_Modules.xml

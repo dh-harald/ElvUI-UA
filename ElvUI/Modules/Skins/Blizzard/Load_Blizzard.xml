@@ -1,0 +1,20 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="Character.lua"/>
+	<Script file="Friends.lua"/>
+	<Script file="SpellBook.lua"/>
+	<Script file="Macro.lua"/>
+	<Script file="MainMenu.lua"/>
+	<Script file="SoundOptions.lua"/>
+	<Script file="UIOptions.lua"/>
+	<Script file="VideoOptions.lua"/>
+	<Script file="Binding.lua"/>
+	<Script file="QuestLog.lua"/>
+	<Script file="Quest.lua"/>
+	<Script file="Gossip.lua"/>
+	<Script file="Greeting.lua"/>
+	<Script file="Merchant.lua"/>
+	<Script file="Taxi.lua"/>
+	<Script file="Stable.lua"/>
+	<Script file="Talent.lua"/>
+	<Script file="TradeSkill.lua"/>
+</Ui>

@@ -1,0 +1,12 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="Compat.lua"/>
+	<Script file="Util.lua"/>
+	<Script file="StaticPopups.lua"/>
+	<Script file="Movers.lua"/>
+	<Script file="Profiles.lua"/>
+	<Script file="Cooldowns.lua"/>
+	<Script file="MirrorTimers.lua"/>
+	<Script file="Install.lua"/>
+	<Script file="Commands.lua"/>
+	<Script file="GameMenu.lua"/>
+</Ui>
