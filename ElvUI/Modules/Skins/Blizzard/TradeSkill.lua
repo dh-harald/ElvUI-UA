@@ -39,11 +39,10 @@
 --   a level higher. The detail pane's background is the separate
 --   `elvDetailPane` host on `TradeSkillFrame`, exactly as real ElvUI's
 --   own `bg2` is.
--- - **The reagent icon keeps its native parent.** Its bordered holder is
---   pinned to `TradeSkillFrame`'s reagent-button level so
---   `Util.CreateButtonBorder`'s backdrop lands BELOW the button's own
---   regions; a holder at the default child level puts that backdrop at
---   the button's level, created later, and it covers the icon.
+-- - **Reagent slots use the shared `S:StyleQuestItemSlot`** (Skins.lua):
+--   the merchant window's item-slot look -- bordered icon, name beside it,
+--   field surface behind the name, no border around the slot and no
+--   quality tint.
 -- - **`TradeSkillListScrollFrame` is a `FauxScrollFrameTemplate`.** Its
 --   visible rows (`TradeSkillSkill1-25`) are NOT its children -- they are
 --   siblings, direct children of `TradeSkillFrame` itself, merely
@@ -108,18 +107,10 @@
 --   re-crop and the reagent/recipe item-quality border colouring, exactly
 --   like real ElvUI's own single hook does.
 -- - **`TradeSkillReagent1-8` (`TradeSkillItemTemplate`, inherits
---   `QuestItemTemplate`) are a DIFFERENT native shape from every other
---   item slot skinned in this project so far** -- no Normal/Pushed
---   texture at all, just a bare `$parentIconTexture` plus a decorative
---   `$parentNameFrame` "scroll nameplate" texture behind the name text.
---   `Util.SkinItemButton` (built for `ItemButtonTemplate`'s Normal-texture
---   shape) doesn't apply. New, minimal recipe here instead: kill
---   `$parentNameFrame`, reposition the name relative to where it WAS
---   (killing only hides it, its anchor point stays valid), and give the
---   icon its own small bordered holder frame -- the same "icon on a
---   bordered child frame" shape used everywhere else in this project.
---   Reusable later for the identical `QuestLogItem`/`QuestRewardItem`
---   backlog item (`docs/skins/windows/quest.md`/`questlog.md`).
+--   `QuestItemTemplate`)** have no Normal/Pushed texture, only a bare
+--   `$parentIconTexture` and a decorative `$parentNameFrame`, so
+--   `Util.SkinItemButton` (built for `ItemButtonTemplate`) does not apply;
+--   `S:StyleQuestItemSlot` covers that shape.
 -- - `TradeSkillSkillIcon` is a bare `Button` with NO inherited template at
 --   all -- its icon is native code calling `SetNormalTexture` directly on
 --   selection change, so (unlike every other icon in this project) its
@@ -155,7 +146,6 @@ local DETAIL_SCROLL_WIDTH, DETAIL_SCROLL_HEIGHT = 300, 381
 local DETAIL_SCROLL_X, DETAIL_SCROLL_Y = -60, -95
 local DETAIL_CHILD_WIDTH, DETAIL_CHILD_HEIGHT = 300, 150
 local REAGENT_WIDTH, REAGENT_HEIGHT = 143, 40
-local REAGENT_ICON_SIZE = 32
 -- Real ElvUI's own rank-bar fill colour for this window.
 local RANK_BAR_COLOR = { 0.13, 0.28, 0.85 }
 
@@ -180,65 +170,11 @@ local function SetRankBarColor()
 	if bar then pcall(bar.SetStatusBarColor, bar, RANK_BAR_COLOR[1], RANK_BAR_COLOR[2], RANK_BAR_COLOR[3]) end
 end
 
--- New recipe for `QuestItemTemplate`-shaped slots -- see file header.
--- Same shape as `Util.SkinItemButton`'s proven one (border UNDER the
--- button, icon left as a region OF the button), except that here the icon
--- occupies only the left 32px of a 143x40 row, so it gets its own small
--- border frame rather than the row's.
-local function StyleReagentSlot(name)
-	local reagent = _G[name]
-	if not reagent then return end
-
-	pcall(reagent.SetWidth, reagent, REAGENT_WIDTH)
-	pcall(reagent.SetHeight, reagent, REAGENT_HEIGHT)
-	if ElvUI.Util and ElvUI.Util.CreateButtonBorder then
-		ElvUI.Util.CreateButtonBorder(reagent)
-	end
-
-	local icon = _G[name .. "IconTexture"]
-	local reagentName = _G[name .. "Name"]
-	local nameFrame = _G[name .. "NameFrame"]
-
-	if reagentName and nameFrame then
-		pcall(reagentName.ClearAllPoints, reagentName)
-		pcall(reagentName.SetPoint, reagentName, "LEFT", nameFrame, "LEFT", 20, 0)
-	end
-	S:Kill(nameFrame)
-
-	if icon then
-		pcall(icon.SetTexCoord, icon, 0.08, 0.92, 0.08, 0.92)
-		pcall(icon.ClearAllPoints, icon)
-		pcall(icon.SetPoint, icon, "TOPLEFT", reagent, "TOPLEFT", 4, -4)
-		pcall(icon.SetWidth, icon, REAGENT_ICON_SIZE)
-		pcall(icon.SetHeight, icon, REAGENT_ICON_SIZE)
-		pcall(icon.SetDrawLayer, icon, "OVERLAY")
-	end
-
-	if icon and not reagent.elvIconHolder then
-		local okHolder, holder = pcall(CreateFrame, "Frame", nil, reagent)
-		if okHolder and holder then
-			pcall(holder.SetPoint, holder, "TOPLEFT", icon, "TOPLEFT", -1, 1)
-			pcall(holder.SetPoint, holder, "BOTTOMRIGHT", icon, "BOTTOMRIGHT", 1, -1)
-			-- Level pinned to the reagent's OWN, not left at the default
-			-- child level: `Util.CreateButtonBorder` places its backdrop one
-			-- level below its target, so a default-level holder would put
-			-- that opaque backdrop at exactly the reagent's level, created
-			-- later, and it would cover the icon it is supposed to frame.
-			local okLevel, level = pcall(reagent.GetFrameLevel, reagent)
-			pcall(holder.SetFrameLevel, holder, (okLevel and tonumber(level)) or 4)
-			if ElvUI.Util and ElvUI.Util.CreateButtonBorder then
-				ElvUI.Util.CreateButtonBorder(holder)
-			end
-			reagent.elvIconHolder = holder
-		end
-	end
-end
-
 -- `TradeSkillFrame_SetSelection` is a bare global function -- the
--- confirmed-safe hook shape (`docs/api-diffs/hooks-events.md`). Handles
--- both halves real ElvUI's own single hook does: re-crop the recipe icon
--- (a bare Button with no inherited border template) and colour every
--- reagent slot's border by the ingredient's item quality.
+-- confirmed-safe hook shape (`docs/api-diffs/hooks-events.md`). Re-crops
+-- the recipe icon (a bare Button with no inherited border template) and
+-- colours its border by the crafted item's quality. Reagent slots keep the
+-- merchant-style black border (`S:StyleQuestItemSlot`).
 local function ApplySelectionChrome(id)
 	SetRankBarColor()
 
@@ -281,35 +217,6 @@ local function ApplySelectionChrome(id)
 		end
 	end
 
-	local okNum, numReagents = pcall(GetTradeSkillNumReagents, id)
-	numReagents = (okNum and tonumber(numReagents)) or 0
-	local i
-	for i = 1, REAGENT_COUNT do
-		local reagent = _G["TradeSkillReagent" .. i]
-		local iconBorder = reagent and reagent.elvIconHolder and reagent.elvIconHolder.elvBackdrop
-		local rowBorder = reagent and reagent.elvBackdrop
-		if (iconBorder or rowBorder) and i <= numReagents then
-			local okReagent, reagentLink = pcall(GetTradeSkillReagentItemLink, id, i)
-			local quality
-			if okReagent and reagentLink then
-				local itemId = Compat.match(reagentLink, "item:(%d+)")
-				if itemId then
-					local okInfo, _, _, q = pcall(GetItemInfo, itemId)
-					if okInfo then quality = q end
-				end
-			end
-			local r, g, b
-			if quality then
-				local okColor, qr, qg, qb = pcall(GetItemQualityColor, quality)
-				if okColor then r, g, b = qr, qg, qb end
-			end
-			if not r then
-				r, g, b = S.BORDER_COLOR[1], S.BORDER_COLOR[2], S.BORDER_COLOR[3]
-			end
-			if iconBorder then pcall(iconBorder.SetBackdropBorderColor, iconBorder, r, g, b) end
-			if rowBorder then pcall(rowBorder.SetBackdropBorderColor, rowBorder, r, g, b) end
-		end
-	end
 end
 
 -- Periodic glyph sync -- see file header for why this replaces real
@@ -365,6 +272,9 @@ end
 local function ApplyTradeSkillChrome(frame)
 	S:StripTextures(frame, true)
 	S:Kill(_G.TradeSkillFramePortrait)
+
+	-- The selection highlight sits 3 units low against the row text.
+	S:ShiftRegionInFrame(_G.TradeSkillHighlight, _G.TradeSkillHighlightFrame, 0, 3)
 
 	S:CreatePanel(frame, PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM)
 	PromotePanelText()
@@ -547,7 +457,7 @@ local function ApplyTradeSkillChrome(frame)
 	if reqLabel then pcall(reqLabel.SetTextColor, reqLabel, 1, 0.80, 0.10) end
 
 	for i = 1, REAGENT_COUNT do
-		StyleReagentSlot("TradeSkillReagent" .. i)
+		S:StyleQuestItemSlot(_G["TradeSkillReagent" .. i], REAGENT_WIDTH, REAGENT_HEIGHT)
 	end
 	local reagentLabel = _G.TradeSkillReagentLabel
 	if reagentLabel and skillIcon then
@@ -621,7 +531,12 @@ local function ApplyTradeSkillSkin()
 
 	ApplyTradeSkillChrome(frame)
 
-	local ok = S:TryHookScript(frame, "OnShow", function() ApplyTradeSkillChrome(frame) end)
+	-- The doublewide override means an open craft or auction window is no
+	-- longer replaced by the panel manager: closed here instead.
+	local ok = S:TryHookScript(frame, "OnShow", function()
+		ApplyTradeSkillChrome(frame)
+		S:CloseOtherDoublewidePanels(frame)
+	end)
 	if not ok then E:Print("Skins (tradeskill): TradeSkillFrame OnShow hook failed to install") end
 
 	local hookOk = pcall(function() S:SecureHook("TradeSkillFrame_SetSelection", ApplySelectionChrome) end)

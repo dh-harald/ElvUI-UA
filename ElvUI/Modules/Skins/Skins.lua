@@ -347,6 +347,112 @@ function S:CreateField(frame, l, t, r, b, keepDefaultLevel)
 	return S:CreateSurface(frame, S.WIDGET_COLOR, l, t, r, b, keepDefaultLevel)
 end
 
+-- Item slot in the QuestItemTemplate shape (trade skill and craft reagents),
+-- styled like the merchant window's item slots (Blizzard/Merchant.lua): a
+-- 37x37 icon with the shared 1px button border, the name beside it, and a
+-- field surface from just past the icon to the slot's right edge, as tall as
+-- the icon. No border around the whole slot, no quality tint.
+--
+-- Unlike a merchant slot, the icon and name are regions of the slot button
+-- itself, and the field is a child frame at the button's own level, which
+-- draws over the button's BACKGROUND/ARTWORK regions; the name is raised to
+-- OVERLAY (the count sits on the icon, outside the field). The icon border is
+-- a holder frame pinned to the slot's level BEFORE Util.CreateButtonBorder,
+-- which puts its backdrop one level below its target: a holder at the default
+-- child level would put that backdrop above the icon.
+--
+-- `width`/`height` resize the slot (native QuestItemTemplate: 147x41).
+local QUEST_ITEM_ICON_SIZE = 37
+local QUEST_ITEM_FIELD_GAP = 4
+local QUEST_ITEM_TEXT_GAP = 8
+
+function S:StyleQuestItemSlot(slot, width, height)
+	if not slot then return end
+	local okName, name = pcall(slot.GetName, slot)
+	if not okName or not name then return end
+
+	if width then pcall(slot.SetWidth, slot, width) end
+	if height then pcall(slot.SetHeight, slot, height) end
+	S:Kill(_G[name .. "NameFrame"])
+
+	if not slot.elvIconHolder then
+		local okHolder, holder = pcall(CreateFrame, "Frame", nil, slot)
+		if okHolder and holder then
+			pcall(holder.SetWidth, holder, QUEST_ITEM_ICON_SIZE)
+			pcall(holder.SetHeight, holder, QUEST_ITEM_ICON_SIZE)
+			pcall(holder.SetPoint, holder, "TOPLEFT", slot, "TOPLEFT", 0, 0)
+			local okLevel, level = pcall(slot.GetFrameLevel, slot)
+			pcall(holder.SetFrameLevel, holder, (okLevel and tonumber(level)) or 4)
+			if ElvUI.Util and ElvUI.Util.CreateButtonBorder then
+				ElvUI.Util.CreateButtonBorder(holder)
+			end
+			slot.elvIconHolder = holder
+		end
+	end
+	local holder = slot.elvIconHolder
+
+	if not slot.elvBackground then
+		local okHeight, slotHeight = pcall(slot.GetHeight, slot)
+		local bottom = ((okHeight and tonumber(slotHeight)) or QUEST_ITEM_ICON_SIZE) - QUEST_ITEM_ICON_SIZE
+		if bottom < 0 then bottom = 0 end
+		S:CreateField(slot, QUEST_ITEM_ICON_SIZE + QUEST_ITEM_FIELD_GAP, 0, 0, bottom)
+	end
+
+	local icon = _G[name .. "IconTexture"]
+	if icon and holder then
+		pcall(icon.SetTexCoord, icon, 0.08, 0.92, 0.08, 0.92)
+		pcall(icon.ClearAllPoints, icon)
+		pcall(icon.SetPoint, icon, "TOPLEFT", holder, "TOPLEFT", 1, -1)
+		pcall(icon.SetPoint, icon, "BOTTOMRIGHT", holder, "BOTTOMRIGHT", -1, 1)
+		pcall(icon.SetDrawLayer, icon, "OVERLAY")
+	end
+
+	local label = _G[name .. "Name"]
+	if label and holder then
+		pcall(label.ClearAllPoints, label)
+		pcall(label.SetPoint, label, "LEFT", holder, "RIGHT", QUEST_ITEM_TEXT_GAP, 0)
+		pcall(label.SetDrawLayer, label, "OVERLAY")
+	end
+end
+
+-- Doublewide panels (UIPanelWindows area "doublewide") do not replace each
+-- other: FrameXML's SetDoublewideFrame hides the open left and center panels
+-- but not a doublewide panel that is already open -- it only takes over the
+-- reference -- so two of them open on top of each other. Called from a
+-- doublewide window's OnShow, this hides every other shown doublewide panel.
+-- A plain Hide() is enough, since the panel manager no longer references the
+-- older frame; its own OnHide closes its session (CloseTradeSkill/CloseCraft)
+-- without affecting the window that stays open (measured on UA, both ways).
+-- Hiding fires that OnHide, which on UA leaves the `this` global changed.
+function S:CloseOtherDoublewidePanels(frame)
+	if not frame or type(UIPanelWindows) ~= "table" then return end
+	local okName, keep = pcall(frame.GetName, frame)
+	if not okName or not keep then return end
+
+	local caller = this
+	local name, info
+	for name, info in pairs(UIPanelWindows) do
+		if name ~= keep and type(info) == "table" and info.area == "doublewide" then
+			local other = _G[name]
+			local okShown, shown = false, false
+			if other then okShown, shown = pcall(other.IsShown, other) end
+			if okShown and shown then pcall(other.Hide, other) end
+		end
+	end
+	this = caller
+end
+
+-- Re-anchors a region to fill `frame` shifted by (x, y). For a native list's
+-- selection highlight: native code only re-anchors the highlight FRAME onto
+-- the selected row and recolours its texture, so an offset on the texture
+-- itself persists across list updates.
+function S:ShiftRegionInFrame(region, frame, x, y)
+	if not region or not frame then return end
+	pcall(region.ClearAllPoints, region)
+	pcall(region.SetPoint, region, "TOPLEFT", frame, "TOPLEFT", x or 0, y or 0)
+	pcall(region.SetPoint, region, "BOTTOMRIGHT", frame, "BOTTOMRIGHT", x or 0, y or 0)
+end
+
 -- What colour is this widget actually SITTING on? Walks up the parent chain
 -- to the nearest frame this module has already drawn a surface on and
 -- returns that surface's own colour, falling back to the window tone.

@@ -52,7 +52,7 @@ Two addons ship together:
 - Skinning of a large and growing set of native Blizzard windows in
   place (Character, Friends, SpellBook, Macro, Key Bindings, Main Menu,
   Interface/Video/Sound Options, Gossip/Greeting/Quest/QuestLog,
-  Merchant, Taxi, Pet Stable, Talents, Trade Skills, and more)
+  Merchant, Taxi, Pet Stable, Talents, Trade Skills, Enchanting, and more)
 
 **Missing / not yet started:**
 - Group loot (Need/Greed/Pass roll UI) — solo loot only for now
