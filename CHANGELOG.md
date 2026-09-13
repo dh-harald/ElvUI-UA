@@ -1,3 +1,10 @@
+## [0.2.1](https://github.com/dh-harald/ElvUI-UA/compare/v0.2.0...v0.2.1) (2026-09-13)
+
+
+### Bug Fixes
+
+* load LibDatabroker ([d1401a5](https://github.com/dh-harald/ElvUI-UA/commit/d1401a51e2d045cb3bf60a09392893a2ddf7729d))
+
 # [0.2.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.1.2...v0.2.0) (2026-09-13)
 
 
