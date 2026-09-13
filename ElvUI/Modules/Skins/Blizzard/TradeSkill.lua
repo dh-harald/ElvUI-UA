@@ -427,14 +427,42 @@ local function ApplyTradeSkillChrome(frame)
 	pcall(_G.TradeSkillCreateAllButton.SetPoint, _G.TradeSkillCreateAllButton, "TOPLEFT", _G.TradeSkillDetailScrollFrame, "BOTTOMLEFT", 0, -3)
 	S:StyleUIPanelButton(_G.TradeSkillCreateAllButton)
 
-	S:StyleSquareIconButton(_G.TradeSkillDecrementButton, "LEFT", 0.5)
-	S:StyleSquareIconButton(_G.TradeSkillIncrementButton, "RIGHT", 0.5)
+	-- Quantity stepper: [-] [box] [+] chained left to right, 3px gaps,
+	-- inside the 76px gap between Create All (detail left edge + 80) and
+	-- Create (detail right edge - 144). The native layout anchors
+	-- Create All to Create and the increment button to Create
+	-- independently; once Create All is re-seated on the detail pane's
+	-- left edge, those two chains no longer agree, and the increment
+	-- button (native 23x22, still anchored to Create) lands under the
+	-- input box, which then swallows its clicks. So every stepper piece
+	-- is chained off the previous one and sized to fit: 16px arrows
+	-- (icon 13px, real ElvUI's `HandleNextPrevButton` icon size) and a
+	-- 32px box. Button size is set BEFORE styling, because
+	-- `StyleSquareIconButton` sizes a scaled icon from the current size.
+	local decrement, increment = _G.TradeSkillDecrementButton, _G.TradeSkillIncrementButton
+	local inputBox = _G.TradeSkillInputBox
+	if decrement then
+		pcall(decrement.SetWidth, decrement, 16)
+		pcall(decrement.SetHeight, decrement, 16)
+		pcall(decrement.ClearAllPoints, decrement)
+		pcall(decrement.SetPoint, decrement, "LEFT", _G.TradeSkillCreateAllButton, "RIGHT", 3, 0)
+	end
+	if increment then
+		pcall(increment.SetWidth, increment, 16)
+		pcall(increment.SetHeight, increment, 16)
+	end
+	S:StyleSquareIconButton(decrement, "LEFT", 0.8)
+	S:StyleSquareIconButton(increment, "RIGHT", 0.8)
 
-	S:StyleEditBox(_G.TradeSkillInputBox)
-	pcall(_G.TradeSkillInputBox.SetWidth, _G.TradeSkillInputBox, 40)
-	pcall(_G.TradeSkillInputBox.SetHeight, _G.TradeSkillInputBox, 16)
-	pcall(_G.TradeSkillInputBox.ClearAllPoints, _G.TradeSkillInputBox)
-	pcall(_G.TradeSkillInputBox.SetPoint, _G.TradeSkillInputBox, "LEFT", _G.TradeSkillDecrementButton, "RIGHT", 6, 0)
+	S:StyleEditBox(inputBox)
+	pcall(inputBox.SetWidth, inputBox, 32)
+	pcall(inputBox.SetHeight, inputBox, 16)
+	pcall(inputBox.ClearAllPoints, inputBox)
+	pcall(inputBox.SetPoint, inputBox, "LEFT", decrement, "RIGHT", 3, 0)
+	if increment then
+		pcall(increment.ClearAllPoints, increment)
+		pcall(increment.SetPoint, increment, "LEFT", inputBox, "RIGHT", 3, 0)
+	end
 
 	-- Recipe icon: a bare Button, no inherited template, so its
 	-- NormalTexture IS the content (native `SetNormalTexture` on
