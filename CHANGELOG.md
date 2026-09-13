@@ -1,3 +1,10 @@
+## [0.2.2](https://github.com/dh-harald/ElvUI-UA/compare/v0.2.1...v0.2.2) (2026-09-13)
+
+
+### Bug Fixes
+
+* **libs:** include libstub with xml ([03557b8](https://github.com/dh-harald/ElvUI-UA/commit/03557b86328d66381114c6025701680d148e4b4f))
+
 ## [0.2.1](https://github.com/dh-harald/ElvUI-UA/compare/v0.2.0...v0.2.1) (2026-09-13)
 
 
