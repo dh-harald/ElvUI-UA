@@ -41,6 +41,13 @@ local isUA = Compat and Compat.isUA
 local lootFrame, lootFrameHolder
 local iconSize = 30
 
+-- The highest strata below TOOLTIP, set explicitly on the holder, the window
+-- and every slot rather than left to inheritance, so the loot window stays
+-- above the bag and bank windows (DIALOG) a disenchant is started from.
+-- TOOLTIP itself would put the window level with GameTooltip, and the item
+-- tooltip over a slot could then draw beneath it.
+local LOOT_STRATA = "FULLSCREEN_DIALOG"
+
 -- Selected slot/quality/name for the master-loot give-loot popup below --
 -- fed by each slot's OnClick, read by the overridden
 -- GroupLootDropDown_GiveLoot and OPEN_MASTER_LOOT_LIST.
@@ -186,6 +193,7 @@ local function createSlot(id)
 	else
 		frame = CreateFrame("LootButton", "ElvLootSlot"..id, lootFrame)
 	end
+	frame:SetFrameStrata(LOOT_STRATA)
 
 	frame:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 	frame:SetPoint("LEFT", lootFrame, "LEFT", 8, 0)
@@ -377,6 +385,7 @@ function M:LoadLoot()
 	lootFrameHolder:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 36, -195)
 	lootFrameHolder:SetWidth(150)
 	lootFrameHolder:SetHeight(22)
+	lootFrameHolder:SetFrameStrata(LOOT_STRATA)
 
 	lootFrame = CreateFrame("Button", "ElvLootFrame", lootFrameHolder)
 	lootFrame:SetClampedToScreen(true)
@@ -384,7 +393,7 @@ function M:LoadLoot()
 	lootFrame:SetWidth(256)
 	lootFrame:SetHeight(64)
 	ApplyPanelBackdrop(lootFrame, {0.05, 0.05, 0.05, 0.8}, {0, 0, 0, 1})
-	lootFrame:SetFrameStrata("FULLSCREEN")
+	lootFrame:SetFrameStrata(LOOT_STRATA)
 	lootFrame:SetToplevel(true)
 
 	local title = lootFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
