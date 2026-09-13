@@ -1001,53 +1001,59 @@ local function IsComparedFill(name, unit, slot)
 end
 
 -- Left of GameTooltip while it sits in the right half of the screen, right of
--- it otherwise; bottom-aligned in the lower half, so a taller comparison grows
--- away from the screen edge.
-local function CompareSide(owner)
-	local okCenter, x, y = pcall(owner.GetCenter, owner)
-	if not okCenter or not x or not y then return true, true end
+-- it otherwise. Top-aligned, so the heading grows the frame downwards, away
+-- from the edge it shares with GameTooltip.
+local function CompareOnLeft(owner)
+	local okCenter, x = pcall(owner.GetCenter, owner)
+	if not okCenter or not x then return true end
 	local scale = owner:GetEffectiveScale() / UIParent:GetEffectiveScale()
-	return x * scale > UIParent:GetWidth() / 2, y * scale < UIParent:GetHeight() / 2
+	return x * scale > UIParent:GetWidth() / 2
 end
 
--- "Currently Equipped" heading on line 1 of a comparison tooltip, as the native
--- merchant and auction comparison setters add it; SetInventoryItem adds none.
--- Every filled row moves down one line. The layout follows UnrealUI's measured
--- rules for tooltip lines on UA (modules/tooltip.lua):
---   * a line is measured, and truncated, when SetText runs, against the width
---     its region has at that moment, and writing the string a line already
---     holds does not re-measure it. A moved row is therefore widened, written
---     blank and then with its text, and trimmed to its drawn width plus the 5
---     units every native line carries.
---   * a right-hand line hangs off its row's left line, offset by the frame's
---     content width, and a row moved down keeps the offset some earlier
---     tooltip gave it. The frame is sized to the widest row and every right
---     line is anchored to that width again.
--- All rows are read before any is written and the extra row is added once up
--- front: NumLines stops at the first hidden left line, so it cannot be relied
--- on while rows are being moved.
+-- "Currently Equipped" heading above a comparison tooltip's lines, as the
+-- native merchant and auction comparison setters add it; SetInventoryItem adds
+-- none. ShoppingTooltipTemplate is laid out for that heading: line 1 is
+-- GameFontNormalSmall, line 2 GameFontNormal, line 3 onwards smaller fonts, so
+-- after SetInventoryItem the item name sits on the small line and the second
+-- row on the large one.
+--
+-- No line's text is ever copied to another line. On UA FontString:GetTextColor
+-- returns the colour of the line's font object, not the line's own colour, so
+-- a row copied one line down (the pfUI/UnrealUI technique) loses its
+-- item-quality, green "Equip:" or red requirement colour. Instead, measured on
+-- UA:
+--   * line 1 is re-anchored one heading lower; every other line hangs off the
+--     one above it, so the whole list follows with its colours intact;
+--   * lines 1 and 2 swap font sizes and are re-measured. SetFontObject alone
+--     keeps a line's colour, but the name comes out white once it is written
+--     again, so line 1 is recoloured from the equipped item's link. Line 2 is
+--     the binding text, white natively;
+--   * the frame is sized by hand to its last line, one frame after the
+--     fill (ScheduleFit): calling Show() again to make it re-layout collapses
+--     it to zero width;
+--   * the heading is a FontString of this module's own in the freed space.
+-- Everything is undone before the frame is hidden, so the next fill, and the
+-- Auction House's own comparison in the same frames, start from native.
+--
+-- Text follows UnrealUI's measured rules for tooltip lines on UA
+-- (modules/tooltip.lua): text is truncated to the width its region has when
+-- SetText runs and a font change does not re-measure it, so a line is widened,
+-- written blank and then with its text, and trimmed to its drawn width plus the
+-- 5 units every native line carries. When the widest re-measured text exceeds
+-- the frame's content, the frame is widened and every right-hand line
+-- re-anchored: a right line hangs off its row's left line by the content width
+-- and does not follow a resized frame.
 local HEADER_TEXT = CURRENTLY_EQUIPPED or "Currently Equipped"
+local HEADER_SHIFT = 14
 local LINE_INSET = 10
-local LINE_GAP = 8
 local LINE_PAD = 5
 local LINE_MEASURE_WIDTH = 512
-local MAX_TOOLTIP_LINES = 30
 
 local function DrawnWidth(label)
 	if not label or not label:IsShown() then return 0 end
 	local text = label:GetText()
 	if not text or text == "" then return 0 end
 	return label:GetStringWidth() or 0
-end
-
-local function WriteLine(label, text, r, g, b)
-	label:SetWidth(LINE_MEASURE_WIDTH)
-	label:SetText("")
-	label:SetText(text)
-	local width = label:GetStringWidth() or 0
-	label:SetWidth(width + LINE_PAD)
-	label:SetTextColor(r or 1, g or 1, b or 1)
-	label:Show()
 end
 
 -- A second point is dropped if SetPoint added one instead of replacing the
@@ -1061,70 +1067,139 @@ local function AnchorRightLine(right, leftName, content)
 	end
 end
 
-local function FitLines(tip, name, count)
-	local widest = 0
-	local i
-	for i = 1, count do
-		local row = DrawnWidth(_G[name .. "TextLeft" .. i])
-		local right = DrawnWidth(_G[name .. "TextRight" .. i])
-		if right > 0 then row = row + LINE_GAP + right end
-		if row > widest then widest = row end
-	end
-	if widest <= 0 then return end
+-- Native position of line 1 is TOPLEFT 10,-10 (GameTooltipTemplate).
+local function AnchorFirstLine(tip, name, shift)
+	local first = _G[name .. "TextLeft1"]
+	if not first then return end
+	first:ClearAllPoints()
+	first:SetPoint("TOPLEFT", tip, "TOPLEFT", LINE_INSET, -(LINE_INSET + shift))
+end
 
+-- Writes a label's text again so it is measured against its current font and
+-- trimmed like a native line; returns the new width.
+local function Remeasure(label, text)
+	label:SetWidth(LINE_MEASURE_WIDTH)
+	label:SetText("")
+	label:SetText(text)
+	local width = (label:GetStringWidth() or 0) + LINE_PAD
+	label:SetWidth(width)
+	return width
+end
+
+local function SetLineFont(label, font)
+	if not label or not font then return 0 end
+	label:SetFontObject(font)
+	local text = label:GetText()
+	if not label:IsShown() or not text or text == "" then return 0 end
+	return Remeasure(label, text)
+end
+
+-- Quality colour from an item link's own |cAARRGGBB prefix.
+local function LinkColor(link)
+	if type(link) ~= "string" then return nil end
+	local _, _, rr, gg, bb = find(link, "^|c%x%x(%x%x)(%x%x)(%x%x)")
+	if not rr then return nil end
+	return tonumber(rr, 16) / 255, tonumber(gg, 16) / 255, tonumber(bb, 16) / 255
+end
+
+-- The height is measured rather than the heading's height added, so the
+-- swapped fonts' line heights need not be known: the frame reaches from its top
+-- to the last line's bottom plus the inset line 1 natively has from the top.
+-- +HEADER_SHIFT only when no position can be read.
+local function FitCompareTooltip(tip)
+	local name = tip:GetName()
+	if not name then return end
+
+	local top = tip:GetTop()
+	local last = _G[name .. "TextLeft" .. tip:NumLines()]
+	local bottom = last and last:GetBottom()
+	if top and bottom then
+		local needed = top - bottom + LINE_INSET
+		if needed > (tip:GetHeight() or 0) then tip:SetHeight(needed) end
+	else
+		tip:SetHeight((tip:GetHeight() or 0) + HEADER_SHIFT)
+	end
+
+	local widest = tip.elvCompareWidest or 0
 	local content = (tip:GetWidth() or 0) - LINE_INSET * 2
 	if widest > content then
-		content = widest
-		tip:SetWidth(content + LINE_INSET * 2)
-	end
-	for i = 1, count do
-		if DrawnWidth(_G[name .. "TextRight" .. i]) > 0 then
-			AnchorRightLine(_G[name .. "TextRight" .. i], name .. "TextLeft" .. i, content)
+		tip:SetWidth(widest + LINE_INSET * 2)
+		local i
+		for i = 1, tip:NumLines() do
+			local right = _G[name .. "TextRight" .. i]
+			if DrawnWidth(right) > 0 then
+				AnchorRightLine(right, name .. "TextLeft" .. i, widest)
+			end
 		end
 	end
 end
 
-local function AddCompareHeader(tip)
+-- Sizing runs one frame after the fill, reading the positions the lines have
+-- once line 1 is re-anchored and the fonts are swapped.
+local pendingFits = {}
+local fitFrame
+
+local function ScheduleFit(tip)
+	pendingFits[tip] = true
+	if not fitFrame then
+		fitFrame = CreateFrame("Frame")
+		fitFrame:Hide()
+		fitFrame:SetScript("OnUpdate", function()
+			fitFrame:Hide()
+			local pending
+			for pending in pairs(pendingFits) do
+				pendingFits[pending] = nil
+				if pending.elvCompareHeaderShown and pending:IsShown() then
+					pcall(FitCompareTooltip, pending)
+				end
+			end
+		end)
+	end
+	fitFrame:Show()
+end
+
+local function AddCompareHeader(tip, slot)
+	local name = tip:GetName()
+	if not name or tip.elvCompareHeaderShown then return end
+	-- Set first, so a failure part-way through is still undone on hide.
+	tip.elvCompareHeaderShown = true
+
+	local header = tip.elvCompareHeader
+	if not header then
+		header = tip:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+		header:SetJustifyH("LEFT")
+		header:SetPoint("TOPLEFT", tip, "TOPLEFT", LINE_INSET, -LINE_INSET)
+		tip.elvCompareHeader = header
+	end
+	local widest = Remeasure(header, HEADER_TEXT)
+	header:SetTextColor(0.5, 0.5, 0.5)
+	header:Show()
+
+	local first = _G[name .. "TextLeft1"]
+	local nameWidth = SetLineFont(first, GameFontNormal)
+	if nameWidth > widest then widest = nameWidth end
+	local r, g, b = LinkColor(GetInventoryItemLink("player", slot))
+	if first and r then first:SetTextColor(r, g, b) end
+	SetLineFont(_G[name .. "TextLeft2"], GameFontHighlightSmall)
+
+	AnchorFirstLine(tip, name, HEADER_SHIFT)
+	tip.elvCompareWidest = widest
+	ScheduleFit(tip)
+end
+
+-- Native anchor and fonts back (ShoppingTooltipTemplate: line 1
+-- GameFontNormalSmall, line 2 GameFontNormal). Line widths and the frame size
+-- are recomputed by the next fill.
+local function RemoveCompareHeader(tip)
+	if not tip.elvCompareHeaderShown then return end
+	tip.elvCompareHeaderShown = nil
+	if tip.elvCompareHeader then tip.elvCompareHeader:Hide() end
 	local name = tip:GetName()
 	if not name then return end
-	local count = tip:NumLines()
-	local first = _G[name .. "TextLeft1"]
-	if not first or count < 1 or count >= MAX_TOOLTIP_LINES then return end
-	if first:GetText() == HEADER_TEXT then return end
-
-	local rows = {}
-	local i
-	for i = 1, count do
-		local left = _G[name .. "TextLeft" .. i]
-		local right = _G[name .. "TextRight" .. i]
-		local row = { left = left:GetText() }
-		row.lr, row.lg, row.lb = left:GetTextColor()
-		if right and right:IsShown() then
-			row.right = right:GetText()
-			row.rr, row.rg, row.rb = right:GetTextColor()
-		end
-		rows[i] = row
-	end
-
-	tip:AddLine(" ")
-	if tip:NumLines() <= count then return end
-
-	for i = count, 1, -1 do
-		local row = rows[i]
-		WriteLine(_G[name .. "TextLeft" .. (i + 1)], row.left or "", row.lr, row.lg, row.lb)
-		local right = _G[name .. "TextRight" .. (i + 1)]
-		if row.right and row.right ~= "" then
-			WriteLine(right, row.right, row.rr, row.rg, row.rb)
-		else
-			right:Hide()
-		end
-	end
-
-	WriteLine(first, HEADER_TEXT, 0.5, 0.5, 0.5)
-	_G[name .. "TextRight1"]:Hide()
-
-	tip:Show()
-	FitLines(tip, name, count + 1)
+	AnchorFirstLine(tip, name, 0)
+	local first, second = _G[name .. "TextLeft1"], _G[name .. "TextLeft2"]
+	if first then first:SetFontObject(GameFontNormalSmall) end
+	if second then second:SetFontObject(GameFontNormal) end
 end
 
 -- Hides only what this module showed: the Auction House fills the same frames.
@@ -1136,7 +1211,10 @@ function TT:HideCompare()
 	local i
 	for i = 1, getn(COMPARE_TOOLTIPS) do
 		local tip = _G[COMPARE_TOOLTIPS[i]]
-		if tip then pcall(tip.Hide, tip) end
+		if tip then
+			pcall(RemoveCompareHeader, tip)
+			pcall(tip.Hide, tip)
+		end
 	end
 	this = caller
 end
@@ -1154,8 +1232,8 @@ function TT:ShowCompare()
 	local slots = COMPARE_SLOTS[EquipLoc(tonumber(idText)) or ""]
 	if not slots then return end
 
-	local onLeft, alignBottom = CompareSide(owner)
-	local vertical = alignBottom and "BOTTOM" or "TOP"
+	local onLeft = CompareOnLeft(owner)
+	local vertical = "TOP"
 	local caller = this
 	local previous = owner
 	local used = 0
@@ -1174,7 +1252,7 @@ function TT:ShowCompare()
 			local okFill, hasItem = pcall(tip.SetInventoryItem, tip, "player", slot)
 			if okFill and hasItem then
 				pcall(tip.Show, tip)
-				pcall(AddCompareHeader, tip)
+				pcall(AddCompareHeader, tip, slot)
 				self.compareShown = true
 				previous = tip
 				used = used + 1
@@ -1196,8 +1274,15 @@ function compareCallbacks:OnModifierStateChanged()
 end
 
 -- Called with the item GameTooltip has just been filled for.
+-- A bag button re-runs its OnEnter every frame while it owns GameTooltip
+-- (FrameXML ContainerFrameItemButton_OnUpdate, its throttle commented out), and
+-- the legacy client's setter wrappers see the same per-frame refill. Showing
+-- the comparison again refills its frames at native size and throws away the
+-- heading's layout, so an item already being compared is left alone; Shift
+-- presses reach OnModifierStateChanged through LibModifierState instead.
 function TT:SetCompareItem(link)
 	if type(link) ~= "string" or not GameTooltip:IsShown() then return end
+	if link == self.compareLink then return end
 	self.compareLink = link
 	if LMS and not self.compareTracking then
 		LMS.RegisterCallback(compareCallbacks, "MODIFIER_STATE_CHANGED", "OnModifierStateChanged")
