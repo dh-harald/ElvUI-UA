@@ -52,7 +52,8 @@ Two addons ship together:
 - Skinning of a large and growing set of native Blizzard windows in
   place (Character, Friends, SpellBook, Macro, Key Bindings, Main Menu,
   Interface/Video/Sound Options, Gossip/Greeting/Quest/QuestLog,
-  Merchant, Taxi, Pet Stable, Talents, Trade Skills, Enchanting, and more)
+  Merchant, Trade, Taxi, Pet Stable, Talents, Trade Skills, Enchanting,
+  and more)
 
 **Missing / not yet started:**
 - Group loot (Need/Greed/Pass roll UI) — solo loot only for now
@@ -63,7 +64,7 @@ Two addons ship together:
   shown on action buttons (the client offers no way to read the item of an
   action slot)
 - A handful of native windows not yet reskinned (Auction House, Mail,
-  Trade, Trainer, Tabard, World Map polish, and a few more niche ones)
+  Trainer, Tabard, World Map polish, and a few more niche ones)
 - Nameplate customization — blocked by a client-side limitation on
   Unreal Azeroth, parked until that changes
 - A few smaller ElvUI features (auto-track reputation, chat-anchored

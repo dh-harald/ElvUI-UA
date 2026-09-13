@@ -102,6 +102,7 @@ V.skins = {
 		gossip = true,
 		greeting = true,
 		merchant = true,
+		trade = true,
 		taxi = true,
 		inspect = true,
 		stable = true,
