@@ -2,4 +2,5 @@
 	<Script file="Misc.lua"/>
 	<Script file="Loot.lua"/>
 	<Script file="RaidMarker.lua"/>
+	<Script file="LootRoll.lua"/>
 </Ui>

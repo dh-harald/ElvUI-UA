@@ -94,6 +94,24 @@ E.Options.args.general = {
 			type = "group",
 			name = L["General"],
 			args = {
+				autoRoll = {
+					order = 7,
+					type = "toggle",
+					name = L["Auto Greed"],
+					desc = L["Automatically select greed (when available) on green quality items. This will only work if you are the max level."],
+					disabled = function() return not E.private.general.lootRoll end,
+				},
+				lootRoll = {
+					order = 9,
+					type = "toggle",
+					name = L["Loot Roll"],
+					desc = L["Enable/disable the loot roll frame. Requires /reload to take effect."],
+					get = function() return E.private.general.lootRoll end,
+					set = function(_, value)
+						E.private.general.lootRoll = value
+						E:RequestReload("private")
+					end,
+				},
 				loot = {
 					order = 8,
 					type = "toggle",

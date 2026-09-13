@@ -33,6 +33,7 @@ V.general = {
 	normTex = "ElvUI Norm",
 	glossTex = "ElvUI Norm",
 	loot = true,
+	lootRoll = true,
 	lootUnderMouse = false,
 	minimap = {
 		enable = true,

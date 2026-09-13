@@ -40,7 +40,7 @@ Two addons ship together:
 - DataBars (XP/Reputation), DataTexts
 - Chat
 - Bags/Bank
-- Solo loot
+- Solo loot and group loot rolls (Need/Greed/Pass bars, optional auto greed)
 - Raid marker ring (a key binding opens the eight raid target icons at the
   cursor; legacy client)
 - Tooltip: class/reaction-coloured unit tooltips, guild rank,
@@ -58,7 +58,6 @@ Two addons ship together:
   and more)
 
 **Missing / not yet started:**
-- Group loot (Need/Greed/Pass roll UI) — solo loot only for now
 - Tooltip item level, inspect info, spell IDs and the tooltip text font
   settings; the health bar font is applied on the legacy client only
   (Unreal Azeroth ignores font changes), and on Unreal Azeroth the item
