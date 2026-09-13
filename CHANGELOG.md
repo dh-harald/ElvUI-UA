@@ -1,3 +1,18 @@
+# [0.2.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.1.2...v0.2.0) (2026-09-13)
+
+
+### Bug Fixes
+
+* 3D model overlay in UA without transparent health ([46fe5ca](https://github.com/dh-harald/ElvUI-UA/commit/46fe5cafc4ad90fcf349d166ec6aa63a7eb7d552))
+* show CharacterLevelText() on character and inspect ([a65b10a](https://github.com/dh-harald/ElvUI-UA/commit/a65b10aca36a650d7cfe39158a5c2779c13bfe0c))
+
+
+### Features
+
+* add Tooltip module / skin ([727c2bd](https://github.com/dh-harald/ElvUI-UA/commit/727c2bd480f643a571b021f3fc6374f6f36beab2))
+* **skin:** Add enchanting ([1ac4f1c](https://github.com/dh-harald/ElvUI-UA/commit/1ac4f1c5e86606a6d6ad8992fc01e9c707b4a6f9))
+* **skin:** add inspect ([bbaad95](https://github.com/dh-harald/ElvUI-UA/commit/bbaad95123e540c2a259070cd9b35cb9d839fbf2))
+
 ## [0.1.2](https://github.com/dh-harald/ElvUI-UA/compare/v0.1.1...v0.1.2) (2026-09-12)
 
 
