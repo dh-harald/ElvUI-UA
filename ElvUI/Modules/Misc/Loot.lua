@@ -61,6 +61,12 @@ local function OnSlotEnter()
 	if LootSlotIsItem(slot) then
 		GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
 		GameTooltip:SetLootItem(slot)
+		-- Price/count/id lines. On the legacy client the Tooltip module's
+		-- SetLootItem wrapper adds them and this call is a no-op.
+		if E.Tooltip then
+			local _, _, quantity = GetLootSlotInfo(slot)
+			pcall(E.Tooltip.AddItemLinesForSurface, E.Tooltip, GameTooltip, GetLootSlotLink(slot), quantity)
+		end
 		CursorUpdate(this)
 	end
 

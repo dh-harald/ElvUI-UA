@@ -82,6 +82,8 @@ V.mirrortimers = { enable = true }
 -- no longer gates anything, NP:Initialize() hard-disables regardless.
 V.nameplates = { enable = false }
 
+V.tooltip = { enable = true }
+
 -- A master enable plus one flag per skinned window, matching real ElvUI's
 -- own `E.private.skins.blizzard.*` layout and config grouping.
 V.skins = {
@@ -105,5 +107,6 @@ V.skins = {
 		stable = true,
 		talent = true,
 		tradeskill = true,
+		tooltip = true,
 	},
 }

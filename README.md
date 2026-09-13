@@ -41,6 +41,13 @@ Two addons ship together:
 - Chat
 - Bags/Bank
 - Solo loot
+- Tooltip: class/reaction-coloured unit tooltips, guild rank,
+  level/classification line, target and "targeted by" info, movable anchor
+  or cursor anchor, flat ElvUI skin, health bar with health text, sell
+  price / item count / item ID lines on item tooltips, the equipped item(s)
+  shown beside an item tooltip while Shift is held, visibility rules
+  (modifier key / hide in combat) for unit frames, bags and action bars,
+  and an options page for all of these
 - Install Wizard
 - Skinning of a large and growing set of native Blizzard windows in
   place (Character, Friends, SpellBook, Macro, Key Bindings, Main Menu,
@@ -49,7 +56,12 @@ Two addons ship together:
 
 **Missing / not yet started:**
 - Group loot (Need/Greed/Pass roll UI) — solo loot only for now
-- Tooltip module
+- Tooltip item level, inspect info, spell IDs and the tooltip text font
+  settings; the health bar font is applied on the legacy client only
+  (Unreal Azeroth ignores font changes), and on Unreal Azeroth the item
+  lines are not yet
+  shown on action buttons (the client offers no way to read the item of an
+  action slot)
 - A handful of native windows not yet reskinned (Auction House, Mail,
   Trade, Trainer, Tabard, World Map polish, and a few more niche ones)
 - Nameplate customization — blocked by a client-side limitation on
@@ -59,6 +71,10 @@ Two addons ship together:
 
 ## Known issues
 
+- Tooltip (Unreal Azeroth): with an ActionBars visibility modifier set, on
+  pet command buttons (Attack, Follow, Stay, Aggressive, Defensive,
+  Passive) pressing the modifier while already hovering does not bring the
+  tooltip up; hovering the button with the modifier held works.
 - A number of settings still require a full UI reload to take effect; the
   options window tells you when that's the case, and a confirmation
   popup offers to reload for you.

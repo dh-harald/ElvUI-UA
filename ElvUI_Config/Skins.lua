@@ -83,6 +83,7 @@ E.Options.args.skins = {
 				stable = { type = "toggle", name = "Stable", desc = SKIN_DESC },
 				talent = { type = "toggle", name = "Talents", desc = SKIN_DESC },
 				tradeskill = { type = "toggle", name = "Tradeskills", desc = SKIN_DESC },
+				tooltip = { type = "toggle", name = "Tooltip", desc = SKIN_DESC },
 			},
 		},
 	},

@@ -18,4 +18,5 @@
 	<Script file="Stable.lua"/>
 	<Script file="Talent.lua"/>
 	<Script file="TradeSkill.lua"/>
+	<Script file="Tooltip.lua"/>
 </Ui>

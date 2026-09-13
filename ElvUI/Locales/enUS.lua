@@ -195,6 +195,44 @@ L["The size of the individual buttons on the bank frame."] = true
 L["Panel Width (Bank)"] = true
 L["Adjust the width of the bank frame. The number of columns follows from it and the slot size."] = true
 
+--Tooltip
+L["Targeted By:"] = true
+L["Tooltip"] = true
+L["Setup options for the Tooltip."] = true
+L["Cursor Anchor"] = true
+L["Should tooltip be anchored to mouse cursor"] = true
+L["Target Info"] = true
+L["When in a raid group display if anyone in your raid is targeting the current tooltip unit."] = true
+L["Player Titles"] = true
+L["Display player titles."] = true
+L["Guild Ranks"] = true
+L["Display guild ranks if a unit is guilded."] = true
+L["Spell/Item IDs"] = true
+L["Display the spell or item ID when mousing over a spell or item tooltip."] = true
+L["Opacity"] = true
+L["Custom Faction Colors"] = true
+L["Health Bar"] = true
+L["Text"] = true
+L["Item Price"] = true
+L["Display vendor sell value on item tooltips."] = true
+L["Item Count"] = true
+L["Display how many of a certain item you have in your possession."] = true
+L["Bags Only"] = true
+L["Bank Only"] = true
+L["Both"] = true
+L["Sell Price:"] = true
+L["Count"] = true
+L["Bank"] = true
+L["Visibility"] = true
+L["Bags/Bank"] = true
+L["Always Hide"] = true
+L["Never Hide"] = true
+L["Shift Key"] = true
+L["ALT-Key"] = true
+L["CTRL-Key"] = true
+L["Choose when you want the tooltip to show. If a modifer is chosen, then you need to hold that down to show the tooltip."] = true
+L["Hide tooltip while in combat."] = true
+
 --Chat
 L["Chat"] = true
 L["Only the left/default chat window is docked and skinned -- the right panel exists (datatexts, mover, collapse icon all work) but nothing docks a second chat window into it. Message formatting (timestamps, URL links, keyword highlighting, spam throttle) applies project-wide, not just the docked window. Not implemented: chat history log/replay, hyperlink hover tooltips, channel-link click-to-switch -- see CLAUDE.md."] = true

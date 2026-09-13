@@ -475,6 +475,16 @@ function UF:ShowUnitTooltip(frame)
 	end
 	frame.elvTooltipHidden = nil
 
+	-- Tooltip visibility (unitFrames modifier, combat). The 0.25s refresh
+	-- runs this again, so pressing or releasing the modifier while hovering
+	-- shows or hides the tooltip without leaving the frame.
+	if E.Tooltip and E.Tooltip:IsSuppressed("unitFrames") then
+		if GameTooltip:IsShown() then
+			pcall(GameTooltip.Hide, GameTooltip)
+		end
+		return
+	end
+
 	local anchored = false
 	if type(_G.GameTooltip_SetDefaultAnchor) == "function" then
 		anchored = pcall(_G.GameTooltip_SetDefaultAnchor, GameTooltip, frame)
@@ -485,6 +495,13 @@ function UF:ShowUnitTooltip(frame)
 
 	if pcall(GameTooltip.SetUnit, GameTooltip, unit) then
 		pcall(GameTooltip.Show, GameTooltip)
+		-- The Tooltip module restyles world units from UPDATE_MOUSEOVER_UNIT,
+		-- which does not cover a SetUnit on a frame's own unit token, and the
+		-- GameTooltip setters cannot be hooked on UA -- so the rewrite is
+		-- called directly after the fill.
+		if E.Tooltip then
+			pcall(E.Tooltip.UpdateUnitTooltip, E.Tooltip, unit)
+		end
 	end
 end
 
