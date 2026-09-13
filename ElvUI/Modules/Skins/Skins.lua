@@ -356,7 +356,9 @@ end
 -- Unlike a merchant slot, the icon and name are regions of the slot button
 -- itself, and the field is a child frame at the button's own level, which
 -- draws over the button's BACKGROUND/ARTWORK regions; the name is raised to
--- OVERLAY (the count sits on the icon, outside the field). The icon border is
+-- OVERLAY. So is the icon, which then covers the count text (`$parentCount`,
+-- natively ARTWORK) -- the count is raised to OVERLAY too, AFTER the icon,
+-- the order confirmed live to draw it on top. The icon border is
 -- a holder frame pinned to the slot's level BEFORE Util.CreateButtonBorder,
 -- which puts its backdrop one level below its target: a holder at the default
 -- child level would put that backdrop above the icon.
@@ -406,6 +408,9 @@ function S:StyleQuestItemSlot(slot, width, height)
 		pcall(icon.SetPoint, icon, "BOTTOMRIGHT", holder, "BOTTOMRIGHT", -1, 1)
 		pcall(icon.SetDrawLayer, icon, "OVERLAY")
 	end
+
+	local count = _G[name .. "Count"]
+	if count then pcall(count.SetDrawLayer, count, "OVERLAY") end
 
 	local label = _G[name .. "Name"]
 	if label and holder then
