@@ -184,6 +184,31 @@ E.Options.args.general = {
 						["GERMAN"] = L["German (Tsd, Mio, Mrd)"],
 					},
 				},
+				-- Project extension: whether the Lua error window
+				-- (Core/DebugTools.lua) opens by itself. Real ElvUI has no such
+				-- entry; it gates this with the ShowErrors CVar, which Unreal
+				-- Azeroth cannot report. Stored in E.global.debugTools, not
+				-- E.db.general, hence its own get/set. Read on every new error,
+				-- so no reload. Ordered after the real entries so it does not
+				-- disturb their order.
+				autoOpen = {
+					order = 30,
+					type = "toggle",
+					name = L["Open Lua Error Window"],
+					desc = L["Open the Lua error window by itself when a new error occurs. Errors are recorded either way, and /elvui errors shows them. Same as /elvui errors on / off."],
+					get = function()
+						local settings = E.global.debugTools
+						return not settings or settings.autoOpen ~= false
+					end,
+					set = function(_, value)
+						E.global.debugTools = E.global.debugTools or {}
+						E.global.debugTools.autoOpen = value and true or false
+					end,
+					disabled = function()
+						local blizzard = E.private.skins.blizzard
+						return not (blizzard.enable and blizzard.debug)
+					end,
+				},
 			},
 		},
 		cooldown = {

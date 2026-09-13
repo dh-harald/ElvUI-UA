@@ -85,6 +85,9 @@ E.Options.args.skins = {
 				talent = { type = "toggle", name = "Talents", desc = SKIN_DESC },
 				tradeskill = { type = "toggle", name = "Tradeskills", desc = SKIN_DESC },
 				tooltip = { type = "toggle", name = "Tooltip", desc = SKIN_DESC },
+				-- Gates the ElvUI Lua error window (Core/DebugTools.lua); off
+				-- leaves the client's own error display in place.
+				debug = { type = "toggle", name = "Debug Tools", desc = SKIN_DESC },
 			},
 		},
 	},

@@ -32,3 +32,10 @@ G.auras = {
 -- Saved position of the `/moveui` control panel. Project-only UI state,
 -- filled at runtime by Core/Movers.lua.
 G.moverPanel = {}
+
+-- Whether the Lua error window (Core/DebugTools.lua) opens by itself on a new
+-- error; errors are recorded either way. Toggled with "/elvui errors on|off".
+-- Project-only UI state, so global rather than profile.
+G.debugTools = {
+	autoOpen = true,
+}

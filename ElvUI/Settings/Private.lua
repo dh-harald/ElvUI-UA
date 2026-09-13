@@ -110,5 +110,6 @@ V.skins = {
 		talent = true,
 		tradeskill = true,
 		tooltip = true,
+		debug = true,
 	},
 }

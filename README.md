@@ -51,6 +51,10 @@ Two addons ship together:
   (modifier key / hide in combat) for unit frames, bags and action bars,
   and an options page for all of these
 - Install Wizard
+- Lua error window: collects script errors (repeats merged with a count),
+  pages through them, the text can be selected and copied, stays closed in
+  combat and opens afterwards; `/elvui errors` reopens it, and
+  `/elvui errors on` / `off` switches whether it opens by itself
 - Skinning of a large and growing set of native Blizzard windows in
   place (Character, Friends, SpellBook, Macro, Key Bindings, Main Menu,
   Interface/Video/Sound Options, Gossip/Greeting/Quest/QuestLog,
