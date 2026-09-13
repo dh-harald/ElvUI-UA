@@ -558,6 +558,9 @@ end
 -- only ever describe the player's own cast (see UnitFrames.lua's own
 -- Castbar section for why a Target castbar isn't feasible on this
 -- client generation at all).
+-- `hasRaidIcon`: the units real ElvUI declares `raidicon` settings for among
+-- the ones this project builds -- player, target, targettarget and party; pet
+-- and pettarget have none upstream.
 -- The units this project builds, as a `values` table for the per-unit "Copy
 -- From" control. Real ElvUI reads its own `UF.units` list here; ours is static
 -- because the set is fixed by which Units/*.lua files exist.
@@ -590,7 +593,7 @@ E.PopupDialogs["RESET_UF_UNIT"] = {
 	hideOnEscape = true,
 }
 
-local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappiness, hasCastbar)
+local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappiness, hasCastbar, hasRaidIcon)
 	local function unitTable() return E.db.unitframe.units[dbKey] end
 
 	local args = {
@@ -847,6 +850,59 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 			name = L["Resting Icon"],
 			order = 6,
 			args = StateIconArgs(function() return unitTable().RestIcon end, 1),
+		}
+	end
+
+	-- Every field is read live by UnitFrames.lua's poll (UpdateRaidIcon).
+	if hasRaidIcon then
+		args.raidicon = {
+			type = "group",
+			name = L["Raid Icon"],
+			order = 14,
+			get = function(info) return unitTable().raidicon[ info[getn(info)] ] end,
+			set = function(info, value) unitTable().raidicon[ info[getn(info)] ] = value end,
+			args = {
+				enable = {
+					type = "toggle",
+					name = L["Enable"],
+					order = 1,
+				},
+				attachTo = {
+					type = "select",
+					name = L["Position"],
+					order = 2,
+					values = Shared.POSITION_VALUES,
+				},
+				attachToObject = {
+					type = "select",
+					name = L["Attach To"],
+					order = 3,
+					values = {
+						["Health"] = L["Health"],
+						["Power"] = L["Power"],
+						["InfoPanel"] = L["Information Panel"],
+						["Frame"] = L["Frame"],
+					},
+				},
+				size = {
+					type = "range",
+					name = L["Size"],
+					order = 4,
+					min = 8, max = 60, step = 1,
+				},
+				xOffset = {
+					type = "range",
+					name = L["X Offset"],
+					order = 5,
+					min = -300, max = 300, step = 1,
+				},
+				yOffset = {
+					type = "range",
+					name = L["Y Offset"],
+					order = 6,
+					min = -300, max = 300, step = 1,
+				},
+			},
 		}
 	end
 
@@ -1277,14 +1333,14 @@ E.Options.args.unitframe = {
 			name = L["Player"],
 			order = 2,
 			childGroups = "tab",
-			args = UnitFrameArgs("player", true, true, true, nil, true),
+			args = UnitFrameArgs("player", true, true, true, nil, true, true),
 		},
 		target = {
 			type = "group",
 			name = L["Target"],
 			order = 3,
 			childGroups = "tab",
-			args = UnitFrameArgs("target", nil, true, true),
+			args = UnitFrameArgs("target", nil, true, true, nil, nil, true),
 		},
 		pet = {
 			type = "group",
@@ -1298,7 +1354,7 @@ E.Options.args.unitframe = {
 			name = L["Target of Target"],
 			order = 5,
 			childGroups = "tab",
-			args = UnitFrameArgs("targettarget", nil, true, true),
+			args = UnitFrameArgs("targettarget", nil, true, true, nil, nil, true),
 		},
 		pettarget = {
 			type = "group",
@@ -1312,7 +1368,7 @@ E.Options.args.unitframe = {
 			name = L["Party"],
 			order = 7,
 			childGroups = "tab",
-			args = UnitFrameArgs("party", nil, true, true),
+			args = UnitFrameArgs("party", nil, true, true, nil, nil, true),
 		},
 	},
 }

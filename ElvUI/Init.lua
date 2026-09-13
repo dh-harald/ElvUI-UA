@@ -27,6 +27,10 @@ AddOn.callbacks = AddOn.callbacks or LibStub("CallbackHandler-1.0"):New(AddOn)
 -- removed (see Modules/ActionBars.lua's SetNormalTexture override).
 AddOn.noop = AddOn.noop or function() end
 
+-- Heading of ElvUI's commands in the stock Key Bindings window; Bindings.xml
+-- declares them under header="ELVUI".
+BINDING_HEADER_ELVUI = "ElvUI"
+
 -- The defaults tables themselves. Their CONTENT lives in
 -- Settings/{Profile,Global,Private}.lua, which the .toc loads immediately
 -- after this file -- those files reach them through the Engine[3..5]

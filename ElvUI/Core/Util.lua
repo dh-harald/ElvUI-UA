@@ -545,6 +545,24 @@ function Util.CreateButtonBorder(button, insetX, insetTop, insetBottom)
 	end
 end
 
+-- TexCoords (left, right, top, bottom) of raid target marks 1-8 on a 4x4 icon
+-- sheet: the grid FrameXML's SetRaidTargetIconTexture computes
+-- (TargetFrame.lua), identical to the unit menu's tCoord values. Used for the
+-- native UI-RaidTargetingIcons and for ElvUI's own Media/Textures/raidicons,
+-- which real ElvUI crops with that same function. That global is not in UA's
+-- API documentation, hence a table. Shared by Misc/RaidMarker.lua and the unit
+-- frames' raid icon.
+Util.RAID_TARGET_COORDS = {
+	{ 0, 0.25, 0, 0.25 },
+	{ 0.25, 0.5, 0, 0.25 },
+	{ 0.5, 0.75, 0, 0.25 },
+	{ 0.75, 1, 0, 0.25 },
+	{ 0, 0.25, 0.25, 0.5 },
+	{ 0.25, 0.5, 0.25, 0.5 },
+	{ 0.5, 0.75, 0.25, 0.5 },
+	{ 0.75, 1, 0.25, 0.5 },
+}
+
 -- Reskins a native `ItemButtonTemplate`-shaped slot in place: blanks the
 -- gold "quickslot" NormalTexture and puts `CreateButtonBorder`'s own
 -- bordered surface under the icon. Shared by the bag/bank grid

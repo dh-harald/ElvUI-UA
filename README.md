@@ -41,6 +41,8 @@ Two addons ship together:
 - Chat
 - Bags/Bank
 - Solo loot
+- Raid marker ring (a key binding opens the eight raid target icons at the
+  cursor; legacy client)
 - Tooltip: class/reaction-coloured unit tooltips, guild rank,
   level/classification line, target and "targeted by" info, movable anchor
   or cursor anchor, flat ElvUI skin, health bar with health text, sell
@@ -72,6 +74,9 @@ Two addons ship together:
 
 ## Known issues
 
+- Raid marker (Unreal Azeroth): the "Raid Marker" key binding does not show
+  up in the Key Bindings window, because the client does not register key
+  bindings declared by addons yet. It works on the legacy client.
 - Tooltip (Unreal Azeroth): with an ActionBars visibility modifier set, on
   pet command buttons (Attack, Follow, Stay, Aggressive, Defensive,
   Passive) pressing the modifier while already hovering does not bring the

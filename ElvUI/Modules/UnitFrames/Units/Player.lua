@@ -63,6 +63,7 @@ local function Construct_PlayerFrame()
 	-- bars.
 	frame.RestingIndicator = UF:Construct_StateIcon(frame.Health.textLayer)
 	frame.CombatIndicator = UF:Construct_StateIcon(frame.Health.textLayer)
+	frame.RaidTargetIndicator = UF:Construct_StateIcon(frame.Health.textLayer)
 	UF:Construct_Auras(frame, "buff")
 	UF:Construct_Auras(frame, "debuff")
 	frame.InfoPanel = UF:Construct_InfoPanel(frame)

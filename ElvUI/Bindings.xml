@@ -1,0 +1,5 @@
+<Bindings>
+	<Binding name="Raid Marker" runOnUp="true" header="ELVUI">
+		if RaidMark_HotkeyPressed then RaidMark_HotkeyPressed(keystate) end
+	</Binding>
+</Bindings>

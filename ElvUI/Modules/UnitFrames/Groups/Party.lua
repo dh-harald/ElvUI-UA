@@ -70,6 +70,7 @@ local function Construct_PartyMemberFrame(index)
 		UF:Construct_Portrait(frame, settings.portrait and settings.portrait.width or 28)
 
 		frame.CombatIndicator = UF:Construct_StateIcon(frame.Health.textLayer)
+		frame.RaidTargetIndicator = UF:Construct_StateIcon(frame.Health.textLayer)
 		UF:Construct_Auras(frame, "buff")
 		UF:Construct_Auras(frame, "debuff")
 

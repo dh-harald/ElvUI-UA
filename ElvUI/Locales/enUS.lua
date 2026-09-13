@@ -512,3 +512,4 @@ L["Force Class Color Off"] = true
 L["Current"] = true
 L["Current / Max"] = true
 L["Remaining"] = true
+L["Raid Icon"] = true

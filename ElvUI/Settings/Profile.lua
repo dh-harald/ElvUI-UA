@@ -816,6 +816,14 @@ P.unitframe.units.player = {
 		yOffset = 0,
 		size = 20,
 	},
+	raidicon = {
+		enable = true,
+		size = 18,
+		attachTo = "TOP",
+		attachToObject = "Frame",
+		xOffset = 0,
+		yOffset = 8,
+	},
 	-- Player's own buffs/debuffs are the only ones with REAL duration --
 	-- the native GetPlayerBuff* family takes no unit argument.
 	buffs = {
@@ -916,6 +924,14 @@ P.unitframe.units.target = {
 		yOffset = 0,
 		size = 20,
 	},
+	raidicon = {
+		enable = true,
+		size = 18,
+		attachTo = "TOP",
+		attachToObject = "Frame",
+		xOffset = 0,
+		yOffset = 8,
+	},
 	-- Duration source here is tier 3 (icon + stack count only, no timer) --
 	-- there is no per-unit equivalent of GetPlayerBuff.
 	buffs = {
@@ -999,6 +1015,14 @@ P.unitframe.units.targettarget = {
 		xOffset = 0,
 		yOffset = 0,
 		size = 14,
+	},
+	raidicon = {
+		enable = true,
+		size = 18,
+		attachTo = "TOP",
+		attachToObject = "Frame",
+		xOffset = 0,
+		yOffset = 8,
 	},
 	debuffs = {
 		enable = true,
@@ -1251,6 +1275,14 @@ P.unitframe.units.party = {
 		xOffset = 0,
 		yOffset = 0,
 		size = 16,
+	},
+	raidicon = {
+		enable = true,
+		size = 18,
+		attachTo = "TOP",
+		attachToObject = "Frame",
+		xOffset = 0,
+		yOffset = 8,
 	},
 	buffs = {
 		enable = false,

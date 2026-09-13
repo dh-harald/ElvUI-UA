@@ -51,6 +51,7 @@ local function Construct_TargetTargetFrame()
 	UF:Construct_Portrait(frame, settings.portrait and settings.portrait.width or 24)
 
 	frame.CombatIndicator = UF:Construct_StateIcon(frame.Health.textLayer)
+	frame.RaidTargetIndicator = UF:Construct_StateIcon(frame.Health.textLayer)
 	-- BOTH aura types, as on every other unit. Only the debuff container used
 	-- to be built here, which left `buffs` a dead settings branch on this unit
 	-- alone -- UF:UpdateAuras itself is entirely unit-independent.

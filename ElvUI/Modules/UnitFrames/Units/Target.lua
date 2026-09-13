@@ -54,6 +54,7 @@ local function Construct_TargetFrame()
 	-- state is a player-only concept (see Settings/Profile.lua's per-unit
 	-- notes).
 	frame.CombatIndicator = UF:Construct_StateIcon(frame.Health.textLayer)
+	frame.RaidTargetIndicator = UF:Construct_StateIcon(frame.Health.textLayer)
 	UF:Construct_Auras(frame, "buff")
 	UF:Construct_Auras(frame, "debuff")
 	frame.InfoPanel = UF:Construct_InfoPanel(frame)

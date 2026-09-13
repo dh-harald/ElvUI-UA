@@ -1827,6 +1827,32 @@ local function UpdateStateIcon(icon, shown, settings, anchor)
 	icon:Show()
 end
 
+-- Raid target mark: real ElvUI's RaidTargetIndicator element, `raidicon`
+-- settings, on ElvUI's own raidicons texture cropped with the shared icon-sheet
+-- grid (Util.RAID_TARGET_COORDS). Refreshed by the unit frame poll rather than
+-- RAID_TARGET_UPDATE: UA's API documentation lists no events. Placement is
+-- real ElvUI's Configure_RaidIcon: `attachTo` is both the icon's own point and
+-- the point on the element `attachToObject` names.
+local RAID_ICON_TEXTURE = "Interface\\AddOns\\ElvUI\\Media\\Textures\\raidicons"
+
+local function UpdateRaidIcon(frame, unit, settings)
+	local icon = frame.RaidTargetIndicator
+	local okIndex, index = pcall(GetRaidTargetIndex, unit)
+	local coords = okIndex and index and ElvUI.Util.RAID_TARGET_COORDS[index]
+	if not settings.enable or not coords then
+		icon:Hide()
+		return
+	end
+
+	icon:SetTexture(RAID_ICON_TEXTURE)
+	icon:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+	icon:SetWidth(settings.size)
+	icon:SetHeight(settings.size)
+	icon:ClearAllPoints()
+	icon:SetPoint(settings.attachTo, GetCustomTextAnchor(frame, settings.attachToObject), settings.attachTo, settings.xOffset, settings.yOffset)
+	icon:Show()
+end
+
 function UF:UpdateFrame(frame)
 	local unit = frame.unit
 	if not unit then return end
@@ -2083,6 +2109,9 @@ function UF:UpdateFrame(frame)
 				frame.CombatIndicator:SetTexCoord(0, 1, 0, 1)
 			end
 		end
+	end
+	if frame.RaidTargetIndicator and settings.raidicon then
+		UpdateRaidIcon(frame, unit, settings.raidicon)
 	end
 
 	self:UpdateAuras(frame, "buff")

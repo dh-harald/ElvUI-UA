@@ -1,11 +1,11 @@
 -- Misc module -- the catch-all real ElvUI keeps for small features that
 -- don't earn a module of their own (source/ElvUI-vanilla/ElvUI/Modules/
--- Misc/). Only the solo loot window lives here so far; the rest of that
--- folder's surface (auto repair, interrupt announce, enhanced PvP messages,
--- auto invite, error-frame toggle, forced CVars, AFK screen, chat bubbles,
--- raid markers, group loot rolls) is not ported. Each of those lands as its
--- own file beside Loot.lua, defining one M:Load*() that Initialize below
--- calls -- the same arrangement real ElvUI's own Misc.lua uses.
+-- Misc/). Ported so far: the solo loot window and the raid marker ring; the
+-- rest of that folder's surface (auto repair, interrupt announce, enhanced
+-- PvP messages, auto invite, error-frame toggle, forced CVars, AFK screen,
+-- chat bubbles, group loot rolls) is not. Each feature is its own file beside
+-- Loot.lua, defining one M:Load*() that Initialize below calls -- the same
+-- arrangement real ElvUI's own Misc.lua uses.
 --
 -- Files under Modules/Misc/ do NOT create modules of their own: they attach
 -- to this one with E:GetModule("Misc"), the way Modules/Skins/Blizzard/*
@@ -19,6 +19,7 @@ E.Misc = M
 
 function M:Initialize()
 	self:LoadLoot()
+	self:LoadRaidMarker()
 end
 
 E:RegisterInitialModule(M:GetName(), function() M:Initialize() end)
