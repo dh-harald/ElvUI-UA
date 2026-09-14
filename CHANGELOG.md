@@ -1,3 +1,17 @@
+# [0.4.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.3.0...v0.4.0) (2026-09-14)
+
+
+### Bug Fixes
+
+* **skin:** social: minor tweaks on friends/guild tab ([c59da05](https://github.com/dh-harald/ElvUI-UA/commit/c59da05eb13b7192d33bef48869694544d6e26a8))
+
+
+### Features
+
+* **bags:** add quality/quest borders and junk icon ([876e833](https://github.com/dh-harald/ElvUI-UA/commit/876e833cf8687f3ed5552f4d1335f9118114ca6a))
+* **bags:** add sort feature ([a06f80c](https://github.com/dh-harald/ElvUI-UA/commit/a06f80c831a69ec00f56b345966ccb8a374c48e2))
+* **bags:** auto repair / auto sell grays ([efaa142](https://github.com/dh-harald/ElvUI-UA/commit/efaa14240846b8e74798a231add157e76e05a8f0))
+
 # [0.3.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.2.2...v0.3.0) (2026-09-14)
 
 
