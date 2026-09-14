@@ -121,9 +121,9 @@ end
 -- Who tab: scrollbar + dropdown + column-sort-click. Ported structurally
 -- from real ElvUI's own Modules/Skins/Blizzard/Friends.lua Who-frame
 -- block, rebuilt on this project's own primitives. `WhoFrameButton<i>`
--- rows ARE touched directly here (icon, Level/Name reposition, Class
--- hidden) -- unlike Friends/Ignore rows, source/UnrealUI never claimed a
--- crash for these. Deliberately NOT calling `S:HandleButtonHighlight` on
+-- rows ARE touched directly here (Level/Class/Name text re-anchored, see
+-- LayoutWhoRows) -- unlike Friends/Ignore rows, source/UnrealUI never
+-- claimed a crash for these, and repositions the same three regions itself. Deliberately NOT calling `S:HandleButtonHighlight` on
 -- these rows though -- that's not an UnrealUI claim, it's this project's
 -- own live-confirmed regression (permanently-grey, unselectable rows on
 -- FriendsFrameFriendButton, see this file's own top-of-file history and
@@ -173,6 +173,42 @@ local function StyleColumnHeader(header)
 	end
 end
 
+-- Row text of a Who or guild roster list in the header order this file sets
+-- up (Level, Class, Name, then the zone column), at real ElvUI's own offsets:
+-- level at `levelX`, name at x=85 and 100 wide. Real ElvUI puts a class ICON
+-- in between, which needs globals 1.12.1 does not have (see above), so the
+-- native Class text takes that column instead, narrowed to it. The zone text
+-- (`$parentVariable` on Who, `$parentZone` on the guild roster) keeps its
+-- native anchor to the name's right edge, which lands it under the zone
+-- header. Natively both rows run Name, Zone, Level, Class -- left that way
+-- under reordered headers, the level numbers sit under the zone header.
+--
+-- Called again from each list's update hook: source/UnrealUI records that on
+-- UA WhoList_Update puts the native row anchors back on every refresh.
+local function LayoutClassRows(prefix, count, levelX)
+	local i
+	for i = 1, count do
+		local row = _G[prefix..i]
+		local level = _G[prefix..i.."Level"]
+		local class = _G[prefix..i.."Class"]
+		local name = _G[prefix..i.."Name"]
+		if row and level and class and name then
+			pcall(level.ClearAllPoints, level)
+			pcall(level.SetPoint, level, "TOPLEFT", row, "TOPLEFT", levelX, -3)
+			pcall(class.ClearAllPoints, class)
+			pcall(class.SetPoint, class, "LEFT", level, "RIGHT", 8, 0)
+			pcall(class.SetWidth, class, 44)
+			pcall(name.ClearAllPoints, name)
+			pcall(name.SetPoint, name, "TOPLEFT", row, "TOPLEFT", 85, -3)
+			pcall(name.SetWidth, name, 100)
+		end
+	end
+end
+
+local function LayoutWhoRows()
+	LayoutClassRows("WhoFrameButton", WHOS_TO_DISPLAY, 12)
+end
+
 local whoListUpdateHooked = false
 local function ApplyWhoChrome()
 	if not WhoFrame then return end
@@ -208,32 +244,24 @@ local function ApplyWhoChrome()
 
 	S:StyleDropDownBox(WhoFrameDropDown)
 
-	-- 17 search-result rows -- DELIBERATELY left fully native (no icon,
-	-- no reposition, Class column stays visible). See this file's own
-	-- comment above the class-name-lookup removal for why: the
-	-- class-icon/class-color feature this used to port from real ElvUI
-	-- depends on `LOCALIZED_CLASS_NAMES_MALE`/`_FEMALE` and
-	-- `CLASS_ICON_TCOORDS`, neither of which exists in real 1.12.1 at all
-	-- (confirmed zero hits in source/wow-ui-source; traced to patch
-	-- 10.1.7 -- Dragonflight, over a decade past this project's target).
-	-- Real vanilla's own
-	-- `WhoList_Update` (FrameXML/FriendsFrame.lua:253-325) just sets plain
-	-- `WhoFrameButton<i>Class` text, no icon -- there is no vanilla-
-	-- compatible way to reproduce real ElvUI's own icon here, so this
-	-- falls back to genuine native behavior instead of a half-working
-	-- hybrid. Selection (`button:LockHighlight()`/`UnlockHighlight()`,
-	-- driven by `WhoFrame.selectedWho`) is untouched either way.
+	-- 17 search-result rows: text re-anchored to the header order, no class
+	-- icon (see LayoutWhoRows and the class-name note above it). Selection
+	-- (`button:LockHighlight()`/`UnlockHighlight()`, driven by
+	-- `WhoFrame.selectedWho`) is untouched.
+	LayoutWhoRows()
 
 	if WhoListScrollFrame then
 		S:StripTextures(WhoListScrollFrame, false)
 		S:HandleScrollBar(WhoListScrollFrameScrollBar)
 	end
 
+	-- Real ElvUI's position; the width is 10 narrower than its 339, which
+	-- would run past the panel's right edge (x=351, see ApplyOuterChrome).
 	if WhoFrameEditBox then
 		S:StyleEditBox(WhoFrameEditBox)
 		pcall(WhoFrameEditBox.ClearAllPoints, WhoFrameEditBox)
 		pcall(WhoFrameEditBox.SetPoint, WhoFrameEditBox, "BOTTOMLEFT", FriendsFrame, "BOTTOMLEFT", 17, 108)
-		pcall(WhoFrameEditBox.SetWidth, WhoFrameEditBox, 339)
+		pcall(WhoFrameEditBox.SetWidth, WhoFrameEditBox, 329)
 		pcall(WhoFrameEditBox.SetHeight, WhoFrameEditBox, 18)
 	end
 
@@ -259,6 +287,8 @@ local function ApplyWhoChrome()
 	if not whoListUpdateHooked then
 		local ok, err = pcall(function()
 			S:SecureHook("WhoList_Update", function()
+				LayoutWhoRows()
+
 				local okOffset, whoOffset = pcall(FauxScrollFrame_GetOffset, WhoListScrollFrame)
 				whoOffset = (okOffset and whoOffset) or 0
 
@@ -352,6 +382,12 @@ end
 
 local GUILDMEMBERS_TO_DISPLAY = _G.GUILDMEMBERS_TO_DISPLAY or 13
 
+-- Roster view rows (`GuildFrameButton<i>`) only: the status view's own header
+-- row keeps its native order, as in real ElvUI. Level at real ElvUI's x=10.
+local function LayoutGuildRows()
+	LayoutClassRows("GuildFrameButton", GUILDMEMBERS_TO_DISPLAY, 10)
+end
+
 local guildStatusUpdateHooked = false
 local function ApplyGuildChrome()
 	if not GuildFrame then return end
@@ -393,6 +429,8 @@ local function ApplyGuildChrome()
 		StyleColumnHeader(_G["GuildFrameGuildStatusColumnHeader"..i])
 	end
 
+	LayoutGuildRows()
+
 	if GuildListScrollFrame then
 		S:StripTextures(GuildListScrollFrame, false)
 		S:HandleScrollBar(GuildListScrollFrameScrollBar)
@@ -418,6 +456,8 @@ local function ApplyGuildChrome()
 				local j
 
 				if FriendsFrame and FriendsFrame.playerStatusFrame then
+					LayoutGuildRows()
+
 					for j = 1, GUILDMEMBERS_TO_DISPLAY do
 						local button = _G["GuildFrameButton"..j]
 						local nameText = _G["GuildFrameButton"..j.."Name"]
@@ -566,6 +606,14 @@ local function ApplyOuterChrome(frame)
 	end
 
 	S:StyleCloseButton(FriendsFrameCloseButton)
+
+	-- Inside the panel's top-right corner. The native anchor (TOPRIGHT
+	-- -30,-8) is laid out for the native 32x32 art; at the 20x20 of
+	-- S:StyleCloseButton it would overhang the panel's right edge (-33).
+	if FriendsFrameCloseButton and frame.elvBackground then
+		pcall(FriendsFrameCloseButton.ClearAllPoints, FriendsFrameCloseButton)
+		pcall(FriendsFrameCloseButton.SetPoint, FriendsFrameCloseButton, "TOPRIGHT", frame.elvBackground, "TOPRIGHT", -4, -4)
+	end
 
 	-- Tab 3 (Guild) gets an EXPLICIT disabled state instead of letting
 	-- `S:StyleTab` infer one: it intermittently came back gold while not
