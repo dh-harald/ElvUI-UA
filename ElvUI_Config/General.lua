@@ -168,7 +168,7 @@ E.Options.args.general = {
 					order = 20,
 					type = "range",
 					name = L["Decimal Length"],
-					desc = L["How many decimals a shortened value keeps -- 0 turns 1700 into 2K, 1 into 1.7K."],
+					desc = L["How many decimals a shortened value keeps -- 1 turns 1762 into 1.8K, 2 into 1.76K. 0 turns shortening off and shows the full number (1762)."],
 					min = 0, max = 4, step = 1,
 				},
 				numberPrefixStyle = {

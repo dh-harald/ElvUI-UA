@@ -107,7 +107,7 @@ L["Secondary Texture"] = true
 L["Used as the fill of every button-shaped backdrop -- this is where their subtle top-to-bottom falloff comes from. Requires /reload to take effect."] = true
 
 L["Decimal Length"] = true
-L["How many decimals a shortened value keeps -- 0 turns 1700 into 2K, 1 into 1.7K."] = true
+L["How many decimals a shortened value keeps -- 1 turns 1762 into 1.8K, 2 into 1.76K. 0 turns shortening off and shows the full number (1762)."] = true
 L["Unit Prefix Style"] = true
 L["Which unit prefixes a shortened value uses. Visible on unit frame health/power text and on the XP/Reputation bars."] = true
 L["Border Color"] = true

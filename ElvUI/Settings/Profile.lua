@@ -719,6 +719,15 @@ P.unitframe.colors = {
 		NEUTRAL = {r = 218/255, g = 197/255, b = 92/255},
 		GOOD = {r = 75/255, g = 175/255, b = 76/255},
 	},
+	-- Read by Modules/UnitFrames/HealPrediction.lua. `others` is carried for
+	-- the real schema; only the player's own heals are predicted.
+	-- `maxOverflow` 1 (real ElvUI: 0) lets the overheal show up to one bar
+	-- width past the bar's end, so a heal on a unit at full health is visible.
+	healPrediction = {
+		personal = {r = 0, g = 1, b = 0.5, a = 0.25},
+		others = {r = 0, g = 1, b = 0, a = 0.25},
+		maxOverflow = 1,
+	},
 }
 
 P.unitframe.units = {}
@@ -763,6 +772,7 @@ P.unitframe.units.player = {
 	enable = true,
 	width = 270,
 	height = 54,
+	healPrediction = true,
 	orientation = "LEFT",
 	colorOverride = "USE_DEFAULT",
 	health = {
@@ -885,6 +895,7 @@ P.unitframe.units.target = {
 	enable = true,
 	width = 270,
 	height = 54,
+	healPrediction = true,
 	orientation = "RIGHT",
 	colorOverride = "USE_DEFAULT",
 	health = {
@@ -1067,6 +1078,7 @@ P.unitframe.units.pet = {
 	enable = true,
 	width = 130,
 	height = 36,
+	healPrediction = true,
 	orientation = "MIDDLE",
 	colorOverride = "USE_DEFAULT",
 	health = {
@@ -1237,6 +1249,7 @@ P.unitframe.units.party = {
 	enable = true,
 	width = 184,
 	height = 54,
+	healPrediction = false,
 	orientation = "LEFT",
 	colorOverride = "USE_DEFAULT",
 	health = {

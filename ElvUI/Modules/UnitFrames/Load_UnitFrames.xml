@@ -1,5 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
 	<Script file="UnitFrames.lua"/>
+	<Script file="HealPrediction.lua"/>
 	<Script file="PortraitUA.lua"/>
 	<Script file="PortraitLegacy.lua"/>
 	<Script file="DebuffDurations.lua"/>

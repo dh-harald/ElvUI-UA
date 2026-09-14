@@ -37,6 +37,11 @@ Two addons ship together:
 - Layout (screen panels, minimap panels, mover system)
 - ActionBars, PetBar/StanceBar, Cooldown text
 - UnitFrames (player/target/pet/party/etc.), Auras
+- Heal prediction for your own heals: the healing still to come from the
+  heal you are casting and from your heal-over-time spells (Rejuvenation,
+  Renew, Regrowth) is shown on the target's health bar, extending past its
+  end for the overheal (the amount of each spell rank is learned from your
+  own heals)
 - DataBars (XP/Reputation), DataTexts
 - Chat
 - Bags/Bank
@@ -72,6 +77,14 @@ Two addons ship together:
   Trainer, Tabard, World Map polish, and a few more niche ones)
 - Nameplate customization — blocked by a client-side limitation on
   Unreal Azeroth, parked until that changes
+- Heal prediction covers only your own direct heals and your Rejuvenation,
+  Renew and Regrowth: other players' incoming heals, channelled heals
+  (Tranquility, Mend Pet, bandages) and heals on several targets (Prayer of
+  Healing, Chain Heal) are not predicted yet. A spell rank predicts nothing
+  until one of its heals has landed once (a heal-over-time's tick amount only
+  on a damaged target), a heal-over-time removed early still shows until its
+  normal duration ends, and set bonuses that lengthen one are not taken into
+  account
 - A few smaller ElvUI features (auto-track reputation, chat-anchored
   data panels) are researched but not built yet
 

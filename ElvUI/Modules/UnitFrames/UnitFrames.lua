@@ -1958,6 +1958,10 @@ function UF:UpdateFrame(frame)
 	else
 		ElvUI.Util.SetStatusBarBackgroundColor(frame.Health, HEALTH_BG_COLOR[1], HEALTH_BG_COLOR[2], HEALTH_BG_COLOR[3], healthAlpha)
 	end
+	-- Incoming-heal segment ahead of the health fill (HealPrediction.lua).
+	if self.UpdateHealPrediction then
+		pcall(self.UpdateHealPrediction, self, frame, unit, dbKey, health, healthMax, dead, GetBarTexture())
+	end
 	-- The overlay portrait mirrors this bar's state above the portrait
 	-- (PortraitUA.lua / PortraitLegacy.lua).
 	if self.PostUpdateHealth_Portrait then

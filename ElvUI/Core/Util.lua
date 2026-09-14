@@ -127,6 +127,11 @@ E.InversePoints = {
 -- Sign handling matches upstream: the CUT is chosen from the absolute value, but
 -- the printed number keeps its sign, so -1700 becomes "-1.7K".
 --
+-- Deliberate deviation: `decimalLength` 0 turns abbreviation off and prints the
+-- full integer (1762), where upstream would print "2K". A value with no
+-- decimals left carries so little information that the full number is the more
+-- useful reading. 1 and up behave exactly as upstream.
+--
 -- No `%` operator anywhere in here -- it does not parse on Lua 5.0.3 (CLAUDE.md).
 -- `string.format`'s own "%%.%df" is a format LITERAL, which is unaffected.
 local SHORT_VALUE_PREFIXES = {
@@ -144,6 +149,9 @@ function E:ShortValue(v)
 	local general = E.db and E.db.general
 	local style = (general and general.numberPrefixStyle) or "ENGLISH"
 	local dec = (general and general.decimalLength) or 1
+	if dec <= 0 then
+		return string.format("%.0f", v)
+	end
 
 	local set = SHORT_VALUE_PREFIXES[style] or SHORT_VALUE_PREFIXES.ENGLISH
 	local decFormat = string.format("%%.%df", dec)
