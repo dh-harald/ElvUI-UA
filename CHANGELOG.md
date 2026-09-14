@@ -1,3 +1,24 @@
+# [0.3.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.2.2...v0.3.0) (2026-09-14)
+
+
+### Bug Fixes
+
+* **actionbars:** stance/shapeshifting/stealth ([9fc1cbd](https://github.com/dh-harald/ElvUI-UA/commit/9fc1cbde1e2028981981f9792dde8e3555a1f27c))
+* move lootframe to highest strata ([f432cb0](https://github.com/dh-harald/ElvUI-UA/commit/f432cb0566a3ad2ec5fddfcc5ac9b97d12880788))
+* **skin:** tradeskill increment button is now register clicks ([414be0f](https://github.com/dh-harald/ElvUI-UA/commit/414be0feed840e7384a22c519dab74ce22fd2a9a))
+* **skin:** TradeSkillReagentXCountY ([75b15bd](https://github.com/dh-harald/ElvUI-UA/commit/75b15bd2637a0a0e90e24ac6accc5d6bab17b502))
+* **tooltip:** currently equipped colors ([b4c6a8e](https://github.com/dh-harald/ElvUI-UA/commit/b4c6a8e791ef06c38f19baf828eb8472ee1d172f))
+
+
+### Features
+
+* add healing prediction for direct heals and HoTs ([2112d74](https://github.com/dh-harald/ElvUI-UA/commit/2112d74625c6c27851028b00b5065e66dd423b5a))
+* add raidicon (misc/RaidMarker + Unitframes support) ([63e81de](https://github.com/dh-harald/ElvUI-UA/commit/63e81dedee35ba05fe244bac71c44db7cdb58649))
+* **locales:** initial commit ([37a8de3](https://github.com/dh-harald/ElvUI-UA/commit/37a8de36d51d6fd41bca453c438798fbbbe57cbc))
+* **module:** misc/LootRoll ([32437fe](https://github.com/dh-harald/ElvUI-UA/commit/32437fe7de9e84f08623d0886cddd34f3bd4a6f1))
+* **skin:** add DebugTools + extra option to disable the popup ([3f4cf0d](https://github.com/dh-harald/ElvUI-UA/commit/3f4cf0d08e91a27d078ad95e6b82c2d09944dffc))
+* **skin:** add trade window ([c33fb59](https://github.com/dh-harald/ElvUI-UA/commit/c33fb59fc3009a4d7d0cad0a5b3d4f572745861f))
+
 ## [0.2.2](https://github.com/dh-harald/ElvUI-UA/compare/v0.2.1...v0.2.2) (2026-09-13)
 
 
