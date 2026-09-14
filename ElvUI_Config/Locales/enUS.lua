@@ -246,6 +246,11 @@ L["Will attempt to sell another item in set interval after previous one was sold
 L["Vendor Gray Detailed Report"] = true
 L["Displays a detailed report of every item sold when enabled."] = true
 L["Progress Bar"] = true
+L["Show Junk Icon"] = true
+L["Display the junk icon on all grey items that can be vendored."] = true
+L["Items"] = true
+L["Quest Starter"] = true
+L["Quest Item"] = true
 
 --Tooltip
 L["Setup options for the Tooltip."] = true

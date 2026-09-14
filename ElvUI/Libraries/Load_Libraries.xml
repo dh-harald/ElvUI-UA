@@ -12,5 +12,6 @@
 	<Include file="LibSharedMedia-3.0\LibSharedMedia-3.0.xml"/>
 	<Include file="LibDataBroker-1.1\LibDataBroker-1.1.xml"/>
 	<Include file="LibItemPrice-1.1\LibItemPrice-1.1.xml"/>
+	<Include file="QuestItemStarterDB\QuestItemStarterDB.xml"/>
 	<Include file="LibModifierState-1.0\LibModifierState-1.0.xml"/>
 </Ui>

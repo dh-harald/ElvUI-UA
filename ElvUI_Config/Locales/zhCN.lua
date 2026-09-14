@@ -223,6 +223,11 @@ L["Will attempt to sell another item in set interval after previous one was sold
 L["Vendor Gray Detailed Report"] = "出售灰色物品详细报告"
 L["Displays a detailed report of every item sold when enabled."] = "启用后显示包含每个物品金额的详细报告"
 L["Progress Bar"] = "进度条"
+L["Show Junk Icon"] = "显示垃圾图标"
+L["Display the junk icon on all grey items that can be vendored."] = "为所有能够卖店的灰色物品显示垃圾图标"
+L["Items"] = "物品"
+L["Quest Starter"] = "任务起始物品"
+L["Quest Item"] = "任务物品"
 
 --Tooltip
 L["Setup options for the Tooltip."] = "鼠标提示的设置选项。"

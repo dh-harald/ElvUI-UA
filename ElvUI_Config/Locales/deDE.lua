@@ -223,6 +223,11 @@ L["Will attempt to sell another item in set interval after previous one was sold
 L["Vendor Gray Detailed Report"] = "Graue Gegenstände detaillierter Report"
 L["Displays a detailed report of every item sold when enabled."] = "Zeigt einen detaillierten Report von jedem verkauften Gegenstand wenn aktiviert."
 L["Progress Bar"] = "Fortschrittsbalken"
+L["Show Junk Icon"] = "Zeige Müll Symbol"
+L["Display the junk icon on all grey items that can be vendored."] = "Zeigt das Müll Symbol auf allen grauen Gegenständen an die verkauft werden können."
+L["Items"] = "Gegenstände"
+L["Quest Starter"] = "Questbeginn"
+L["Quest Item"] = "Questgegenstand"
 
 --Tooltip
 L["Setup options for the Tooltip."] = "Einstellungen für den Tooltip."

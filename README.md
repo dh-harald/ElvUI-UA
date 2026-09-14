@@ -45,7 +45,9 @@ Two addons ship together:
 - DataBars (XP/Reputation), DataTexts
 - Chat
 - Bags/Bank, with gray items sold automatically at a vendor (one at a
-  time, with an adjustable interval and an optional progress bar)
+  time, with an adjustable interval and an optional progress bar), item
+  quality and quest item borders, a "!" on items that start a quest, and an
+  optional junk coin on sellable gray items
 - Automatic repair at a merchant
 - Solo loot and group loot rolls (Need/Greed/Pass bars, optional auto greed)
 - Raid marker ring (a key binding opens the eight raid target icons at the

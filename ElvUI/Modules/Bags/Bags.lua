@@ -1233,16 +1233,170 @@ function B:UpdateBankGenericSlots()
 	end
 end
 
+-- Item classification shared by the slot decoration below and by vendor grays.
+--
+-- "Gray" is read from the link colour, the same test pfUI's autovendor uses:
+-- it needs no item cache, and GetContainerItemInfo's quality return is not
+-- measured on either client here. Sell prices come from LibItemPrice-1.1 by
+-- numeric id.
+local GRAY_LINK_COLOR = "ff9d9d9d"
+
+local QUEST_ICON = "Interface\\AddOns\\ElvUI\\Media\\Textures\\bagQuestIcon"
+local JUNK_ICON = "Interface\\AddOns\\ElvUI\\Media\\Textures\\bagJunkIcon"
+
+-- The id as a STRING: QuestItemStarterDB is keyed by strings.
+local function LinkItemID(link)
+	if not link then return nil end
+
+	local _, _, idText = string.find(link, "item:(%d+)")
+	return idText
+end
+
+local function IsGrayLink(link)
+	return link ~= nil and string.find(string.lower(link), GRAY_LINK_COLOR, 1, true) ~= nil
+end
+
+local function GetSellPrice(link)
+	local LIP = LibStub("ItemPrice-1.1", true)
+	local id = tonumber(LinkItemID(link))
+	if not LIP or not id then return nil end
+
+	return LIP:GetPriceById(id)
+end
+
+-- Quest status and rarity of one item, real ElvUI-vanilla's
+-- GetQuestItemStarterInfo. The client has no API for "starts a quest", so
+-- starters come only from QuestItemStarterDB's id list; a plain quest item is
+-- either on its key list or has the item type "Quest".
+--
+-- GetItemInfo is read in the 1.12.1 return order -- name, link, rarity,
+-- minLevel, TYPE -- so the type is the FIFTH value. Real ElvUI-vanilla reads
+-- the sixth through its !Compatibility shim, which reorders the returns to the
+-- later API. "Quest" is compared in English, as real ElvUI and Bagzen do; a
+-- non-English client is not measured.
+local function ClassifyItem(itemID)
+	local QIS = LibStub("QuestItemStarterDB", true)
+
+	local _, _, rarity, _, itemType = GetItemInfo(tonumber(itemID))
+
+	local isQuestItem = (itemType == "Quest") or (QIS and QIS.QuestItemKeyIDs[itemID]) or false
+	local isQuestStarter = (QIS and QIS.QuestItemStarterIDs[itemID]) or false
+	local invalidQuestItem = (QIS and QIS.InvalidQuestItemIDs[itemID]) or false
+
+	return isQuestItem, isQuestStarter, invalidQuestItem, rarity
+end
+
+-- Created once per borrowed button, on the button itself: new textures on a
+-- native frame are safe, unlike changing the ones it came with. The border
+-- colour goes to our own elvBackdrop frame (Util.CreateButtonBorder), never to
+-- the native button's backdrop.
+local function EnsureSlotOverlays(button)
+	if button.elvQuestIcon then return end
+
+	local quest = button:CreateTexture(nil, "OVERLAY")
+	quest:SetTexture(QUEST_ICON)
+	quest:SetPoint("TOPLEFT", button, "TOPLEFT", 1, -1)
+	quest:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
+	quest:Hide()
+	button.elvQuestIcon = quest
+
+	local junk = button:CreateTexture(nil, "OVERLAY")
+	junk:SetTexture(JUNK_ICON)
+	junk:SetPoint("TOPLEFT", button, "TOPLEFT", 1, 0)
+	junk:Hide()
+	button.elvJunkIcon = junk
+end
+
+-- Real ElvUI's B:UpdateSlot decoration, in its order of precedence: a quest
+-- starter (icon + questStarter border), a quest item (questItem border), an
+-- item of uncommon quality or better (quality border), otherwise the default
+-- border. The junk coin is independent of the border: a gray item with a sell
+-- price that is not a quest item, while `junkIcon` is on.
+function B:UpdateSlotOverlay(bagID, slotID, button)
+	if not button then return end
+
+	EnsureSlotOverlays(button)
+	button.elvQuestIcon:Hide()
+	button.elvJunkIcon:Hide()
+
+	local border = Util.BORDER_COLOR
+	local r, g, b = border[1], border[2], border[3]
+
+	local link = GetContainerItemLink(bagID, slotID)
+	local itemID = LinkItemID(link)
+	if itemID then
+		local isQuestItem, isQuestStarter, invalidQuestItem, rarity = ClassifyItem(itemID)
+		local colors = E.db.bags.colors.items
+
+		if isQuestStarter then
+			button.elvQuestIcon:Show()
+			r, g, b = colors.questStarter.r, colors.questStarter.g, colors.questStarter.b
+		elseif isQuestItem and not invalidQuestItem then
+			r, g, b = colors.questItem.r, colors.questItem.g, colors.questItem.b
+		elseif rarity and rarity > 1 then
+			local okColor, qr, qg, qb = pcall(GetItemQualityColor, rarity)
+			if okColor and qr then r, g, b = qr, qg, qb end
+		end
+
+		if E.db.bags.junkIcon and not isQuestItem and IsGrayLink(link) then
+			local price = GetSellPrice(link)
+			if price and price > 0 then
+				local size = (tonumber(button:GetWidth()) or 34) / 2
+				button.elvJunkIcon:SetWidth(size)
+				button.elvJunkIcon:SetHeight(size)
+				button.elvJunkIcon:Show()
+			end
+		end
+	end
+
+	if button.elvBackdrop then
+		pcall(button.elvBackdrop.SetBackdropBorderColor, button.elvBackdrop, r, g, b, 1)
+	end
+end
+
+-- Which window owns a bag id: the bank's generic rows and bank bags live in the
+-- bank window, everything else -- the keyring included -- in the bag window.
+function B:UpdateBagOverlays(bagID)
+	local f = self.BagFrame
+	if bagID == BANK_BAG or bagID > (NUM_BAG_SLOTS or 4) then f = self.BankFrame end
+
+	local parent = f and f.Bags[bagID]
+	if not parent or not parent.slots then return end
+
+	local j = 1
+	while parent.slots[j] do
+		self:UpdateSlotOverlay(bagID, j, parent.slots[j])
+		j = j + 1
+	end
+end
+
+-- Config entry point: re-decorates every borrowed slot in both windows.
+function B:UpdateAllOverlays()
+	local frames = { self.BagFrame, self.BankFrame }
+
+	local i
+	for i = 1, 2 do
+		if frames[i] then
+			for bagID in pairs(frames[i].Bags) do
+				self:UpdateBagOverlays(bagID)
+			end
+		end
+	end
+end
+
+-- The decoration runs after the fill in both branches: the native pass and
+-- the bank-row fill both rewrite the slot, and neither knows about it.
 function B:UpdateBag(bagID)
 	if bagID == BANK_BAG then
 		self:UpdateBankGenericSlots()
-		return
+	else
+		local native = self:GetNativeContainer(bagID)
+		if not native or not native.size then return end
+
+		pcall(ContainerFrame_Update, native)
 	end
 
-	local native = self:GetNativeContainer(bagID)
-	if not native or not native.size then return end
-
-	pcall(ContainerFrame_Update, native)
+	self:UpdateBagOverlays(bagID)
 end
 
 function B:UpdateAllSlots(isBank)
@@ -1520,29 +1674,15 @@ end
 -- is never confirmed (the merchant refused the item) is given up after
 -- SELL_CONFIRM_TIMEOUT seconds and not counted.
 --
--- "Gray" is read from the link colour, the same test pfUI's autovendor uses:
--- GetItemInfo needs the item cache, and GetContainerItemInfo's quality return
--- is not measured on either client here. An item is only queued with a known
--- sell price above zero (LibItemPrice-1.1), as in real ElvUI, which keeps
--- items without a vendor value out of the queue.
+-- Gray detection and prices are the shared IsGrayLink/GetSellPrice above
+-- B:UpdateBag. An item is only queued with a known sell price above zero, as
+-- in real ElvUI, which keeps items without a vendor value out of the queue.
 --
 -- pfUI and UnrealUI clear the cursor before each sale; this waits instead
 -- while the cursor carries an item, so an item the player is moving is never
 -- taken off the cursor.
-local GRAY_LINK_COLOR = "ff9d9d9d"
 local MIN_SELL_INTERVAL = 0.1
 local SELL_CONFIRM_TIMEOUT = 3
-
-local function GetSellPrice(link)
-	local LIP = LibStub("ItemPrice-1.1", true)
-	if not LIP then return nil end
-
-	local _, _, idText = string.find(link, "item:(%d+)")
-	local id = tonumber(idText)
-	if not id then return nil end
-
-	return LIP:GetPriceById(id)
-end
 
 function B:CollectGrays()
 	local list = {}
@@ -1552,7 +1692,7 @@ function B:CollectGrays()
 		local slot
 		for slot = 1, (GetContainerNumSlots(bag) or 0) do
 			local link = GetContainerItemLink(bag, slot)
-			if link and string.find(string.lower(link), GRAY_LINK_COLOR, 1, true) then
+			if IsGrayLink(link) then
 				local price = GetSellPrice(link)
 				if price and price > 0 then
 					table.insert(list, { bag = bag, slot = slot, link = link, price = price })

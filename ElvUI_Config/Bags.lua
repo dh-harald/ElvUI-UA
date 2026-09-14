@@ -60,8 +60,18 @@ E.Options.args.bags = {
 						if E.Bags then E.Bags:UpdateGoldText() end
 					end,
 				},
-				-- Order 5, real ElvUI's own slot in this group (4 is its
-				-- junkIcon, not implemented here, so the number stays free).
+				junkIcon = {
+					order = 4,
+					type = "toggle",
+					name = L["Show Junk Icon"],
+					desc = L["Display the junk icon on all grey items that can be vendored."],
+					get = function() return E.db.bags.junkIcon end,
+					set = function(_, value)
+						E.db.bags.junkIcon = value
+						if E.Bags then E.Bags:UpdateAllOverlays() end
+					end,
+				},
+				-- Order 5, real ElvUI's own slot in this group.
 				-- Live with no extra plumbing: Modules/Bags/Bags.lua reads this
 				-- inside the container's OnHide, so the next close obeys it.
 				clearSearchOnClose = {
@@ -132,6 +142,44 @@ E.Options.args.bags = {
 						E.db.bags.bankWidth = value
 						if E.Bags then E.Bags:Layout(true) end
 					end,
+				},
+			},
+		},
+		-- Real ElvUI's colorGroup, with only its `items` branch: the
+		-- profession-bag colours have no code reading them here, so they get
+		-- no controls. No manual header, as with the other tree pages.
+		colorGroup = {
+			order = 5,
+			type = "group",
+			name = L["Colors"],
+			args = {
+				items = {
+					order = 3,
+					type = "group",
+					name = L["Items"],
+					guiInline = true,
+					get = function(info)
+						local t = E.db.bags.colors.items[ info[getn(info)] ]
+						local d = P.bags.colors.items[ info[getn(info)] ]
+						return t.r, t.g, t.b, t.a, d.r, d.g, d.b
+					end,
+					set = function(info, r, g, b)
+						local t = E.db.bags.colors.items[ info[getn(info)] ]
+						t.r, t.g, t.b = r, g, b
+						if E.Bags then E.Bags:UpdateAllOverlays() end
+					end,
+					args = {
+						questStarter = {
+							order = 1,
+							type = "color",
+							name = L["Quest Starter"],
+						},
+						questItem = {
+							order = 2,
+							type = "color",
+							name = L["Quest Item"],
+						},
+					},
 				},
 			},
 		},

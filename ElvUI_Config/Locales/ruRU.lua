@@ -223,6 +223,11 @@ L["Will attempt to sell another item in set interval after previous one was sold
 L["Vendor Gray Detailed Report"] = "Подробности продажи"
 L["Displays a detailed report of every item sold when enabled."] = "Показывать подробный отчет по каждому проданному серому предмету."
 L["Progress Bar"] = "Полоса прогресса"
+L["Show Junk Icon"] = "Иконки мусора"
+L["Display the junk icon on all grey items that can be vendored."] = "Показывать иконку монетки на серых предметах, которые можно продать."
+L["Items"] = "Предметы"
+L["Quest Starter"] = "Начинает задание"
+L["Quest Item"] = "Предмет, необходимый для задания"
 
 --Tooltip
 L["Setup options for the Tooltip."] = "Настройки всплывающей подсказки."

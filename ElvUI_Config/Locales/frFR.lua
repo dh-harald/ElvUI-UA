@@ -223,6 +223,11 @@ L["Will attempt to sell another item in set interval after previous one was sold
 L["Vendor Gray Detailed Report"] = "Rapport détaillé des ventes d'objets gris"
 L["Displays a detailed report of every item sold when enabled."] = "Affiche un rapport détaillé de chaque objet vendu lorsque activé."
 L["Progress Bar"] = "Barre de progression"
+L["Show Junk Icon"] = "Afficher l'icône camelotte"
+L["Display the junk icon on all grey items that can be vendored."] = "Afficher l'cône de camelotte sur tous les objets gris qui peuvent être vendu"
+L["Items"] = "Objets"
+L["Quest Starter"] = "Déclencheur de quête"
+L["Quest Item"] = "Objet de quête"
 
 --Tooltip
 L["Setup options for the Tooltip."] = "Options de configuration de l'infobulle."
