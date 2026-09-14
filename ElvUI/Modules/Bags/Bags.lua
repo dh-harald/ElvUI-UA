@@ -36,8 +36,9 @@
 -- Scope of this file so far: the window shell and its movers, the takeover of
 -- the native bag entry points, the merged item grid, the equipped-bag strip,
 -- the keyring, the money display, the search filter, the bank, and selling
--- gray items at a merchant (see B:InitializeVendorGrays). The sort button and
--- the manual vendor-grays header button attach to the same frames afterwards.
+-- gray items at a merchant (see B:InitializeVendorGrays). Sorting and its
+-- header button live in Sort.lua; the manual vendor-grays header button is
+-- not built yet.
 --
 -- The bank works the same way, with one structural difference: its generic
 -- rows (BankFrameItem1-24) are borrowed from the native BankFrame rather than
@@ -132,7 +133,7 @@ end
 -- nothing else has to be re-anchored. Real ElvUI's full order, right to left:
 --   bag window   money, sort, keyring, bags, vendor-grays, search
 --   bank window  "Bank", sort, bags, purchase, search
--- Missing here: sort on both (belongs with sorting itself) and vendor-grays.
+-- Missing here: vendor-grays.
 function B:AnchorHeaderButton(f, button)
 	button:ClearAllPoints()
 	button:SetPoint("RIGHT", f.headerLeftmost, "LEFT", -5, 0)
@@ -238,6 +239,8 @@ function B:ConstructContainerFrame(name, isBank)
 		end
 		f.keyFrame:Hide()
 
+		self:ConstructSortButton(f, name, false)
+
 		f.keyButton = CreateFrame("Button", name.."KeyButton", f)
 		f.keyButton:SetWidth(18)
 		f.keyButton:SetHeight(18)
@@ -294,6 +297,8 @@ function B:ConstructContainerFrame(name, isBank)
 		f.bagText:SetJustifyH("RIGHT")
 		f.bagText:SetText(L["Bank"])
 		f.headerLeftmost = f.bagText
+
+		self:ConstructSortButton(f, name, true)
 
 		f.bagsButton = CreateFrame("Button", name.."BagsButton", f)
 		f.bagsButton:SetWidth(18)
@@ -1285,6 +1290,9 @@ local function ClassifyItem(itemID)
 
 	return isQuestItem, isQuestStarter, invalidQuestItem, rarity
 end
+
+-- Sort.lua orders quest items by this same classification.
+B.ClassifyItem = ClassifyItem
 
 -- Created once per borrowed button, on the button itself: new textures on a
 -- native frame are safe, unlike changing the ones it came with. The border

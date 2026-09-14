@@ -228,6 +228,11 @@ L["Display the junk icon on all grey items that can be vendored."] = "为所有�
 L["Items"] = "物品"
 L["Quest Starter"] = "任务起始物品"
 L["Quest Item"] = "任务物品"
+L["Disable Bag Sort"] = "禁用背包排序"
+L["Disable Bank Sort"] = "禁用银行排序"
+L["Bag Sorting"] = "背包排序"
+L["Sort Inverted"] = "倒序"
+L["Direction the bag sorting will use to allocate the items."] = "整理背包时物品排序方向."
 
 --Tooltip
 L["Setup options for the Tooltip."] = "鼠标提示的设置选项。"

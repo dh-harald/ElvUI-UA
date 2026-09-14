@@ -127,6 +127,10 @@ L["Bag Mover"] = "Bag Mover"
 L["Bank Mover"] = "Déplacement de la banque"
 L["Vendoring Grays"] = "Vente des objets gris"
 L["Vendored gray items for: %s"] = "Objets gris vendus pour : %s"
+L["Sort Bags"] = "Trier les sacs"
+L["Already Running.. Bailing Out!"] = "Déjà en cours d'exécution, arrêt du processus..."
+L["Confused.. Try Again!"] = "Confus...Essayez à nouveau!"
+L["Sorting the bank needs at least one bank bag."] = "Le tri de la banque nécessite au moins un sac de banque."
 
 --Chat
 L["Toggle Chat Frame"] = "Activer la fenêtre de discussion"

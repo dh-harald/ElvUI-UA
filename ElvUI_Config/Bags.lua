@@ -31,6 +31,7 @@ E.Options.args.bags = {
 			order = 3,
 			type = "group",
 			name = L["General"],
+			get = function(info) return E.db.bags[ info[getn(info)] ] end,
 			args = {
 				-- No manual header -- `general` has no childGroups/guiInline
 				-- of its own, so LibConfig-1.0 renders it as its own sidebar
@@ -81,6 +82,25 @@ E.Options.args.bags = {
 					desc = L["Reset the bag search box when the window closes, instead of keeping the filter for next time."],
 					get = function() return E.db.bags.clearSearchOnClose end,
 					set = function(_, value) E.db.bags.clearSearchOnClose = value end,
+				},
+				-- Order 6 is real ElvUI's `reverseSlots`, not built here.
+				disableBagSort = {
+					order = 7,
+					type = "toggle",
+					name = L["Disable Bag Sort"],
+					set = function(info, value)
+						E.db.bags[ info[getn(info)] ] = value
+						if E.Bags then E.Bags:ToggleSortButtonState(false) end
+					end,
+				},
+				disableBankSort = {
+					order = 8,
+					type = "toggle",
+					name = L["Disable Bank Sort"],
+					set = function(info, value)
+						E.db.bags[ info[getn(info)] ] = value
+						if E.Bags then E.Bags:ToggleSortButtonState(true) end
+					end,
 				},
 			},
 		},
@@ -221,6 +241,24 @@ E.Options.args.bags = {
 					type = "toggle",
 					name = L["Progress Bar"],
 					disabled = function() return not E.db.bags.vendorGrays.enable end,
+				},
+			},
+		},
+		-- Real ElvUI's order and key. Only `sortInverted`: its ignored-items
+		-- list needs LibItemSearch-1.2, which is not vendored, so the sort
+		-- never reads `ignoredItems`. Read when a sort starts, so no push.
+		bagSortingGroup = {
+			order = 9,
+			type = "group",
+			name = L["Bag Sorting"],
+			get = function(info) return E.db.bags[ info[getn(info)] ] end,
+			set = function(info, value) E.db.bags[ info[getn(info)] ] = value end,
+			args = {
+				sortInverted = {
+					order = 1,
+					type = "toggle",
+					name = L["Sort Inverted"],
+					desc = L["Direction the bag sorting will use to allocate the items."],
 				},
 			},
 		},

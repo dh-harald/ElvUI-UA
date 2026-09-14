@@ -127,6 +127,10 @@ L["Bag Mover"] = "背包框架"
 L["Bank Mover"] = "银行移动手柄"
 L["Vendoring Grays"] = "正在出售灰色物品"
 L["Vendored gray items for: %s"] = "出售灰色物品获得: %s"
+L["Sort Bags"] = "背包整理"
+L["Already Running.. Bailing Out!"] = "正在运行!"
+L["Confused.. Try Again!"] = "请再试一次!"
+L["Sorting the bank needs at least one bank bag."] = "整理银行需要至少一个银行背包。"
 
 --Chat
 L["Toggle Chat Frame"] = "开关聊天框架"

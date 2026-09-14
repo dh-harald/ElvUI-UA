@@ -228,6 +228,11 @@ L["Display the junk icon on all grey items that can be vendored."] = "Показ
 L["Items"] = "Предметы"
 L["Quest Starter"] = "Начинает задание"
 L["Quest Item"] = "Предмет, необходимый для задания"
+L["Disable Bag Sort"] = "Отключить сортировку сумок"
+L["Disable Bank Sort"] = "Отключить сортировку банка"
+L["Bag Sorting"] = "Сортировка сумок"
+L["Sort Inverted"] = "Инвертированная сортировка"
+L["Direction the bag sorting will use to allocate the items."] = "Направление расположения предметов при сортировке."
 
 --Tooltip
 L["Setup options for the Tooltip."] = "Настройки всплывающей подсказки."

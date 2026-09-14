@@ -169,6 +169,10 @@ L["Bag Mover"] = true
 L["Bank Mover"] = true
 L["Vendoring Grays"] = true
 L["Vendored gray items for: %s"] = true
+L["Sort Bags"] = true
+L["Already Running.. Bailing Out!"] = true
+L["Confused.. Try Again!"] = true
+L["Sorting the bank needs at least one bank bag."] = true
 
 --Chat
 L["Toggle Chat Frame"] = true

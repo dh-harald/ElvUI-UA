@@ -228,6 +228,11 @@ L["Display the junk icon on all grey items that can be vendored."] = "Afficher l
 L["Items"] = "Objets"
 L["Quest Starter"] = "Déclencheur de quête"
 L["Quest Item"] = "Objet de quête"
+L["Disable Bag Sort"] = "Désactiver le tri des sacs"
+L["Disable Bank Sort"] = "Désactiver le tri de la banque"
+L["Bag Sorting"] = "Tri des sacs"
+L["Sort Inverted"] = "Tri inversé"
+L["Direction the bag sorting will use to allocate the items."] = "Direction du tri du sac qui sera utilisé pour allouer les objets."
 
 --Tooltip
 L["Setup options for the Tooltip."] = "Options de configuration de l'infobulle."

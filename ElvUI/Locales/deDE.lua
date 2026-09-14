@@ -127,6 +127,10 @@ L["Bag Mover"] = "Taschen Anker"
 L["Bank Mover"] = "Bank-Verschieber"
 L["Vendoring Grays"] = "Graue Gegenstände werden verkauft"
 L["Vendored gray items for: %s"] = "Graue Gegenstände verkauft für: %s"
+L["Sort Bags"] = "Taschen sortieren"
+L["Already Running.. Bailing Out!"] = "Bereits ausgeführt.. Warte ab!"
+L["Confused.. Try Again!"] = "Verwirrt.. Versuche es erneut!"
+L["Sorting the bank needs at least one bank bag."] = "Zum Sortieren der Bank wird mindestens eine Banktasche benötigt."
 
 --Chat
 L["Toggle Chat Frame"] = "Chatfenster an-/ausschalten"

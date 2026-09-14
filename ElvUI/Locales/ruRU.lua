@@ -127,6 +127,10 @@ L["Bag Mover"] = "Фиксатор сумок"
 L["Bank Mover"] = "Элемент перемещения банка"
 L["Vendoring Grays"] = "Продажа серых предметов"
 L["Vendored gray items for: %s"] = "Серые предметы проданы за: %s"
+L["Sort Bags"] = "Сортировать"
+L["Already Running.. Bailing Out!"] = "Уже выполняется.. Бобер, выдыхай!"
+L["Confused.. Try Again!"] = "Что за?.. Попробуйте еще раз!"
+L["Sorting the bank needs at least one bank bag."] = "Для сортировки банка нужна хотя бы одна банковская сумка."
 
 --Chat
 L["Toggle Chat Frame"] = "Показать/скрыть чат"

@@ -46,8 +46,10 @@ Two addons ship together:
 - Chat
 - Bags/Bank, with gray items sold automatically at a vendor (one at a
   time, with an adjustable interval and an optional progress bar), item
-  quality and quest item borders, a "!" on items that start a quest, and an
-  optional junk coin on sellable gray items
+  quality and quest item borders, a "!" on items that start a quest, an
+  optional junk coin on sellable gray items, and a sort button (stacks
+  merged, quest items first, quivers/ammo pouches/soul bags filled with
+  their own items)
 - Automatic repair at a merchant
 - Solo loot and group loot rolls (Need/Greed/Pass bars, optional auto greed)
 - Raid marker ring (a key binding opens the eight raid target icons at the

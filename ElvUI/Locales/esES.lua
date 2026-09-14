@@ -127,6 +127,10 @@ L["Bag Mover"] = "Fijador de Bolsa"
 L["Bank Mover"] = "Movedor del banco"
 L["Vendoring Grays"] = "Vendiendo objetos grises"
 L["Vendored gray items for: %s"] = "Objetos grises vendidos por: %s"
+L["Sort Bags"] = "Ordenar Bolsas"
+L["Already Running.. Bailing Out!"] = "Ya está en ejecución... ¡Cancelando!"
+L["Confused.. Try Again!"] = "Confundido... ¡Intenta de Nuevo!"
+L["Sorting the bank needs at least one bank bag."] = "Para ordenar el banco se necesita al menos una bolsa de banco."
 
 --Chat
 L["Toggle Chat Frame"] = "Mostrar/Ocultar Marco de Chat"

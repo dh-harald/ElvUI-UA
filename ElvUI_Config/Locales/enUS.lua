@@ -251,6 +251,11 @@ L["Display the junk icon on all grey items that can be vendored."] = true
 L["Items"] = true
 L["Quest Starter"] = true
 L["Quest Item"] = true
+L["Disable Bag Sort"] = true
+L["Disable Bank Sort"] = true
+L["Bag Sorting"] = true
+L["Sort Inverted"] = true
+L["Direction the bag sorting will use to allocate the items."] = true
 
 --Tooltip
 L["Setup options for the Tooltip."] = true
