@@ -630,18 +630,23 @@ end
 -- recognizes them and falls through to the plain current-page
 -- calculation bar1 itself uses.
 --
--- Unlike real ElvUI (which fully REPLACES the global, discarding
--- Blizzard's own bonus-bar/stance-page handling for its `else` branch and
--- reimplementing a simplified version), this WRAPS the original instead
--- -- our bars 2-5 are special-cased directly, everything else (bar1
--- included) falls through to the real original function unchanged. Safer
--- given this project doesn't implement action paging (bonus bar/stance
--- swap) at all -- replacing the global outright would risk silently
--- breaking bar1's native paging behavior in those situations instead of
--- just leaving it alone. Unverified whether bar1's own paging still
--- works correctly after being reparented in the first place -- that's a
--- pre-existing risk from CreateBar, not something this specific fix
--- introduces or resolves.
+-- Unlike real ElvUI (which fully REPLACES the global), this WRAPS the
+-- original: our bars are special-cased directly, anything else falls
+-- through to the original unchanged.
+--
+-- Bar1 also carries the stance/form paging. On 1.12 a form (Warrior
+-- stances, Druid Cat/Bear/Prowl, Rogue Stealth, ...) never changes
+-- ActionButton1-12's page: the native UI slides a SEPARATE
+-- BonusActionBarFrame (BonusActionButton1-12, `isBonus`) over the main bar,
+-- whose slots start at (NUM_ACTIONBAR_PAGES + GetBonusBarOffset() - 1) * 12
+-- + 1. HideChrome() hides that frame, so instead bar1's own buttons resolve
+-- to the bonus slots while GetBonusBarOffset() > 0 on page 1 -- the same
+-- condition the native function applies to `isBonus` buttons. The offset
+-- itself decides whether to page, so no class list is needed: stance-bar
+-- entries without a bonus bar (e.g. Paladin auras) report 0. Keybinds
+-- follow automatically: ActionButtonDown/Up only redirect to
+-- BonusActionButtonN while BonusActionBarFrame:IsShown(), which never
+-- happens here, so they use ActionButtonN and this wrapper.
 local PAGE_CONST_FOR_BAR = {
 	[2] = "BOTTOMRIGHT_ACTIONBAR_PAGE",
 	[3] = "RIGHT_ACTIONBAR_PAGE",
@@ -657,7 +662,17 @@ local function InstallActionButtonGetPagedID()
 		local okParent, parent = pcall(button.GetParent, button)
 		if okParent and parent then
 			local okName, name = pcall(parent.GetName, parent)
-			if okName and name then
+			if okName and name == "ElvUIActionBarHolder1" then
+				local okOffset, offset = pcall(GetBonusBarOffset)
+				if tonumber(_G.CURRENT_ACTIONBAR_PAGE) == 1 and okOffset
+					and offset and offset > 0 then
+					local numPages = tonumber(_G.NUM_ACTIONBAR_PAGES) or 6
+					local okId, id = pcall(button.GetID, button)
+					if okId and id then
+						return id + ((numPages + offset - 1) * MAX_BUTTONS)
+					end
+				end
+			elseif okName and name then
 				local d
 				for _, d in ipairs(BAR_DEFS) do
 					local pageConst = PAGE_CONST_FOR_BAR[d.id]
@@ -770,6 +785,33 @@ function M:Initialize()
 	-- pcall'd Hide/SetTexture calls per button, ~120 buttons max) rather
 	-- than chasing which specific button actually needs it.
 	self:RegisterEvent("ACTIONBAR_SLOT_CHANGED", RestyleAllButtons)
+
+	-- ActionButton_OnEvent only refreshes `isBonus` buttons on
+	-- UPDATE_BONUS_ACTIONBAR, so after a form change bar1 keeps showing the
+	-- previous page until something else updates it. Re-run the native
+	-- ActionButton_Update per button (it reads the button from the `this`
+	-- global); it resolves the slot through the ActionButton_GetPagedID
+	-- wrapper above. `this` is saved and restored because UA does not
+	-- restore it after a nested handler. StyleButton re-hides the native
+	-- Border region that ActionButton_Update may re-show. PLAYER_ENTERING_WORLD
+	-- covers logging in while already in a form.
+	local function RefreshBar1Actions()
+		local bar = self.bars and self.bars[1]
+		if not bar or type(_G.ActionButton_Update) ~= "function" then return end
+		local caller = this
+		local i
+		for i = 1, MAX_BUTTONS do
+			local button = bar.buttons[i]
+			if button then
+				this = button
+				pcall(ActionButton_Update)
+				StyleButton(button, E.db.actionbar.bar1.showGrid)
+			end
+		end
+		this = caller
+	end
+	self:RegisterEvent("UPDATE_BONUS_ACTIONBAR", RefreshBar1Actions)
+	self:RegisterEvent("PLAYER_ENTERING_WORLD", RefreshBar1Actions)
 
 	-- A disabled bar's buttons (HideDisabledBar above) go through the SAME
 	-- Hide()+SetAlpha(0)+EnableMouse(false)+Show=noop treatment as

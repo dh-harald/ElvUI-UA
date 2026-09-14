@@ -168,20 +168,19 @@ local function UpdateVisibility()
 	end
 end
 
--- Which stance is currently active, and whether each is castable right
--- now -- native GetShapeshiftFormInfo(i) returns (texture, name,
--- isActive, isCastable), matching real ElvUI's own BarShapeShift.lua
--- exactly. This is a DISCRETE, event-triggered state change (only
--- updates when you shift), the same class this project already found
--- unreliable via native handlers alone after reparenting (see PetBar.lua's
--- own UpdateCheckedState) -- explicitly re-asserted ourselves rather than
--- trusted to Blizzard's own native refresh. Icon texture/native cooldown
--- swipe are
--- NOT handled here -- both already confirmed to keep updating on their
--- own after reparenting for every other bar in this project (native
--- handlers survive reparenting; Core/Cooldowns.lua's own global
--- CooldownFrame_SetTimer hook already adds countdown text to ANY native
--- Cooldown frame, stance buttons included, with no extra code needed).
+-- Icon texture, active stance and castability per slot -- native
+-- GetShapeshiftFormInfo(i) returns (texture, name, isActive, isCastable),
+-- matching real ElvUI's own BarShapeShift.lua. Unlike ActionButtons, stance
+-- buttons have no per-button event handler: the native
+-- ShapeshiftBar_UpdateState (driven by ShapeshiftBarFrame's OnEvent) is the
+-- only thing that ever sets their icon, checked state and cooldown, and
+-- ActionBars.lua's HideChrome() strips that frame's OnEvent. All three are
+-- therefore this module's job. The texture matters, not just SetChecked:
+-- while a form is on, GetShapeshiftFormInfo returns a different "active"
+-- texture (e.g. Spell_Nature_WispSplode for Druid forms) that replaces the
+-- form's own icon, which is how the native bar shows the active form.
+-- SetTexture is only called when the path changed, since this also runs
+-- from a 0.5s timer.
 local function UpdateCheckedState()
 	local bar = M.bar
 	if not bar then return end
@@ -195,11 +194,36 @@ local function UpdateCheckedState()
 
 			local icon = _G[button:GetName().."Icon"]
 			if icon then
+				if okInfo and texture and button.elvIconTexture ~= texture then
+					pcall(icon.SetTexture, icon, texture)
+					button.elvIconTexture = texture
+				end
 				if okInfo and isCastable then
 					pcall(icon.SetVertexColor, icon, 1, 1, 1)
 				else
 					pcall(icon.SetVertexColor, icon, 0.4, 0.4, 0.4)
 				end
+			end
+		end
+	end
+end
+
+-- Same native-handler gap as UpdateCheckedState above. Event-driven only,
+-- never from the timer: re-applying an unchanged cooldown every tick would
+-- restart the swipe. Core/Cooldowns.lua's CooldownFrame_SetTimer hook adds
+-- the countdown text.
+local function UpdateCooldowns()
+	local bar = M.bar
+	if not bar then return end
+
+	local i
+	for i = 1, NUM_SHAPESHIFT_SLOTS do
+		local button = bar.buttons[i]
+		local cooldown = button and _G[button:GetName().."Cooldown"]
+		if cooldown then
+			local ok, start, duration, enable = pcall(GetShapeshiftFormCooldown, i)
+			if ok and start then
+				pcall(CooldownFrame_SetTimer, cooldown, start, duration, enable)
 			end
 		end
 	end
@@ -211,15 +235,18 @@ function M:Initialize()
 	self:PositionBar()
 	UpdateVisibility()
 	UpdateCheckedState()
+	UpdateCooldowns()
 
 	local function OnStanceBarEvent()
 		UpdateVisibility()
 		UpdateCheckedState()
+		UpdateCooldowns()
 	end
 	self:RegisterEvent("UPDATE_SHAPESHIFT_FORMS", OnStanceBarEvent)
 	self:RegisterEvent("UPDATE_SHAPESHIFT_FORM", OnStanceBarEvent)
 	self:RegisterEvent("PLAYER_ENTERING_WORLD", OnStanceBarEvent)
 	self:RegisterEvent("PLAYER_AURAS_CHANGED", OnStanceBarEvent)
+	self:RegisterEvent("SPELL_UPDATE_COOLDOWN", UpdateCooldowns)
 
 	-- Same safety-net reasoning/interval as PetBar.lua's own checked-
 	-- state timer -- cheap (a handful of pcall'd reads per slot), not
