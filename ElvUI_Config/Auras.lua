@@ -96,8 +96,8 @@ local function AuraSortArgs(args, getTable, order)
 		name = L["Sort Direction"],
 		order = order + 1,
 		values = {
-			["+"] = "Ascending",
-			["-"] = "Descending",
+			["+"] = L["Ascending"],
+			["-"] = L["Descending"],
 		},
 		get = function() return getTable().sortDir end,
 		set = function(_, value) getTable().sortDir = value end,
@@ -205,13 +205,13 @@ E.Options.args.auras = {
 			type = "group",
 			name = L["Buffs"],
 			order = 2,
-			args = AuraSortArgs(StandaloneAuraArgs(function() return E.db.auras.buffs end, 1, "Buffs"), function() return E.db.auras.buffs end, 10),
+			args = AuraSortArgs(StandaloneAuraArgs(function() return E.db.auras.buffs end, 1, L["Buffs"]), function() return E.db.auras.buffs end, 10),
 		},
 		debuffs = {
 			type = "group",
 			name = L["Debuffs"],
 			order = 3,
-			args = AuraSortArgs(StandaloneAuraArgs(function() return E.db.auras.debuffs end, 1, "Debuffs"), function() return E.db.auras.debuffs end, 10),
+			args = AuraSortArgs(StandaloneAuraArgs(function() return E.db.auras.debuffs end, 1, L["Debuffs"]), function() return E.db.auras.debuffs end, 10),
 		},
 	},
 }

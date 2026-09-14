@@ -160,7 +160,7 @@ local function ApplyStableSkin()
 	ApplyStableChrome(frame)
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyStableChrome(frame) end)
-	if not ok then E:Print("Skins (stable): PetStableFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

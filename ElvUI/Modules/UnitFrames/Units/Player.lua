@@ -83,13 +83,13 @@ local function Construct_PlayerFrame()
 		-- screen-center-ish, roughly between where Player and Target
 		-- frames are. Previously anchored to `frame`'s own bottom edge.
 		castbar:SetPoint("CENTER", UIParent, "CENTER", 0, -150)
-		E:CreateMover(castbar, "ElvUF_PlayerCastbar", "Player Castbar")
+		E:CreateMover(castbar, "ElvUF_PlayerCastbar", L["Player Castbar"])
 		UF:InitializeCastbar()
 	end
 
 	UF:EnableUnitMouse(frame)
 	HideNativePlayerFrame()
-	E:CreateMover(frame, "ElvUF_Player", "Player Frame")
+	E:CreateMover(frame, "ElvUF_Player", L["Player Frame"])
 
 	return frame
 end

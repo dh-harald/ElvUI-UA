@@ -68,11 +68,11 @@ local FALLBACK_BAR_COLORS = {
 }
 
 -- Same reasoning as FALLBACK_BAR_COLORS: FACTION_STANDING_LABEL1..8 are
--- GlobalStrings entries, English-only here (this project's Chat pipeline
--- port already made the same English-only call deliberately).
+-- GlobalStrings entries; these locale strings stand in only on a client that
+-- does not define them.
 local FALLBACK_STANDING_LABELS = {
-	"Hated", "Hostile", "Unfriendly", "Neutral",
-	"Friendly", "Honored", "Revered", "Exalted",
+	L["Hated"], L["Hostile"], L["Unfriendly"], L["Neutral"],
+	L["Friendly"], L["Honored"], L["Revered"], L["Exalted"],
 }
 
 local function StandingColor(reaction)
@@ -88,7 +88,7 @@ local function StandingLabel(reaction)
 	local id = tonumber(reaction) or 0
 	local label = _G["FACTION_STANDING_LABEL"..id]
 	if not label then label = FALLBACK_STANDING_LABELS[id] end
-	return label or (_G.UNKNOWN or "Unknown")
+	return label or (_G.UNKNOWN or L["Unknown"])
 end
 
 -- Every named piece of Blizzard's native reputation watch bar, from the
@@ -213,8 +213,8 @@ function M:ReputationBar_OnEnter()
 	GameTooltip:ClearLines()
 	GameTooltip:AddLine(name)
 	GameTooltip:AddLine(" ")
-	GameTooltip:AddDoubleLine("Standing:", StandingLabel(reaction), 1, 1, 1)
-	GameTooltip:AddDoubleLine("Reputation:", string.format("%d / %d (%d%%)", cur, total, cur / total * 100), 1, 1, 1)
+	GameTooltip:AddDoubleLine(L["Standing:"], StandingLabel(reaction), 1, 1, 1)
+	GameTooltip:AddDoubleLine(L["Reputation:"], string.format("%d / %d (%d%%)", cur, total, cur / total * 100), 1, 1, 1)
 	GameTooltip:Show()
 end
 
@@ -412,7 +412,7 @@ function M:LoadReputationBar()
 	-- (drag/nudge via /moveui), independently of the XP bar -- matching
 	-- real ElvUI, where these are two fully separate movable bars.
 	bar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 232)
-	E:CreateMover(bar, "ReputationBarMover", "Reputation Bar")
+	E:CreateMover(bar, "ReputationBarMover", L["Reputation Bar"])
 
 	SuppressNativeWatchBar()
 	ReplaceReputationWatchBarUpdate()

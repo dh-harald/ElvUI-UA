@@ -215,7 +215,7 @@ local function ApplyTalentSkin()
 	ApplyTalentChrome(frame)
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyTalentChrome(frame) end)
-	if not ok then E:Print("Skins (talent): " .. frameName .. " OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

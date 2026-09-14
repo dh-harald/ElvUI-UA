@@ -72,16 +72,16 @@ local WHITE = { r = 1, g = 1, b = 1 }
 
 -- Global strings with their 1.12.1 GlobalStrings.lua values as fallback; the
 -- UA Lua API docs do not cover GlobalStrings.
-local LEVEL_TEXT = LEVEL or "Level"
+local LEVEL_TEXT = LEVEL or L["Level"]
 local PVP_TEXT = HELPFRAME_HOME_ISSUE3_HEADER or "PvP"
 local TARGET_TEXT = TARGET or L["Target"]
 local ID_TEXT = ID or "ID"
 
 local CLASSIFICATION = {
-	worldboss = format("|cffAF5050 %s|r", BOSS or "Boss"),
-	rareelite = format("|cffAF5050+ %s|r", ITEM_QUALITY3_DESC or "Rare"),
+	worldboss = format("|cffAF5050 %s|r", BOSS or L["Boss"]),
+	rareelite = format("|cffAF5050+ %s|r", ITEM_QUALITY3_DESC or L["Rare"]),
 	elite = "|cffAF5050+|r",
-	rare = format("|cffAF5050 %s|r", ITEM_QUALITY3_DESC or "Rare"),
+	rare = format("|cffAF5050 %s|r", ITEM_QUALITY3_DESC or L["Rare"]),
 }
 
 -- Real 1.12.1 FrameXML QuestDifficultyColor values (QuestLogFrame.lua), kept
@@ -396,7 +396,7 @@ end
 -- Health bar
 -- ---------------------------------------------------------------------------
 
-local DEAD_TEXT = DEAD or "Dead"
+local DEAD_TEXT = DEAD or L["Dead"]
 
 -- The native bar hangs 2 units in and 1 unit below the frame's bottom edge
 -- (GameTooltipTemplate, the same measured on UA). With the tooltip skin the
@@ -769,8 +769,6 @@ local function IsIDLine(text)
 		and find(string.sub(text, prefixLength + 1), "^%d+$") ~= nil
 end
 
--- Our own string, not the client's SALE_PRICE_COLON ("Sale Price:").
-local SALE_TEXT = L["Sell Price:"]
 local BANK_KEY = BANK_CONTAINER or -1
 
 -- True for a line this module appends to an item tooltip. Compared on
@@ -780,7 +778,7 @@ local function IsExtraLine(text)
 	if not text then return false end
 	if IsIDLine(text) then return true end
 	text = StripEscapes(text)
-	return text == SALE_TEXT or text == L["Count"] or text == L["Bank"]
+	return text == L["Sell Price:"] or text == L["Count"] or text == L["Bank"]
 end
 
 -- Hides every appended line at the end of `tip`. A repeated fill of an open
@@ -865,7 +863,8 @@ function TT:AddItemLines(tip, link, count)
 		local LIP = LibStub("ItemPrice-1.1", true)
 		local price = LIP and LIP:GetPriceById(id)
 		if price and price > 0 then
-			tip:AddDoubleLine(SALE_TEXT, E:FormatMoney(price * (tonumber(count) or 1), "BLIZZARD"),
+			-- Our own string, not the client's SALE_PRICE_COLON ("Sale Price:").
+			tip:AddDoubleLine(L["Sell Price:"], E:FormatMoney(price * (tonumber(count) or 1), "BLIZZARD"),
 				nil, nil, nil, 1, 1, 1)
 			added = true
 		end
@@ -1043,7 +1042,7 @@ end
 -- the frame's content, the frame is widened and every right-hand line
 -- re-anchored: a right line hangs off its row's left line by the content width
 -- and does not follow a resized frame.
-local HEADER_TEXT = CURRENTLY_EQUIPPED or "Currently Equipped"
+local HEADER_TEXT = CURRENTLY_EQUIPPED or L["Currently Equipped"]
 local HEADER_SHIFT = 14
 local LINE_INSET = 10
 local LINE_PAD = 5
@@ -1645,7 +1644,7 @@ function TT:Initialize()
 	E.Tooltip = self
 
 	self.anchor = CreateAnchor()
-	E:CreateMover(self.anchor, "TooltipMover", "Tooltip")
+	E:CreateMover(self.anchor, "TooltipMover", L["Tooltip"])
 
 	-- Every handler runs inside pcall: these hooks sit in the middle of
 	-- native tooltip code paths, and an error here must not stop the

@@ -132,7 +132,7 @@ local function ApplyGossipSkin()
 	ApplyGossipChrome(frame)
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyGossipChrome(frame) end)
-	if not ok then E:Print("Skins (gossip): GossipFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

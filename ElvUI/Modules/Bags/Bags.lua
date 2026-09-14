@@ -171,8 +171,8 @@ function B:ConstructContainerFrame(name, isBank)
 	f:SetScript("OnEnter", function()
 		GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 0, 4)
 		GameTooltip:ClearLines()
-		GameTooltip:AddDoubleLine("Hold Shift + Drag:", "Temporary Move", 1, 1, 1)
-		GameTooltip:AddDoubleLine("Hold Control + Right Click:", "Reset Position", 1, 1, 1)
+		GameTooltip:AddDoubleLine(L["Hold Shift + Drag:"], L["Temporary Move"], 1, 1, 1)
+		GameTooltip:AddDoubleLine(L["Hold Control + Right Click:"], L["Reset Position"], 1, 1, 1)
 		GameTooltip:Show()
 	end)
 	f:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -250,7 +250,7 @@ function B:ConstructContainerFrame(name, isBank)
 		f.keyButton:SetScript("OnClick", function() B:ToggleKeyRing() end)
 		f.keyButton:SetScript("OnEnter", function()
 			GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
-			GameTooltip:SetText(BINDING_NAME_TOGGLEKEYRING or "Toggle Keyring")
+			GameTooltip:SetText(BINDING_NAME_TOGGLEKEYRING or L["Toggle Keyring"])
 			GameTooltip:Show()
 		end)
 		f.keyButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -278,7 +278,7 @@ function B:ConstructContainerFrame(name, isBank)
 		end)
 		f.bagsButton:SetScript("OnEnter", function()
 			GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
-			GameTooltip:SetText("Toggle Bags")
+			GameTooltip:SetText(L["Toggle Bags"])
 			GameTooltip:Show()
 		end)
 		f.bagsButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -291,7 +291,7 @@ function B:ConstructContainerFrame(name, isBank)
 		f.bagText = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		f.bagText:SetPoint("BOTTOMRIGHT", f.holderFrame, "TOPRIGHT", -10, 4)
 		f.bagText:SetJustifyH("RIGHT")
-		f.bagText:SetText("Bank")
+		f.bagText:SetText(L["Bank"])
 		f.headerLeftmost = f.bagText
 
 		f.bagsButton = CreateFrame("Button", name.."BagsButton", f)
@@ -315,7 +315,7 @@ function B:ConstructContainerFrame(name, isBank)
 		end)
 		f.bagsButton:SetScript("OnEnter", function()
 			GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
-			GameTooltip:SetText("Toggle Bank Bags")
+			GameTooltip:SetText(L["Toggle Bank Bags"])
 			GameTooltip:Show()
 		end)
 		f.bagsButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -346,10 +346,10 @@ function B:ConstructContainerFrame(name, isBank)
 		end)
 		f.purchaseButton:SetScript("OnEnter", function()
 			GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
-			GameTooltip:SetText("Purchase Bank Bag Slot")
+			GameTooltip:SetText(L["Purchase Bank Bag Slot"])
 			local slots, full = GetNumBankSlots()
 			if full then
-				GameTooltip:AddLine("All slots purchased.", 1, 1, 1)
+				GameTooltip:AddLine(L["All slots purchased."], 1, 1, 1)
 			else
 				local cost = GetBankSlotCost and GetBankSlotCost(slots or 0)
 				if cost then
@@ -984,7 +984,7 @@ function B:ConstructSearchBox(f, name)
 	-- objects have no SetTextColor at all.
 	box.placeholder = box:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	box.placeholder:SetPoint("LEFT", box, "LEFT", 20, 0)
-	box.placeholder:SetText(SEARCH or "Search")
+	box.placeholder:SetText(SEARCH or L["Search"])
 	pcall(box.placeholder.SetTextColor, box.placeholder, 0.6, 0.6, 0.6)
 
 	box:SetScript("OnMouseDown", function()
@@ -1499,10 +1499,11 @@ function B:TakeOverNativeToggles()
 	end
 
 	-- Silence rather than a hard failure: a missing global means one entry
-	-- point still opens a native window, which is worth naming out loud
+	-- point still opens a native window, which is worth telling the player
 	-- rather than leaving as an unexplained "sometimes the old bag opens".
+	-- The message names the effect, not the missing function names.
 	if table.getn(missing) > 0 then
-		E:Print("Bags: missing native globals: "..table.concat(missing, ", "))
+		E:Print(L["Some bag shortcuts may still open the default bag window."])
 	end
 end
 
@@ -1542,8 +1543,8 @@ function B:Initialize()
 
 	-- Mover NAMES are real ElvUI's own, so a saved position from a real
 	-- profile lands on the right frame.
-	E:CreateMover(self.BagHolder, "ElvUIBagMover", "Bag Mover")
-	E:CreateMover(self.BankHolder, "ElvUIBankMover", "Bank Mover")
+	E:CreateMover(self.BagHolder, "ElvUIBagMover", L["Bag Mover"])
+	E:CreateMover(self.BankHolder, "ElvUIBankMover", L["Bank Mover"])
 
 	self.BagFrame = self:ConstructContainerFrame("ElvUI_ContainerFrame")
 

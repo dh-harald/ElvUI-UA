@@ -114,7 +114,7 @@ local function ApplyTaxiSkin()
 	ApplyTaxiChrome(frame)
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyTaxiChrome(frame) end)
-	if not ok then E:Print("Skins (taxi): TaxiFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

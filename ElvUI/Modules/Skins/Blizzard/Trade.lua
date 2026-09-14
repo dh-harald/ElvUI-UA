@@ -242,7 +242,7 @@ local function ApplyTradeSkin()
 	ApplyTradeChrome(frame)
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyTradeChrome(frame) end)
-	if not ok then E:Print("Skins (trade): TradeFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

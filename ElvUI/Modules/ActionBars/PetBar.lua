@@ -113,7 +113,7 @@ function M:CreateBar()
 	-- above bar1. E:CreateMover below captures this as its reset default,
 	-- then owns the bar's actual position from here on.
 	bar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 204)
-	E:CreateMover(bar, "ElvBar_Pet", "Pet Bar")
+	E:CreateMover(bar, "ElvBar_Pet", L["Pet Bar"])
 
 	pcall(bar.SetBackdrop, bar, {
 		bgFile = "Interface\\Buttons\\WHITE8x8",

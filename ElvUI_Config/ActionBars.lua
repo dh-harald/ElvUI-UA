@@ -35,7 +35,7 @@ local function BarArgs(id)
 		-- enable row from the layout rows with a blank description.
 		info = {
 			type = "header",
-			name = "Bar "..id,
+			name = L["Bar "]..id,
 			order = 1,
 		},
 		spacer = {
@@ -420,11 +420,11 @@ E.Options.args.actionbar = {
 				},
 			},
 		},
-		bar1 = { type = "group", name = "Bar 1", order = 3, args = BarArgs(1) },
-		bar2 = { type = "group", name = "Bar 2", order = 4, args = BarArgs(2) },
-		bar3 = { type = "group", name = "Bar 3", order = 5, args = BarArgs(3) },
-		bar4 = { type = "group", name = "Bar 4", order = 6, args = BarArgs(4) },
-		bar5 = { type = "group", name = "Bar 5", order = 7, args = BarArgs(5) },
+		bar1 = { type = "group", name = L["Bar "]..1, order = 3, args = BarArgs(1) },
+		bar2 = { type = "group", name = L["Bar "]..2, order = 4, args = BarArgs(2) },
+		bar3 = { type = "group", name = L["Bar "]..3, order = 5, args = BarArgs(3) },
+		bar4 = { type = "group", name = L["Bar "]..4, order = 6, args = BarArgs(4) },
+		bar5 = { type = "group", name = L["Bar "]..5, order = 7, args = BarArgs(5) },
 		-- Nested under "actionbar", NOT a separate top-level
 		-- category -- matches real ElvUI's own structure exactly
 		-- (source/ElvUI-vanilla/ElvUI_Config/ActionBars.lua:280:

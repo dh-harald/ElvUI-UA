@@ -410,7 +410,7 @@ local function ApplyMerchantSkin()
 	ApplyMerchantChrome(frame)
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyMerchantChrome(frame) end)
-	if not ok then E:Print("Skins (merchant): MerchantFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

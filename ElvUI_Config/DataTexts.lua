@@ -10,17 +10,22 @@ local Shared = E.ConfigShared
 -- values table, so this never drifts out of sync with what widgets exist.
 -- Calls `DT:LoadDataTexts()` on change, matching real ElvUI's own
 -- PanelLayoutOptions set-functions exactly.
+--
+-- `localizedName` is read in L again: it was captured when the datatext
+-- registered at file load, before the "Addon Language" setting is applied
+-- (ElvUI/Locales/Locales.lua), so on an English client it holds the English
+-- key, and the lookup yields the chosen language.
 local function PanelDataTextArgs(panelKey, order, label)
 	return {
 		type = "select",
 		name = label,
 		order = order,
 		values = function()
-			local list = { [""] = "None" }
+			local list = { [""] = L["None"] }
 			if E.DataTexts then
-				local name
-				for name in pairs(E.DataTexts.RegisteredDataTexts) do
-					list[name] = name
+				local name, data
+				for name, data in pairs(E.DataTexts.RegisteredDataTexts) do
+					list[name] = L[data.localizedName or name]
 				end
 			end
 			return list
@@ -47,11 +52,11 @@ local function ChatPanelDataTextArgs(panelKey, order, label)
 			name = pointLabel,
 			order = pointOrder,
 			values = function()
-				local list = { [""] = "None" }
+				local list = { [""] = L["None"] }
 				if E.DataTexts then
-					local name
-					for name in pairs(E.DataTexts.RegisteredDataTexts) do
-						list[name] = name
+					local name, data
+					for name, data in pairs(E.DataTexts.RegisteredDataTexts) do
+						list[name] = L[data.localizedName or name]
 					end
 				end
 				return list
@@ -72,9 +77,9 @@ local function ChatPanelDataTextArgs(panelKey, order, label)
 		order = order,
 		guiInline = true,
 		args = {
-			left = PointArgs("left", 1, "Left"),
-			middle = PointArgs("middle", 2, "Middle"),
-			right = PointArgs("right", 3, "Right"),
+			left = PointArgs("left", 1, L["Left"]),
+			middle = PointArgs("middle", 2, L["Middle"]),
+			right = PointArgs("right", 3, L["Right"]),
 		},
 	}
 end
@@ -307,12 +312,12 @@ E.Options.args.datatexts = {
 					guiInline = true,
 					order = 12,
 					args = {
-						LeftMiniPanel = PanelDataTextArgs("LeftMiniPanel", 1, "Left Minimap Panel"),
-						RightMiniPanel = PanelDataTextArgs("RightMiniPanel", 2, "Right Minimap Panel"),
+						LeftMiniPanel = PanelDataTextArgs("LeftMiniPanel", 1, L["Left Minimap Panel"]),
+						RightMiniPanel = PanelDataTextArgs("RightMiniPanel", 2, L["Right Minimap Panel"]),
 					},
 				},
-				LeftChatDataPanel = ChatPanelDataTextArgs("LeftChatDataPanel", 13, "Left Chat Panel"),
-				RightChatDataPanel = ChatPanelDataTextArgs("RightChatDataPanel", 14, "Right Chat Panel"),
+				LeftChatDataPanel = ChatPanelDataTextArgs("LeftChatDataPanel", 13, L["Left Chat Panel"]),
+				RightChatDataPanel = ChatPanelDataTextArgs("RightChatDataPanel", 14, L["Right Chat Panel"]),
 			},
 		},
 		time = {
@@ -330,7 +335,7 @@ E.Options.args.datatexts = {
 					name = L["Time Format"],
 					order = 2,
 					values = {
-						[""] = "None",
+						[""] = L["None"],
 						["%I:%M"] = "03:27",
 						["%I:%M:%S"] = "03:27:32",
 						["%I:%M %p"] = "03:27 PM",
@@ -346,7 +351,7 @@ E.Options.args.datatexts = {
 					name = L["Date Format"],
 					order = 3,
 					values = {
-						[""] = "None",
+						[""] = L["None"],
 						["%d/%m/%y "] = "DD/MM/YY",
 						["%m/%d/%y "] = "MM/DD/YY",
 						["%y/%m/%d "] = "YY/MM/DD",

@@ -76,7 +76,7 @@ local function Construct_PartyMemberFrame(index)
 
 		UF:EnableUnitMouse(frame)
 		HideNativePartyFrame(index)
-		E:CreateMover(frame, "ElvUF_Party"..index, "Party "..index.." Frame")
+		E:CreateMover(frame, "ElvUF_Party"..index, string.format(L["Party %d Frame"], index))
 
 		return frame
 	end

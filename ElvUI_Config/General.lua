@@ -184,6 +184,61 @@ E.Options.args.general = {
 						["GERMAN"] = L["German (Tsd, Mio, Mrd)"],
 					},
 				},
+				-- Matches real ElvUI's own general.general.GameLocale exactly
+				-- (source/ElvUI-vanilla/ElvUI_Config/General.lua:222, order 22,
+				-- right after numberPrefixStyle) -- same arg key, same path, same
+				-- get/set on the bare global `GAME_LOCALE`, so a real profile's
+				-- options-tree expectations still hold. `name`/`desc` are this
+				-- project's OWN L[] keys rather than real ElvUI's "Change
+				-- Language" pair -- upstream itself only ever translated that
+				-- pair into German, leaving every other locale on plain English
+				-- (source/ElvUI-vanilla/ElvUI_Config/Locales/*_Config.lua), which
+				-- would defeat the point of this control on the other four
+				-- shipped locales. `values` also isn't reused verbatim: upstream
+				-- lists 9 locales, this project ships translations for 6
+				-- (enUS + the 5 this Locales/ directory carries) -- listing an
+				-- unshipped one would silently show English when picked, since
+				-- no Locales/*.lua block would register for it.
+				--
+				-- AceLocale-3.0 itself reads this exact global
+				-- (`GAME_LOCALE or GetLocale()`, see AceLocale-3.0.lua) to decide
+				-- which translation to register. As a SavedVariable it is only
+				-- assigned after every ElvUI file has run, so the core applies
+				-- its own translations from OnInitialize
+				-- (ElvUI/Locales/Locales.lua); this addon's Locales load later
+				-- and register directly. It is read before E.db is even
+				-- built -- hence get/set touch GAME_LOCALE directly, not
+				-- E.db/E.private/E.global. "" maps to nil (automatic: the game
+				-- client's own locale) -- a convenience beyond upstream, safe to
+				-- add since GAME_LOCALE lives outside the profile system
+				-- entirely, so it cannot affect real-profile import fidelity.
+				-- A reload re-runs every Locales file, so "global" scope
+				-- (E:RequestReload("global")) is correct for OUR declaration
+				-- specifically (`## SavedVariables: ..., GAME_LOCALE` in
+				-- ElvUI.toc, account-wide, not per-character) -- upstream's own
+				-- control calls PRIVATE_RL instead despite declaring GAME_LOCALE
+				-- the same way, which looks like an upstream wording mismatch,
+				-- not a reason to copy it here.
+				GameLocale = {
+					order = 22,
+					type = "select",
+					name = L["Addon Language"],
+					desc = L["Overrides which language this addon's own text uses, independent of the game client's language. Automatic uses the game client's own language, falling back to English if unsupported. Requires /reload to take effect."],
+					values = {
+						[""] = L["Automatic (Game Client Language)"],
+						["enUS"] = "English (enUS)",
+						["frFR"] = "French (frFR)",
+						["deDE"] = "German (deDE)",
+						["esES"] = "Spanish (esES)",
+						["ruRU"] = "Russian (ruRU)",
+						["zhCN"] = "Chinese (zhCN)",
+					},
+					get = function() return GAME_LOCALE or "" end,
+					set = function(_, value)
+						GAME_LOCALE = (value ~= "" and value) or nil
+						E:RequestReload("global")
+					end,
+				},
 				-- Project extension: whether the Lua error window
 				-- (Core/DebugTools.lua) opens by itself. Real ElvUI has no such
 				-- entry; it gates this with the ShowErrors CVar, which Unreal

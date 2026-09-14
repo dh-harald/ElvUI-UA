@@ -281,11 +281,11 @@ local function ApplyMacroSkin()
 
 	ApplyMacroFrameChrome(frame)
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyMacroFrameChrome(frame) end)
-	if not ok then E:Print("Skins (macro): MacroFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 
 	ApplyMacroPopupChrome()
 	local okPopup = S:TryHookScript(_G.MacroPopupFrame, "OnShow", ApplyMacroPopupChrome)
-	if not okPopup then E:Print("Skins (macro): MacroPopupFrame OnShow hook failed to install") end
+	if not okPopup then S:ReportSkinProblem() end
 end
 
 -- A hand-rolled `E:ScheduleRepeatingTimer(..., 1)` poll would flash the

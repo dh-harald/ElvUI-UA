@@ -507,7 +507,7 @@ function M:CreateBar(barDef)
 	-- position from here on (drag/nudge via /moveui, persisted in
 	-- E.db.movers["ElvAB_"..id], real-ElvUI-format -- see Core/Movers.lua).
 	bar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, DEFAULT_Y_OFFSET[barDef.id] or 4)
-	E:CreateMover(bar, "ElvAB_"..barDef.id, "Bar "..barDef.id)
+	E:CreateMover(bar, "ElvAB_"..barDef.id, L["Bar "]..barDef.id)
 
 	bar.buttons = {}
 	local i

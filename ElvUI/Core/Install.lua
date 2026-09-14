@@ -174,7 +174,7 @@ local function SetupCVars()
 	pcall(TutorialFrame_HideAllAlerts)
 	pcall(ClearTutorials)
 
-	ShowStepComplete("CVars Set")
+	ShowStepComplete(L["CVars Set"])
 end
 
 -- Values ported from real ElvUI's own SetupTheme
@@ -278,7 +278,7 @@ function E:SetupTheme(theme)
 	ElvUI.Util.BORDER_COLOR[2] = brc.g
 	ElvUI.Util.BORDER_COLOR[3] = brc.b
 
-	ShowStepComplete("Theme Set")
+	ShowStepComplete(L["Theme Set"])
 end
 
 -- Toggles an option button between usable and disabled-with-explanation,
@@ -365,7 +365,7 @@ local function SetupResolutionLow()
 
 	E.db.lowresolutionset = true
 	ApplyResolutionLiveRefresh()
-	ShowStepComplete("Resolution Style Set")
+	ShowStepComplete(L["Resolution Style Set"])
 end
 
 local function SetupResolutionHigh()
@@ -389,7 +389,7 @@ local function SetupResolutionHigh()
 
 	E.db.lowresolutionset = false
 	ApplyResolutionLiveRefresh()
-	ShowStepComplete("Resolution Style Set")
+	ShowStepComplete(L["Resolution Style Set"])
 end
 
 -- Real ElvUI's own SetupLayout (source/ElvUI-vanilla/.../
@@ -514,7 +514,7 @@ function E:SetupLayout(role)
 	panel.middle = "Durability"
 	panel.right = preset.datatextRight
 
-	ShowStepComplete("Layout Set")
+	ShowStepComplete(L["Layout Set"])
 end
 
 -- Ported from real ElvUI's own SetupChat
@@ -566,7 +566,7 @@ local function SetupChat()
 
 	pcall(ChangeChatColor, "CHANNEL1", 195 / 255, 230 / 255, 232 / 255)
 
-	ShowStepComplete("Chat Set")
+	ShowStepComplete(L["Chat Set"])
 end
 
 -- Ported from real ElvUI's own SetupAuras
@@ -590,7 +590,7 @@ end
 local function SetupAuras()
 	E.db.unitframe.units.player.buffs.enable = true
 	E.db.unitframe.units.target.debuffs.enable = true
-	ShowStepComplete("Auras Set")
+	ShowStepComplete(L["Auras Set"])
 end
 
 -- Forward-declared so CreateInstallFrame's button closures (built before
@@ -635,66 +635,66 @@ SetPage = function(frame, pageNum)
 	SetButtonUsable(frame.NextButton, pageNum < MAX_PAGE)
 
 	if pageNum == 1 then
-		pcall(frame.SubTitle.SetText, frame.SubTitle, "Welcome to ElvUI")
+		pcall(frame.SubTitle.SetText, frame.SubTitle, L["Welcome to ElvUI"])
 		pcall(frame.Desc1.SetText, frame.Desc1,
-			"This wizard will help you set up your interface.")
+			L["This wizard will help you set up your interface."])
 		pcall(frame.Desc2.SetText, frame.Desc2,
-			"The configuration menu is always available via /elvui or /ec. This wizard can be reopened later with /eiw.")
+			L["The configuration menu is always available via /elvui or /ec. This wizard can be reopened later with /eiw."])
 		pcall(frame.Desc3.SetText, frame.Desc3,
-			"Press Next to continue, or Skip to close without changing anything.")
+			L["Press Next to continue, or Skip to close without changing anything."])
 
 		PositionOptionButtons(frame, 1)
-		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, "Skip")
+		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, L["Skip"])
 		frame.OptionButton1:SetScript("OnClick", function() pcall(frame.Hide, frame) end)
 		pcall(frame.OptionButton1.Show, frame.OptionButton1)
 	elseif pageNum == 2 then
-		pcall(frame.SubTitle.SetText, frame.SubTitle, "CVars")
+		pcall(frame.SubTitle.SetText, frame.SubTitle, L["CVars"])
 		pcall(frame.Desc1.SetText, frame.Desc1,
-			"This step sets up a few of your World of Warcraft options so the interface behaves as expected.")
+			L["This step sets up a few of your World of Warcraft options so the interface behaves as expected."])
 		pcall(frame.Desc2.SetText, frame.Desc2,
-			"Click the button below to apply them.")
-		pcall(frame.Desc3.SetText, frame.Desc3, "Importance: High")
+			L["Click the button below to apply them."])
+		pcall(frame.Desc3.SetText, frame.Desc3, L["Importance: High"])
 
 		PositionOptionButtons(frame, 1)
-		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, "Setup CVars")
+		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, L["Setup CVars"])
 		frame.OptionButton1:SetScript("OnClick", SetupCVars)
 		pcall(frame.OptionButton1.Show, frame.OptionButton1)
 	elseif pageNum == 3 then
-		pcall(frame.SubTitle.SetText, frame.SubTitle, "Chat")
+		pcall(frame.SubTitle.SetText, frame.SubTitle, L["Chat"])
 		pcall(frame.Desc1.SetText, frame.Desc1,
-			"This step sets up which message types show in your main chat window (say/yell/emotes/whispers/etc.) and your combat log window.")
+			L["This step sets up which message types show in your main chat window (say/yell/emotes/whispers/etc.) and your combat log window."])
 		pcall(frame.Desc2.SetText, frame.Desc2,
-			"You can always change this later by right-clicking a chat tab -- nothing here is one-way.")
-		pcall(frame.Desc3.SetText, frame.Desc3, "Importance: Medium")
+			L["You can always change this later by right-clicking a chat tab -- nothing here is one-way."])
+		pcall(frame.Desc3.SetText, frame.Desc3, L["Importance: Medium"])
 
 		PositionOptionButtons(frame, 1)
-		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, "Setup Chat")
+		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, L["Setup Chat"])
 		frame.OptionButton1:SetScript("OnClick", SetupChat)
 		pcall(frame.OptionButton1.Show, frame.OptionButton1)
 	elseif pageNum == 4 then
-		pcall(frame.SubTitle.SetText, frame.SubTitle, "Theme Setup")
+		pcall(frame.SubTitle.SetText, frame.SubTitle, L["Theme Setup"])
 		pcall(frame.Desc1.SetText, frame.Desc1,
-			"Choose a color theme for your interface.")
+			L["Choose a color theme for your interface."])
 		pcall(frame.Desc2.SetText, frame.Desc2,
-			"Border/backdrop colors apply to newly built frames immediately; a /reload shows the full effect everywhere else. Class also colors health/cast bars by class.")
-		pcall(frame.Desc3.SetText, frame.Desc3, "Importance: Low")
+			L["Border/backdrop colors apply to newly built frames immediately; a /reload shows the full effect everywhere else. Class also colors health/cast bars by class."])
+		pcall(frame.Desc3.SetText, frame.Desc3, L["Importance: Low"])
 
 		PositionOptionButtons(frame, 3)
-		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, "Classic")
+		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, L["Classic"])
 		frame.OptionButton1:SetScript("OnClick", function() E:SetupTheme("classic") end)
 		pcall(frame.OptionButton1.Show, frame.OptionButton1)
-		pcall(frame.OptionButton2.label.SetText, frame.OptionButton2.label, "Dark")
+		pcall(frame.OptionButton2.label.SetText, frame.OptionButton2.label, L["Dark"])
 		frame.OptionButton2:SetScript("OnClick", function() E:SetupTheme("dark") end)
 		pcall(frame.OptionButton2.Show, frame.OptionButton2)
-		pcall(frame.OptionButton3.label.SetText, frame.OptionButton3.label, "Class")
+		pcall(frame.OptionButton3.label.SetText, frame.OptionButton3.label, L["Class"])
 		frame.OptionButton3:SetScript("OnClick", function() E:SetupTheme("class") end)
 		pcall(frame.OptionButton3.Show, frame.OptionButton3)
 	elseif pageNum == 5 then
-		pcall(frame.SubTitle.SetText, frame.SubTitle, "Resolution")
+		pcall(frame.SubTitle.SetText, frame.SubTitle, L["Resolution"])
 		PositionOptionButtons(frame, 2)
-		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, "High Resolution")
+		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, L["High Resolution"])
 		pcall(frame.OptionButton1.Show, frame.OptionButton1)
-		pcall(frame.OptionButton2.label.SetText, frame.OptionButton2.label, "Low Resolution")
+		pcall(frame.OptionButton2.label.SetText, frame.OptionButton2.label, L["Low Resolution"])
 		pcall(frame.OptionButton2.Show, frame.OptionButton2)
 
 		-- Runs on BOTH clients -- unlike real ElvUI's own
@@ -706,57 +706,57 @@ SetPage = function(frame, pageNum)
 		-- separate thing this step never touched even on the legacy
 		-- client, and isn't implemented here either.
 		pcall(frame.Desc1.SetText, frame.Desc1,
-			"This step resizes chat windows, unit frames, and action bar buttons for your resolution.")
+			L["This step resizes chat windows, unit frames, and action bar buttons for your resolution."])
 		pcall(frame.Desc2.SetText, frame.Desc2,
-			"Choose High Resolution if your screen is wide enough, or Low Resolution if things feel cramped.")
+			L["Choose High Resolution if your screen is wide enough, or Low Resolution if things feel cramped."])
 		pcall(frame.Desc3.SetText, frame.Desc3,
-			"All changes apply immediately -- no /reload needed.")
+			L["All changes apply immediately -- no /reload needed."])
 		SetButtonUsable(frame.OptionButton1, true)
 		SetButtonUsable(frame.OptionButton2, true)
 		frame.OptionButton1:SetScript("OnClick", SetupResolutionHigh)
 		frame.OptionButton2:SetScript("OnClick", SetupResolutionLow)
 	elseif pageNum == 6 then
-		pcall(frame.SubTitle.SetText, frame.SubTitle, "Layout")
+		pcall(frame.SubTitle.SetText, frame.SubTitle, L["Layout"])
 		pcall(frame.Desc1.SetText, frame.Desc1,
-			"Choose a layout based on your combat role.")
+			L["Choose a layout based on your combat role."])
 		pcall(frame.Desc2.SetText, frame.Desc2,
-			"This repositions your unit frames and (Healer only) reshapes your action bars for more click-heal room. Unit frames, bar button counts, and castbar size apply immediately; enabling/disabling a bar needs /reload.")
-		pcall(frame.Desc3.SetText, frame.Desc3, "Importance: Medium")
+			L["This repositions your unit frames and (Healer only) reshapes your action bars for more click-heal room. Unit frames, bar button counts, and castbar size apply immediately; enabling/disabling a bar needs /reload."])
+		pcall(frame.Desc3.SetText, frame.Desc3, L["Importance: Medium"])
 
 		PositionOptionButtons(frame, 4)
-		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, "Tank")
+		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, L["Tank"])
 		frame.OptionButton1:SetScript("OnClick", function() E:SetupLayout("tank") end)
 		pcall(frame.OptionButton1.Show, frame.OptionButton1)
-		pcall(frame.OptionButton2.label.SetText, frame.OptionButton2.label, "Healer")
+		pcall(frame.OptionButton2.label.SetText, frame.OptionButton2.label, L["Healer"])
 		frame.OptionButton2:SetScript("OnClick", function() E:SetupLayout("healer") end)
 		pcall(frame.OptionButton2.Show, frame.OptionButton2)
-		pcall(frame.OptionButton3.label.SetText, frame.OptionButton3.label, "Physical DPS")
+		pcall(frame.OptionButton3.label.SetText, frame.OptionButton3.label, L["Physical DPS"])
 		frame.OptionButton3:SetScript("OnClick", function() E:SetupLayout("dpsMelee") end)
 		pcall(frame.OptionButton3.Show, frame.OptionButton3)
-		pcall(frame.OptionButton4.label.SetText, frame.OptionButton4.label, "Caster DPS")
+		pcall(frame.OptionButton4.label.SetText, frame.OptionButton4.label, L["Caster DPS"])
 		frame.OptionButton4:SetScript("OnClick", function() E:SetupLayout("dpsCaster") end)
 		pcall(frame.OptionButton4.Show, frame.OptionButton4)
 	elseif pageNum == 7 then
-		pcall(frame.SubTitle.SetText, frame.SubTitle, "Auras")
+		pcall(frame.SubTitle.SetText, frame.SubTitle, L["Auras"])
 		pcall(frame.Desc1.SetText, frame.Desc1,
-			"Select the aura style for your unit frames.")
+			L["Select the aura style for your unit frames."])
 		pcall(frame.Desc2.SetText, frame.Desc2,
-			"This project only has icon-style auras -- there is no aura bar style to choose between.")
-		pcall(frame.Desc3.SetText, frame.Desc3, "Importance: Medium")
+			L["This project only has icon-style auras -- there is no aura bar style to choose between."])
+		pcall(frame.Desc3.SetText, frame.Desc3, L["Importance: Medium"])
 
 		PositionOptionButtons(frame, 1)
-		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, "Icons Only")
+		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, L["Icons Only"])
 		frame.OptionButton1:SetScript("OnClick", SetupAuras)
 		pcall(frame.OptionButton1.Show, frame.OptionButton1)
 	elseif pageNum == MAX_PAGE then
-		pcall(frame.SubTitle.SetText, frame.SubTitle, "Setup Complete")
+		pcall(frame.SubTitle.SetText, frame.SubTitle, L["Setup Complete"])
 		pcall(frame.Desc1.SetText, frame.Desc1,
-			"You are finished with the setup wizard.")
+			L["You are finished with the setup wizard."])
 		pcall(frame.Desc2.SetText, frame.Desc2,
-			"Click Finished to save and reload your interface.")
+			L["Click Finished to save and reload your interface."])
 
 		PositionOptionButtons(frame, 1)
-		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, "Finished")
+		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, L["Finished"])
 		frame.OptionButton1:SetScript("OnClick", function()
 			E.private.installComplete = true
 			ReloadUI()
@@ -856,12 +856,12 @@ local function CreateInstallFrame()
 	end
 	frame.ProgressText = progressText
 
-	frame.PrevButton = CreateWizardButton(frame, nil, "Previous", 100, function() PrevPage(frame) end)
+	frame.PrevButton = CreateWizardButton(frame, nil, L["Previous"], 100, function() PrevPage(frame) end)
 	if frame.PrevButton then
 		pcall(frame.PrevButton.SetPoint, frame.PrevButton, "BOTTOMLEFT", frame, "BOTTOMLEFT", 16, 16)
 	end
 
-	frame.NextButton = CreateWizardButton(frame, nil, "Next", 100, function() NextPage(frame) end)
+	frame.NextButton = CreateWizardButton(frame, nil, L["Next"], 100, function() NextPage(frame) end)
 	if frame.NextButton then
 		pcall(frame.NextButton.SetPoint, frame.NextButton, "BOTTOMRIGHT", frame, "BOTTOMRIGHT", -16, 16)
 	end

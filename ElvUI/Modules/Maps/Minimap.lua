@@ -470,7 +470,7 @@ function M:Initialize()
 	-- Maps/Minimap.lua:317: `E:CreateMover(MMHolder, "MinimapMover",
 	-- MINIMAP_LABEL, ...)`). Same mover name ("MinimapMover") as real
 	-- ElvUI for profile-format compatibility.
-	E:CreateMover(holder, "MinimapMover", "Minimap")
+	E:CreateMover(holder, "MinimapMover", L["Minimap"])
 
 	pcall(holder.SetBackdrop, holder, {
 		bgFile = "Interface\\Buttons\\WHITE8x8",

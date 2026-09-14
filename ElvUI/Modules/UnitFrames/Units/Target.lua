@@ -62,7 +62,7 @@ local function Construct_TargetFrame()
 
 	HideNativeTargetFrame()
 	UF:EnableUnitMouse(frame)
-	E:CreateMover(frame, "ElvUF_Target", "Target Frame")
+	E:CreateMover(frame, "ElvUF_Target", L["Target Frame"])
 
 	return frame
 end

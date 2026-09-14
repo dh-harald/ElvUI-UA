@@ -565,10 +565,10 @@ local function ApplyTradeSkillSkin()
 		ApplyTradeSkillChrome(frame)
 		S:CloseOtherDoublewidePanels(frame)
 	end)
-	if not ok then E:Print("Skins (tradeskill): TradeSkillFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 
 	local hookOk = pcall(function() S:SecureHook("TradeSkillFrame_SetSelection", ApplySelectionChrome) end)
-	if not hookOk then E:Print("Skins (tradeskill): SecureHook(TradeSkillFrame_SetSelection) failed") end
+	if not hookOk then S:ReportSkinProblem() end
 
 	if not rowGlyphPollStarted then
 		rowGlyphPollStarted = true

@@ -418,10 +418,10 @@ local function CustomTextArgs(dbKey)
 					name = L["Attach To"],
 					order = 5,
 					values = {
-						["Health"] = "Health",
-						["Power"] = "Power",
+						["Health"] = L["Health"],
+						["Power"] = L["Power"],
 						["InfoPanel"] = L["Information Panel"],
-						["Frame"] = "Frame",
+						["Frame"] = L["Frame"],
 					},
 					get = function() return getTable().attachTextTo end,
 					set = function(_, value) getTable().attachTextTo = value end,
@@ -430,7 +430,7 @@ local function CustomTextArgs(dbKey)
 					type = "select",
 					name = L["Justify"],
 					order = 6,
-					values = {["CENTER"] = "Center", ["LEFT"] = "Left", ["RIGHT"] = "Right"},
+					values = {["CENTER"] = L["Center"], ["LEFT"] = L["Left"], ["RIGHT"] = L["Right"]},
 					get = function() return getTable().justifyH end,
 					set = function(_, value) getTable().justifyH = value end,
 				},
@@ -487,7 +487,7 @@ local function CustomTextArgs(dbKey)
 			local settings = E.db.unitframe.units[dbKey]
 			settings.customTexts = settings.customTexts or {}
 			if settings.customTexts[value] then
-				E:Print("A custom text named '"..value.."' already exists.")
+				E:Print(string.format(L["A custom text named '%s' already exists."], value))
 				return
 			end
 			settings.customTexts[value] = {
@@ -917,8 +917,8 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 					type = "description",
 					order = 1,
 					name = dbKey == "player"
-						and "Real, exact duration -- read directly from the native GetPlayerBuff* API. Positioned above the frame."
-						or "Icon + stack count only, no duration text -- no per-unit equivalent of the native GetPlayerBuff* API exists (that family only ever describes the player's own buffs). Positioned above the frame.",
+						and L["Real, exact duration -- read directly from the native GetPlayerBuff* API. Positioned above the frame."]
+						or L["Icon + stack count only, no duration text -- no per-unit equivalent of the native GetPlayerBuff* API exists (that family only ever describes the player's own buffs). Positioned above the frame."],
 				}
 				return buffArgs
 			end)(),
@@ -936,8 +936,8 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 					type = "description",
 					order = 1,
 					name = dbKey == "player"
-						and "Real, exact duration -- read directly from the native GetPlayerBuff* API. Positioned below the frame."
-						or "Duration is an APPROXIMATION (ported from pfUI's own libdebuff data + a stamp-on-first-observation timer, not the real vanilla application moment) -- see DebuffDurations.lua's own header comment. Positioned below the frame.",
+						and L["Real, exact duration -- read directly from the native GetPlayerBuff* API. Positioned below the frame."]
+						or L["Duration is an APPROXIMATION (ported from pfUI's own libdebuff data + a stamp-on-first-observation timer, not the real vanilla application moment) -- see DebuffDurations.lua's own header comment. Positioned below the frame."],
 				}
 				return debuffArgs
 			end)(),

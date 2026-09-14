@@ -3,9 +3,10 @@
 -- Registers the AceConfig-format options table with LibConfig-1.0 (not
 -- AceGUI-3.0/AceConfigDialog-3.0 -- those are known broken on Unreal
 -- Azeroth, see source/LibConfig-1.0/README.md). Every option `name`/`desc`
--- goes through AceLocale (`L["..."]`, English text as the key -- see
--- ElvUI/Locales/enUS.lua); only English is shipped, but the indirection is in
--- place so a translation file is a drop-in addition rather than a sweep.
+-- goes through AceLocale (`L["..."]`, English text as the key), declared in
+-- ElvUI_Config/Locales/enUS.lua under the same "ElvUI" application as the core
+-- addon's strings; only English is shipped, but a translation file is a
+-- drop-in addition rather than a sweep.
 --
 -- "Map" section: a `childGroups = "tab"` group with two tabs,
 -- "Map" and "Minimap". This is the first real exercise of LibConfig-1.0's

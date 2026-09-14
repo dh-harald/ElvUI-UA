@@ -11,10 +11,10 @@ local dodge, parry, block, baseMissChance, avoidance, unhittable = 0, 0, 0, 0, 0
 
 -- Accent-coloured VALUE half -- see Armor.lua's own note on why this is a
 -- rebuilt format string and not a per-update format call.
-local displayString = "Defense: %.2f%%"
+local displayString = L["Defense"]..": %.2f%%"
 
 local function ValueColorUpdate(hex)
-	displayString = "Defense: "..hex.."%.2f%%|r"
+	displayString = L["Defense"]..": "..hex.."%.2f%%|r"
 end
 E.valueColorUpdateFuncs[ValueColorUpdate] = true
 
@@ -80,27 +80,27 @@ local function OnEnter(self)
 	DT:SetupTooltip(self)
 
 	if targetlv > 1 then
-		GameTooltip:AddDoubleLine("Avoidance Breakdown", " (lvl "..targetlv..")")
+		GameTooltip:AddDoubleLine(L["Avoidance Breakdown"], " ("..L["lvl"].." "..targetlv..")")
 	elseif targetlv == -1 then
-		GameTooltip:AddDoubleLine("Avoidance Breakdown", " (Boss)")
+		GameTooltip:AddDoubleLine(L["Avoidance Breakdown"], " ("..L["Boss"]..")")
 	else
-		GameTooltip:AddDoubleLine("Avoidance Breakdown", " (lvl "..playerlv..")")
+		GameTooltip:AddDoubleLine(L["Avoidance Breakdown"], " ("..L["lvl"].." "..playerlv..")")
 	end
 
 	GameTooltip:AddLine(" ")
-	GameTooltip:AddDoubleLine("Dodge Chance", string.format("%.2f%%", dodge), 1, 1, 1)
-	GameTooltip:AddDoubleLine("Parry Chance", string.format("%.2f%%", parry), 1, 1, 1)
-	GameTooltip:AddDoubleLine("Block Chance", string.format("%.2f%%", block), 1, 1, 1)
-	GameTooltip:AddDoubleLine("Miss Chance", string.format("%.2f%%", baseMissChance), 1, 1, 1)
+	GameTooltip:AddDoubleLine(L["Dodge Chance"], string.format("%.2f%%", dodge), 1, 1, 1)
+	GameTooltip:AddDoubleLine(L["Parry Chance"], string.format("%.2f%%", parry), 1, 1, 1)
+	GameTooltip:AddDoubleLine(L["Block Chance"], string.format("%.2f%%", block), 1, 1, 1)
+	GameTooltip:AddDoubleLine(L["Miss Chance"], string.format("%.2f%%", baseMissChance), 1, 1, 1)
 	GameTooltip:AddLine(" ")
 
 	if unhittable > 0 then
-		GameTooltip:AddDoubleLine("Unhittable:", "+"..string.format("%.2f%%", unhittable), 1, 1, 1, 0, 1, 0)
+		GameTooltip:AddDoubleLine(L["Unhittable:"], "+"..string.format("%.2f%%", unhittable), 1, 1, 1, 0, 1, 0)
 	else
-		GameTooltip:AddDoubleLine("Unhittable:", string.format("%.2f%%", unhittable), 1, 1, 1, 1, 0, 0)
+		GameTooltip:AddDoubleLine(L["Unhittable:"], string.format("%.2f%%", unhittable), 1, 1, 1, 1, 0, 0)
 	end
 
 	GameTooltip:Show()
 end
 
-DT:RegisterDatatext("Avoidance", {"COMBAT_RATING_UPDATE", "PLAYER_TARGET_CHANGED"}, OnEvent, nil, nil, OnEnter, nil, "Avoidance")
+DT:RegisterDatatext("Avoidance", {"COMBAT_RATING_UPDATE", "PLAYER_TARGET_CHANGED"}, OnEvent, nil, nil, OnEnter, nil, L["Avoidance"])

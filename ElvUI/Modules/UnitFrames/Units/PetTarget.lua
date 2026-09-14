@@ -45,7 +45,7 @@ local function Construct_PetTargetFrame()
 	-- hide (unlike PlayerFrame/TargetFrame/PetFrame/TargetFrameToT,
 	-- which all exist as real native frames on at least one client).
 	UF:EnableUnitMouse(frame)
-	E:CreateMover(frame, "ElvUF_PetTarget", "Pet Target Frame")
+	E:CreateMover(frame, "ElvUF_PetTarget", L["Pet Target Frame"])
 
 	return frame
 end

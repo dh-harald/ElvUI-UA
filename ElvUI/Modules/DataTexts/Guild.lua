@@ -20,12 +20,12 @@ local guildMotD = ""
 -- rebuilt format string and not a per-update format call. The no-guild text
 -- has no value half at all, so it takes the accent WHOLE, matching real
 -- ElvUI's own `noGuildString`.
-local displayString = "Guild: %d"
-local noGuildString = "No Guild"
+local displayString = L["Guild"]..": %d"
+local noGuildString = L["No Guild"]
 
 local function ValueColorUpdate(hex)
-	displayString = "Guild: "..hex.."%d|r"
-	noGuildString = hex.."No Guild|r"
+	displayString = L["Guild"]..": "..hex.."%d|r"
+	noGuildString = hex..L["No Guild"].."|r"
 end
 E.valueColorUpdateFuncs[ValueColorUpdate] = true
 
@@ -85,13 +85,13 @@ local function OnEnter(self)
 
 	local guildName, guildRank = GetGuildInfo("player")
 	if guildName and guildRank then
-		GameTooltip:AddDoubleLine(guildName, "Guild: "..online.."/"..total, 0.4, 0.78, 1, 0.4, 0.78, 1)
+		GameTooltip:AddDoubleLine(guildName, L["Guild"]..": "..online.."/"..total, 0.4, 0.78, 1, 0.4, 0.78, 1)
 		GameTooltip:AddLine(guildRank, 0.4, 0.78, 1)
 	end
 
 	if guildMotD ~= "" then
 		GameTooltip:AddLine(" ")
-		GameTooltip:AddLine("MOTD |cffaaaaaa- |cffffffff"..guildMotD, 0.75, 0.9, 1, 1)
+		GameTooltip:AddLine(L["MOTD"].." |cffaaaaaa- |cffffffff"..guildMotD, 0.75, 0.9, 1, 1)
 	end
 
 	GameTooltip:AddLine(" ")
@@ -109,4 +109,4 @@ local function OnEnter(self)
 	GameTooltip:Show()
 end
 
-DT:RegisterDatatext("Guild", {"PLAYER_LOGIN", "GUILD_ROSTER_UPDATE", "PLAYER_GUILD_UPDATE"}, OnEvent, nil, OnClick, OnEnter, nil, "Guild")
+DT:RegisterDatatext("Guild", {"PLAYER_LOGIN", "GUILD_ROSTER_UPDATE", "PLAYER_GUILD_UPDATE"}, OnEvent, nil, OnClick, OnEnter, nil, L["Guild"])

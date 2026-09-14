@@ -51,6 +51,10 @@ AddOn.privateVars = { profile = {} }
 -- formatted `|cffRRGGBB...|r` string after the fact.
 AddOn.valueColorUpdateFuncs = AddOn.valueColorUpdateFuncs or {}
 
+-- Client-language pass of the core translations; OnInitialize repeats it once
+-- the "Addon Language" SavedVariable is loaded (Locales/Locales.lua).
+Engine.ApplyLocale()
+
 local Locale = LibStub("AceLocale-3.0"):GetLocale(AddOnName, true)
 
 Engine[1] = AddOn
@@ -85,6 +89,12 @@ if type(RAID_CLASS_COLORS) == "table" and type(RAID_CLASS_COLORS.SHAMAN) == "tab
 end
 
 function AddOn:OnInitialize()
+	-- First: GAME_LOCALE is loaded by now, and everything after this line reads
+	-- L[] in the chosen language -- the print below, the datatext strings
+	-- UpdateValueColor rebuilds, every module's init. ElvUI_Config applies it
+	-- itself as well, as its files may load before this runs.
+	ElvUI.ApplyLocale()
+
 	if not ElvCharacterDB then
 		ElvCharacterDB = {}
 	end

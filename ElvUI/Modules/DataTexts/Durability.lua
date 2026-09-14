@@ -10,10 +10,10 @@ local invDurability = {}
 
 -- Accent-coloured VALUE half -- see Armor.lua's own note on why this is a
 -- rebuilt format string and not a per-update format call.
-local displayString = "Durability: %d%%"
+local displayString = L["Durability"]..": %d%%"
 
 local function ValueColorUpdate(hex)
-	displayString = "Durability: "..hex.."%d%%|r"
+	displayString = L["Durability"]..": "..hex.."%d%%|r"
 end
 E.valueColorUpdateFuncs[ValueColorUpdate] = true
 local slots = {
@@ -81,4 +81,4 @@ local function OnEnter(self)
 	GameTooltip:Show()
 end
 
-DT:RegisterDatatext("Durability", {"PLAYER_LOGIN", "UPDATE_INVENTORY_ALERTS", "MERCHANT_SHOW"}, OnEvent, nil, OnClick, OnEnter, nil, "Durability")
+DT:RegisterDatatext("Durability", {"PLAYER_LOGIN", "UPDATE_INVENTORY_ALERTS", "MERCHANT_SHOW"}, OnEvent, nil, OnClick, OnEnter, nil, L["Durability"])

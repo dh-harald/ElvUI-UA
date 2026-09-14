@@ -1386,7 +1386,7 @@ local function ApplySubFrameChrome()
 				if S:TryHookScript(sub, "OnShow", handler) then
 					subFramesHooked[subName] = true
 				else
-					E:Print("Skins (character): OnShow hook failed for " .. tostring(subName) .. " (both AceHook and native SetScript fallback)")
+					S:ReportSkinProblem()
 				end
 			end
 		end
@@ -1588,7 +1588,7 @@ local function LoadSkin()
 	-- exact line from ever running at all) -- never let it be the one
 	-- unguarded/unfallback-protected call again.
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyChrome(frame) end)
-	if not ok then E:Print("Skins (character): CharacterFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 S:AddBlizzardSkin("character", LoadSkin)

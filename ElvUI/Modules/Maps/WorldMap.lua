@@ -125,7 +125,7 @@ function M:Refresh()
 
 	local u, v = GetCursorMapPercent()
 	if u and v and u >= 0 and u <= 1 and v >= 0 and v <= 1 then
-		self.mouseText:SetText(string.format("Cursor: %.1f, %.1f", u * 100, v * 100))
+		self.mouseText:SetText(string.format(L["Cursor"]..": %.1f, %.1f", u * 100, v * 100))
 	else
 		self.mouseText:SetText("")
 	end

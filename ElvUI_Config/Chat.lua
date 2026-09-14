@@ -28,33 +28,33 @@ E.Options.args.chat = {
 			name = L["General"],
 			order = 3,
 			args = {
-				header = { type = "header", name = "General", order = 1 },
+				header = { type = "header", name = L["General"], order = 1 },
 				url = {
-					type = "toggle", name = "URL Links", order = 2,
+					type = "toggle", name = L["URL Links"], order = 2,
 					desc = L["Attempt to create clickable URL links inside the chat."],
 					get = function() return E.db.chat.url end,
 					set = function(_, value) E.db.chat.url = value end,
 				},
 				shortChannels = {
-					type = "toggle", name = "Short Channels", order = 3,
+					type = "toggle", name = L["Short Channels"], order = 3,
 					desc = L["Shorten the channel names in chat."],
 					get = function() return E.db.chat.shortChannels end,
 					set = function(_, value) E.db.chat.shortChannels = value end,
 				},
 				hyperlinkHover = {
-					type = "toggle", name = "Hyperlink Hover", order = 4,
+					type = "toggle", name = L["Hyperlink Hover"], order = 4,
 					desc = L["Not yet implemented on this project (no GameTooltip hook yet)."],
 					get = function() return E.db.chat.hyperlinkHover end,
 					set = function(_, value) E.db.chat.hyperlinkHover = value end,
 				},
 				sticky = {
-					type = "toggle", name = "Sticky Chat", order = 5,
+					type = "toggle", name = L["Sticky Chat"], order = 5,
 					desc = L["Keep the last channel you spoke in selected when opening the chat editbox. Disabled means it always defaults to Say."],
 					get = function() return E.db.chat.sticky end,
 					set = function(_, value) E.db.chat.sticky = value end,
 				},
 				fade = {
-					type = "toggle", name = "Fade Chat", order = 6,
+					type = "toggle", name = L["Fade Chat"], order = 6,
 					desc = L["Fade the chat text when there is no activity."],
 					get = function() return E.db.chat.fade end,
 					set = function(_, value)
@@ -63,13 +63,13 @@ E.Options.args.chat = {
 					end,
 				},
 				chatHistory = {
-					type = "toggle", name = "Chat History", order = 7,
+					type = "toggle", name = L["Chat History"], order = 7,
 					desc = L["Not yet implemented on this project."],
 					get = function() return E.db.chat.chatHistory end,
 					set = function(_, value) E.db.chat.chatHistory = value end,
 				},
 				useAltKey = {
-					type = "toggle", name = "Use Alt Key", order = 8,
+					type = "toggle", name = L["Use Alt Key"], order = 8,
 					desc = L["Require holding the Alt key down to move the cursor or cycle through messages in the editbox."],
 					get = function() return E.db.chat.useAltKey end,
 					set = function(_, value)
@@ -93,7 +93,7 @@ E.Options.args.chat = {
 				-- scroll-edge bug worth reporting/fixing upstream,
 				-- not a fluke of this one field.
 				timeStampFormat = {
-					type = "select", name = "Chat Timestamps", order = 10,
+					type = "select", name = L["Chat Timestamps"], order = 10,
 					desc = L["Select the format of timestamps prefixed to chat messages."],
 					values = {
 						["NONE"] = L["None"],
@@ -108,13 +108,13 @@ E.Options.args.chat = {
 					set = function(_, value) E.db.chat.timeStampFormat = value end,
 				},
 				useCustomTimeColor = {
-					type = "toggle", name = "Custom Timestamp Color", order = 11,
+					type = "toggle", name = L["Custom Timestamp Color"], order = 11,
 					desc = L["Use the custom color below for timestamps instead of plain white."],
 					get = function() return E.db.chat.useCustomTimeColor end,
 					set = function(_, value) E.db.chat.useCustomTimeColor = value end,
 				},
 				customTimeColor = {
-					type = "color", name = "Timestamp Color", order = 12,
+					type = "color", name = L["Timestamp Color"], order = 12,
 					hasAlpha = false,
 					get = function()
 						local c = E.db.chat.customTimeColor
@@ -127,7 +127,7 @@ E.Options.args.chat = {
 				},
 				spacer2 = { type = "description", name = " ", order = 13 },
 				throttleInterval = {
-					type = "range", name = "Spam Interval", order = 14,
+					type = "range", name = L["Spam Interval"], order = 14,
 					desc = L["Prevent the same channel/yell message from displaying more than once within this many seconds. 0 disables."],
 					min = 0, max = 120, step = 1,
 					get = function() return E.db.chat.throttleInterval end,
@@ -137,21 +137,21 @@ E.Options.args.chat = {
 					end,
 				},
 				scrollDownInterval = {
-					type = "range", name = "Scroll Interval", order = 15,
+					type = "range", name = L["Scroll Interval"], order = 15,
 					desc = L["Not yet implemented on this project (auto-scroll-to-bottom after being scrolled up)."],
 					min = 0, max = 120, step = 5,
 					get = function() return E.db.chat.scrollDownInterval end,
 					set = function(_, value) E.db.chat.scrollDownInterval = value end,
 				},
 				numAllowedCombatRepeat = {
-					type = "range", name = "Allowed Combat Repeat", order = 16,
+					type = "range", name = L["Allowed Combat Repeat"], order = 16,
 					desc = L["Number of repeated characters allowed in the chat editbox while in combat before it's automatically closed."],
 					min = 2, max = 10, step = 1,
 					get = function() return E.db.chat.numAllowedCombatRepeat end,
 					set = function(_, value) E.db.chat.numAllowedCombatRepeat = value end,
 				},
 				numScrollMessages = {
-					type = "range", name = "Scroll Messages", order = 17,
+					type = "range", name = L["Scroll Messages"], order = 17,
 					desc = L["Number of lines to scroll per mouse wheel step."],
 					min = 1, max = 10, step = 1,
 					get = function() return E.db.chat.numScrollMessages end,
@@ -164,13 +164,13 @@ E.Options.args.chat = {
 			name = L["Alerts"],
 			order = 4,
 			args = {
-				header = { type = "header", name = "Alerts", order = 1 },
+				header = { type = "header", name = L["Alerts"], order = 1 },
 				whisperSound = {
-					type = "select", name = "Whisper Alert", order = 2,
+					type = "select", name = L["Whisper Alert"], order = 2,
 					desc = L["Sound to play on an incoming whisper. Only \"None\" is selectable until custom sounds are registered with LibSharedMedia-3.0."],
 					values = function()
 						local LSM = LibStub("LibSharedMedia-3.0", true)
-						local list = { ["None"] = "None" }
+						local list = { ["None"] = L["None"] }
 						if LSM then
 							local names = LSM:List("sound")
 							if names then
@@ -186,11 +186,11 @@ E.Options.args.chat = {
 					set = function(_, value) E.db.chat.whisperSound = value end,
 				},
 				keywordSound = {
-					type = "select", name = "Keyword Alert", order = 3,
+					type = "select", name = L["Keyword Alert"], order = 3,
 					desc = L["Sound to play when a keyword below is spoken in chat. Only \"None\" is selectable until custom sounds are registered with LibSharedMedia-3.0."],
 					values = function()
 						local LSM = LibStub("LibSharedMedia-3.0", true)
-						local list = { ["None"] = "None" }
+						local list = { ["None"] = L["None"] }
 						if LSM then
 							local names = LSM:List("sound")
 							if names then
@@ -206,13 +206,13 @@ E.Options.args.chat = {
 					set = function(_, value) E.db.chat.keywordSound = value end,
 				},
 				noAlertInCombat = {
-					type = "toggle", name = "No Alert In Combat", order = 4,
+					type = "toggle", name = L["No Alert In Combat"], order = 4,
 					desc = L["Don't play whisper/keyword alert sounds while in combat."],
 					get = function() return E.db.chat.noAlertInCombat end,
 					set = function(_, value) E.db.chat.noAlertInCombat = value end,
 				},
 				keywords = {
-					type = "input", name = "Keywords", order = 5,
+					type = "input", name = L["Keywords"], order = 5,
 					desc = L["Comma-separated list of words to highlight in chat. Use %MYNAME% for your own character name.\n\nExample:\n%MYNAME%, ElvUI"],
 					width = "full",
 					get = function() return E.db.chat.keywords end,
@@ -228,9 +228,9 @@ E.Options.args.chat = {
 			name = L["Panels"],
 			order = 5,
 			args = {
-				header = { type = "header", name = "Panels", order = 1 },
+				header = { type = "header", name = L["Panels"], order = 1 },
 				lockPositions = {
-					type = "toggle", name = "Lock Positions", order = 2,
+					type = "toggle", name = L["Lock Positions"], order = 2,
 					desc = L["Keep the left chat frame docked inside its panel."],
 					get = function() return E.db.chat.lockPositions end,
 					set = function(_, value)
@@ -245,7 +245,7 @@ E.Options.args.chat = {
 				-- but the call site is the one upstream has, so it survives
 				-- the panel code eventually moving into Layout.
 				panelTabTransparency = {
-					type = "toggle", name = "Tab Panel Transparency", order = 3,
+					type = "toggle", name = L["Tab Panel Transparency"], order = 3,
 					get = function() return E.db.chat.panelTabTransparency end,
 					set = function(_, value)
 						E.db.chat.panelTabTransparency = value
@@ -253,7 +253,7 @@ E.Options.args.chat = {
 					end,
 				},
 				panelTabBackdrop = {
-					type = "toggle", name = "Tab Panel", order = 4,
+					type = "toggle", name = L["Tab Panel"], order = 4,
 					desc = L["Toggle the chat tab panel backdrop."],
 					get = function() return E.db.chat.panelTabBackdrop end,
 					set = function(_, value)
@@ -262,7 +262,7 @@ E.Options.args.chat = {
 					end,
 				},
 				editBoxPosition = {
-					type = "select", name = "Chat EditBox Position", order = 5,
+					type = "select", name = L["Chat EditBox Position"], order = 5,
 					values = {
 						["BELOW_CHAT"] = L["Below Chat"],
 						["ABOVE_CHAT"] = L["Above Chat"],
@@ -274,7 +274,7 @@ E.Options.args.chat = {
 					end,
 				},
 				panelBackdrop = {
-					type = "select", name = "Panel Backdrop", order = 6,
+					type = "select", name = L["Panel Backdrop"], order = 6,
 					desc = L["Toggle showing of the left and right chat panel backdrops."],
 					values = {
 						["HIDEBOTH"] = L["Hide Both"],
@@ -293,7 +293,7 @@ E.Options.args.chat = {
 					end,
 				},
 				separateSizes = {
-					type = "toggle", name = "Separate Panel Sizes", order = 7,
+					type = "toggle", name = L["Separate Panel Sizes"], order = 7,
 					desc = L["Enable the use of separate size options for the right chat panel."],
 					get = function() return E.db.chat.separateSizes end,
 					set = function(_, value)
@@ -303,7 +303,7 @@ E.Options.args.chat = {
 				},
 				spacer1 = { type = "description", name = " ", order = 8 },
 				panelHeight = {
-					type = "range", name = "Panel Height", order = 9,
+					type = "range", name = L["Panel Height"], order = 9,
 					min = 50, max = 600, step = 1,
 					get = function() return E.db.chat.panelHeight end,
 					set = function(_, value)
@@ -312,7 +312,7 @@ E.Options.args.chat = {
 					end,
 				},
 				panelWidth = {
-					type = "range", name = "Panel Width", order = 10,
+					type = "range", name = L["Panel Width"], order = 10,
 					min = 50, max = 1000, step = 1,
 					get = function() return E.db.chat.panelWidth end,
 					set = function(_, value)
@@ -321,7 +321,7 @@ E.Options.args.chat = {
 					end,
 				},
 				panelColor = {
-					type = "color", name = "Backdrop Color", order = 11,
+					type = "color", name = L["Backdrop Color"], order = 11,
 					hasAlpha = true,
 					get = function()
 						local c = E.db.chat.panelColor
@@ -335,7 +335,7 @@ E.Options.args.chat = {
 				},
 				spacer2 = { type = "description", name = " ", order = 12 },
 				panelHeightRight = {
-					type = "range", name = "Right Panel Height", order = 13,
+					type = "range", name = L["Right Panel Height"], order = 13,
 					min = 50, max = 600, step = 1,
 					disabled = function() return not E.db.chat.separateSizes end,
 					get = function() return E.db.chat.panelHeightRight end,
@@ -345,7 +345,7 @@ E.Options.args.chat = {
 					end,
 				},
 				panelWidthRight = {
-					type = "range", name = "Right Panel Width", order = 14,
+					type = "range", name = L["Right Panel Width"], order = 14,
 					min = 50, max = 1000, step = 1,
 					disabled = function() return not E.db.chat.separateSizes end,
 					get = function() return E.db.chat.panelWidthRight end,
@@ -355,7 +355,7 @@ E.Options.args.chat = {
 					end,
 				},
 				panelBackdropNameLeft = {
-					type = "input", name = "Panel Texture (Left)", order = 15,
+					type = "input", name = L["Panel Texture (Left)"], order = 15,
 					width = "full",
 					get = function() return E.db.chat.panelBackdropNameLeft end,
 					set = function(_, value)
@@ -364,7 +364,7 @@ E.Options.args.chat = {
 					end,
 				},
 				panelBackdropNameRight = {
-					type = "input", name = "Panel Texture (Right)", order = 16,
+					type = "input", name = L["Panel Texture (Right)"], order = 16,
 					width = "full",
 					get = function() return E.db.chat.panelBackdropNameRight end,
 					set = function(_, value)
@@ -379,9 +379,9 @@ E.Options.args.chat = {
 			name = L["Fonts"],
 			order = 6,
 			args = {
-				header = { type = "header", name = "Fonts", order = 1 },
+				header = { type = "header", name = L["Fonts"], order = 1 },
 				font = {
-					type = "select", name = "Font", dialogControl = "LSM30_Font", order = 2,
+					type = "select", name = L["Font"], dialogControl = "LSM30_Font", order = 2,
 					values = function()
 						local LSM = LibStub("LibSharedMedia-3.0", true)
 						local list = {}
@@ -401,7 +401,7 @@ E.Options.args.chat = {
 					end,
 				},
 				fontOutline = {
-					type = "select", name = "Font Outline", order = 3,
+					type = "select", name = L["Font Outline"], order = 3,
 					values = {
 						["NONE"] = L["None"],
 						["OUTLINE"] = L["Outline"],
@@ -416,7 +416,7 @@ E.Options.args.chat = {
 				},
 				spacer = { type = "description", name = " ", order = 4 },
 				tabFont = {
-					type = "select", name = "Tab Font", dialogControl = "LSM30_Font", order = 5,
+					type = "select", name = L["Tab Font"], dialogControl = "LSM30_Font", order = 5,
 					values = function()
 						local LSM = LibStub("LibSharedMedia-3.0", true)
 						local list = {}
@@ -436,7 +436,7 @@ E.Options.args.chat = {
 					end,
 				},
 				tabFontSize = {
-					type = "range", name = "Tab Font Size", order = 6,
+					type = "range", name = L["Tab Font Size"], order = 6,
 					min = 6, max = 22, step = 1,
 					get = function() return E.db.chat.tabFontSize end,
 					set = function(_, value)
@@ -445,7 +445,7 @@ E.Options.args.chat = {
 					end,
 				},
 				tabFontOutline = {
-					type = "select", name = "Tab Font Outline", order = 7,
+					type = "select", name = L["Tab Font Outline"], order = 7,
 					values = {
 						["NONE"] = L["None"],
 						["OUTLINE"] = L["Outline"],

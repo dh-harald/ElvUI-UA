@@ -430,7 +430,7 @@ local function ApplyInterfaceOptionsSkin()
 	end
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyInterfaceOptionsChrome(frame) end)
-	if not ok then E:Print("Skins (uioptions): UIOptionsFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

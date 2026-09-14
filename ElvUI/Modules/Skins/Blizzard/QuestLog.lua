@@ -457,7 +457,7 @@ local function ApplyQuestLogSkin()
 	StartGlyphPoll()
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyQuestLogChrome(frame) end)
-	if not ok then E:Print("Skins (quest): QuestLogFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

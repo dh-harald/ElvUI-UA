@@ -97,7 +97,7 @@ local function ApplySoundOptionsSkin()
 
 	ApplySoundOptionsChrome(frame)
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplySoundOptionsChrome(frame) end)
-	if not ok then E:Print("Skins (sound): SoundOptionsFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

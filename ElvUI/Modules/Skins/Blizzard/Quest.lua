@@ -252,7 +252,7 @@ local function ApplyQuestFrameSkin()
 		local entry = subPanels[i]
 		if entry.frame then
 			local ok = S:TryHookScript(entry.frame, "OnShow", entry.apply)
-			if not ok then E:Print("Skins (quest): OnShow hook failed for "..entry.name) end
+			if not ok then S:ReportSkinProblem() end
 		end
 	end
 end

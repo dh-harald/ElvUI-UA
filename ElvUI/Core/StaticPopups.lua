@@ -34,8 +34,8 @@ local KEY_PREFIX = "ELVUI_"
 -- Parked on the engine table as well: ElvUI_Config registers its own popup
 -- entries (RESET_ALL_MOVERS, the profile confirmations, RESET_UF_UNIT) and
 -- needs the same guarantee.
-local BTN_ACCEPT = ACCEPT or "Accept"
-local BTN_CANCEL = CANCEL or "Cancel"
+local BTN_ACCEPT = ACCEPT or L["Accept"]
+local BTN_CANCEL = CANCEL or L["Cancel"]
 E.PopupAccept, E.PopupCancel = BTN_ACCEPT, BTN_CANCEL
 
 -- Texts are real ElvUI's own (its Core/StaticPopups.lua:197-226), so the wording
@@ -43,7 +43,6 @@ E.PopupAccept, E.PopupCancel = BTN_ACCEPT, BTN_CANCEL
 E.PopupDialogs = E.PopupDialogs or {}
 
 E.PopupDialogs["CONFIG_RL"] = {
-	text = L["One or more of the changes you have made require a ReloadUI."],
 	button1 = BTN_ACCEPT,
 	button2 = BTN_CANCEL,
 	OnAccept = ReloadUI,
@@ -53,7 +52,6 @@ E.PopupDialogs["CONFIG_RL"] = {
 }
 
 E.PopupDialogs["GLOBAL_RL"] = {
-	text = L["One or more of the changes you have made will effect all characters using this addon. You will have to reload the user interface to see the changes you have made."],
 	button1 = BTN_ACCEPT,
 	button2 = BTN_CANCEL,
 	OnAccept = ReloadUI,
@@ -63,7 +61,6 @@ E.PopupDialogs["GLOBAL_RL"] = {
 }
 
 E.PopupDialogs["PRIVATE_RL"] = {
-	text = L["A setting you have changed will change an option for this character only. This setting that you have changed will be uneffected by changing user profiles. Changing this setting requires that you reload your User Interface."],
 	button1 = BTN_ACCEPT,
 	button2 = BTN_CANCEL,
 	OnAccept = ReloadUI,
@@ -81,8 +78,17 @@ E.PopupDialogs["PRIVATE_RL"] = {
 -- this file: ElvUI_Config loads much later and adds its own (RESET_ALL_MOVERS),
 -- and a one-shot copy at load would silently never carry those across. Copying
 -- an already-present key again is free.
+--
+-- The three entries above get their text here, on every registration, not in
+-- their table constructors: this file loads before the "Addon Language"
+-- setting is applied (Locales/Locales.lua), so a load-time read would keep the
+-- client's language.
 local function RegisterPopups()
 	if type(StaticPopupDialogs) ~= "table" then return end
+
+	E.PopupDialogs["CONFIG_RL"].text = L["One or more of the changes you have made require a ReloadUI."]
+	E.PopupDialogs["GLOBAL_RL"].text = L["One or more of the changes you have made will effect all characters using this addon. You will have to reload the user interface to see the changes you have made."]
+	E.PopupDialogs["PRIVATE_RL"].text = L["A setting you have changed will change an option for this character only. This setting that you have changed will be uneffected by changing user profiles. Changing this setting requires that you reload your User Interface."]
 
 	local which, info
 	for which, info in pairs(E.PopupDialogs) do

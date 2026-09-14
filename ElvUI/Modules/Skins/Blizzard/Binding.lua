@@ -240,7 +240,7 @@ local function ApplyBindingSkin()
 
 	ApplyBindingChrome(frame)
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyBindingChrome(frame) end)
-	if not ok then E:Print("Skins (binding): KeyBindingFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

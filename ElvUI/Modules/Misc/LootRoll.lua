@@ -263,7 +263,7 @@ function M:START_LOOT_ROLL()
 	bar.link = GetLootRollItemLink(rollID)
 	bar.bind:SetWidth(LABEL_MEASURE_WIDTH)
 	bar.bind:SetText("")
-	bar.bind:SetText(bindOnPickUp and "BoP" or "BoE")
+	bar.bind:SetText(bindOnPickUp and L["BoP"] or L["BoE"])
 	local bindWidth = (bar.bind:GetStringWidth() or 0) + LABEL_PAD
 	bar.bind:SetWidth(bindWidth)
 	if bindOnPickUp then

@@ -3298,9 +3298,10 @@ local function TemplateArt(fragment)
 		end
 	end
 
+	-- No readable art in the whole family: the sweep cannot recognise these
+	-- widgets on this client, so they stay unstyled.
 	if not next(paths) then
-		E:Print("Skins: no template in the "..fragment.." family reports a texture"
-			.." path on this client -- auto-skin can only recognise readable art")
+		S:ReportSkinProblem()
 	end
 
 	return paths
@@ -3488,10 +3489,7 @@ function S:SkinChildren(frame, depth)
 	local okNum, numKids = pcall(frame.GetNumChildren, frame)
 	if okNum and type(numKids) == "number" and numKids > kidCount and not frame.elvSweepWarned then
 		frame.elvSweepWarned = true
-		local okName, frameName = pcall(frame.GetName, frame)
-		E:Print("Skins: GetChildren under-reported on "
-			..tostring(okName and frameName or "<unnamed>")
-			.." ("..kidCount.." of "..numKids..") -- auto-skin sweep incomplete")
+		S:ReportSkinProblem()
 	end
 
 	local i
@@ -3928,6 +3926,16 @@ S.pendingGlobals = S.pendingGlobals or {}
 local pendingPollHandle = nil
 local addonLoadedRegistered = false
 
+-- Player-facing notice for any window skin that failed to install. Printed
+-- at most once per session: several windows can fail for the same underlying
+-- reason, and the message names the visible effect, not the technical cause.
+local skinProblemReported = false
+function S:ReportSkinProblem()
+	if skinProblemReported then return end
+	skinProblemReported = true
+	E:Print(L["Some windows could not be restyled and keep their default look."])
+end
+
 local function FlushPendingGlobals()
 	-- Walk BACKWARDS: entries are removed in place as they resolve, and a
 	-- forward loop would skip the element that slides into the freed slot.
@@ -3936,9 +3944,9 @@ local function FlushPendingGlobals()
 		local entry = S.pendingGlobals[i]
 		if entry and _G[entry.name] then
 			table.remove(S.pendingGlobals, i)
-			local ok, err = pcall(entry.func)
+			local ok = pcall(entry.func)
 			if not ok then
-				E:Print("Skins: WaitForGlobal(" .. tostring(entry.name) .. ") failed: " .. tostring(err))
+				S:ReportSkinProblem()
 			end
 		end
 	end
@@ -3960,8 +3968,8 @@ function S:WaitForGlobal(name, func)
 	-- Already there (a non-LoadOnDemand window, or a second caller after
 	-- the addon loaded): run it now, don't wait a tick for no reason.
 	if _G[name] then
-		local ok, err = pcall(func)
-		if not ok then E:Print("Skins: WaitForGlobal(" .. tostring(name) .. ") failed: " .. tostring(err)) end
+		local ok = pcall(func)
+		if not ok then S:ReportSkinProblem() end
 		return
 	end
 
@@ -4310,9 +4318,9 @@ function S:InstallDropDownMenuSkin()
 	if dropDownMenuSkinInstalled then return end
 
 	-- One-time pass FIRST, independent of the hook -- see point 2 above.
-	local okNow, errNow = pcall(function() S:ApplyDropDownMenuChrome() end)
+	local okNow = pcall(function() S:ApplyDropDownMenuChrome() end)
 	if not okNow then
-		E:Print("Skins (dropdown): initial pass failed: " .. tostring(errNow))
+		S:ReportSkinProblem()
 	end
 
 	-- SECOND, INDEPENDENT TRIGGER: each list frame's own
@@ -4354,11 +4362,11 @@ function S:InstallDropDownMenuSkin()
 	-- this reuses that same already-proven-reliable path instead of the
 	-- raw global function.
 	if type(_G.UIDropDownMenu_Initialize) ~= "function" then
-		E:Print("Skins (dropdown): UIDropDownMenu_Initialize is not a function, skipping")
+		S:ReportSkinProblem()
 		return
 	end
 
-	local ok, err = pcall(function()
+	local ok = pcall(function()
 		-- The hook body is itself `pcall`'d -- an error thrown inside a
 		-- SecureHook callback is swallowed by nothing, and would take out
 		-- every subsequent call with no message. That is exactly how the
@@ -4370,7 +4378,7 @@ function S:InstallDropDownMenuSkin()
 	if ok then
 		dropDownMenuSkinInstalled = true
 	else
-		E:Print("Skins (dropdown): SecureHook(UIDropDownMenu_Initialize) failed: " .. tostring(err))
+		S:ReportSkinProblem()
 	end
 end
 
@@ -4864,8 +4872,8 @@ function S:Initialize()
 		if E.private.skins.blizzard[key] then
 			local i
 			for i = 1, table.getn(list) do
-				local ok, err = pcall(list[i])
-				if not ok then E:Print("Skins (" .. key .. ") error: " .. tostring(err)) end
+				local ok = pcall(list[i])
+				if not ok then S:ReportSkinProblem() end
 			end
 		end
 	end

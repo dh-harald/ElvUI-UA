@@ -73,7 +73,7 @@ function M:CreateBar()
 	if not ok or not bar then return nil end
 
 	bar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 260)
-	E:CreateMover(bar, "ElvBar_StanceBar", "Stance Bar")
+	E:CreateMover(bar, "ElvBar_StanceBar", L["Stance Bar"])
 
 	pcall(bar.SetBackdrop, bar, {
 		bgFile = "Interface\\Buttons\\WHITE8x8",

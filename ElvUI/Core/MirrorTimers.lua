@@ -133,7 +133,7 @@ local function StyleMirrorTimer(i)
 	-- Modules/Skins/Blizzard/MirrorTimers.lua:56) -- kept for eventual
 	-- real-profile position compatibility, same convention already
 	-- established for every other mover in this project.
-	E:CreateMover(frame, "MirrorTimer"..i.."Mover", "Mirror Timer "..i)
+	E:CreateMover(frame, "MirrorTimer"..i.."Mover", string.format(L["Mirror Timer %d"], i))
 
 	frame.elvStyled = true
 end

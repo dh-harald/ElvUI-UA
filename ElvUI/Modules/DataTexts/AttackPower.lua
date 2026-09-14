@@ -10,10 +10,10 @@ local pwr = 0
 
 -- Accent-coloured VALUE half -- see Armor.lua's own note on why this is a
 -- rebuilt format string and not a per-update format call.
-local displayString = "AP: %d"
+local displayString = L["AP"]..": %d"
 
 local function ValueColorUpdate(hex)
-	displayString = "AP: "..hex.."%d|r"
+	displayString = L["AP"]..": "..hex.."%d|r"
 end
 E.valueColorUpdateFuncs[ValueColorUpdate] = true
 
@@ -34,12 +34,12 @@ local function OnEnter(self)
 	DT:SetupTooltip(self)
 
 	if E.myclass == "HUNTER" then
-		GameTooltip:AddDoubleLine("Ranged Attack Power", pwr, 1, 1, 1)
+		GameTooltip:AddDoubleLine(L["Ranged Attack Power"], pwr, 1, 1, 1)
 	else
-		GameTooltip:AddDoubleLine("Melee Attack Power", pwr, 1, 1, 1)
+		GameTooltip:AddDoubleLine(L["Melee Attack Power"], pwr, 1, 1, 1)
 	end
 
 	GameTooltip:Show()
 end
 
-DT:RegisterDatatext("Attack Power", {"UNIT_ATTACK_POWER", "UNIT_RANGED_ATTACK_POWER"}, OnEvent, nil, nil, OnEnter, nil, "Attack Power")
+DT:RegisterDatatext("Attack Power", {"UNIT_ATTACK_POWER", "UNIT_RANGED_ATTACK_POWER"}, OnEvent, nil, nil, OnEnter, nil, L["Attack Power"])

@@ -427,18 +427,18 @@ local function InstallSpellBookHooks()
 		if ok then
 			spellButtonUpdateHooked = true
 		else
-			E:Print("Skins (spellbook): SecureHook(SpellButton_UpdateButton) failed: " .. tostring(err))
+			S:ReportSkinProblem()
 		end
 	end
 
 	if not spellBookUpdateHooked then
-		local ok, err = pcall(function()
+		local ok = pcall(function()
 			S:SecureHook("SpellBookFrame_Update", ApplySpellBookUpdate)
 		end)
 		if ok then
 			spellBookUpdateHooked = true
 		else
-			E:Print("Skins (spellbook): SecureHook(SpellBookFrame_Update) failed: " .. tostring(err))
+			S:ReportSkinProblem()
 		end
 	end
 end
@@ -518,7 +518,7 @@ local function LoadSkin()
 	ApplyChrome(frame)
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyChrome(frame) end)
-	if not ok then E:Print("Skins (spellbook): SpellBookFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 S:AddBlizzardSkin("spellbook", LoadSkin)

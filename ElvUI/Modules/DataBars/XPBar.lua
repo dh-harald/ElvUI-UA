@@ -67,12 +67,12 @@ function M:ExperienceBar_OnEnter()
 
 	GameTooltip:SetOwner(self.expBar, "ANCHOR_CURSOR", 0, -4)
 	GameTooltip:ClearLines()
-	GameTooltip:AddLine("Experience")
+	GameTooltip:AddLine(L["Experience"])
 	GameTooltip:AddLine(" ")
-	GameTooltip:AddDoubleLine("XP:", string.format("%d / %d (%d%%)", cur, max, cur / max * 100), 1, 1, 1)
-	GameTooltip:AddDoubleLine("Remaining:", string.format("%d (%d%%)", max - cur, (max - cur) / max * 100), 1, 1, 1)
+	GameTooltip:AddDoubleLine(L["XP:"], string.format("%d / %d (%d%%)", cur, max, cur / max * 100), 1, 1, 1)
+	GameTooltip:AddDoubleLine(L["Remaining:"], string.format("%d (%d%%)", max - cur, (max - cur) / max * 100), 1, 1, 1)
 	if rested > 0 then
-		GameTooltip:AddDoubleLine("Rested:", string.format("+%d (%d%%)", rested, rested / max * 100), 1, 1, 1)
+		GameTooltip:AddDoubleLine(L["Rested:"], string.format("+%d (%d%%)", rested, rested / max * 100), 1, 1, 1)
 	end
 	GameTooltip:Show()
 end
@@ -322,7 +322,7 @@ function M:LoadExperienceBar()
 	-- a lower offset would render behind one of those bars, visually
 	-- indistinguishable from it.
 	bar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 250)
-	E:CreateMover(bar, "ExperienceBarMover", "Experience Bar")
+	E:CreateMover(bar, "ExperienceBarMover", L["Experience Bar"])
 
 	HideNativeFrame(_G.MainMenuExpBar)
 	HideNativeFrame(_G.ExhaustionTick)

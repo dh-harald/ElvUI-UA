@@ -476,7 +476,7 @@ function A:Initialize()
 	else
 		self.BuffFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -200, -4)
 	end
-	E:CreateMover(self.BuffFrame, "BuffsMover", "Player Buffs")
+	E:CreateMover(self.BuffFrame, "BuffsMover", L["Player Buffs"])
 
 	self.DebuffFrame = self:CreateAuraHeader("ElvUIPlayerDebuffs", "debuff")
 	if mmHolder then
@@ -484,7 +484,7 @@ function A:Initialize()
 	else
 		self.DebuffFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -200, -240)
 	end
-	E:CreateMover(self.DebuffFrame, "DebuffsMover", "Player Debuffs")
+	E:CreateMover(self.DebuffFrame, "DebuffsMover", L["Player Debuffs"])
 
 	-- Periodic refresh alongside the event trigger -- matches this
 	-- project's established preference for a shared repeating timer over

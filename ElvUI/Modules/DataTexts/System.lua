@@ -57,8 +57,8 @@ local function OnEnter(self)
 	-- Positional capture, not `select(3, ...)`: `select` does not exist on
 	-- the legacy client's Lua 5.0 at all.
 	local _, _, homeLatency = GetNetStats()
-	GameTooltip:AddDoubleLine("Home Latency:", string.format("%d ms", homeLatency), 0.69, 0.31, 0.31, 0.84, 0.75, 0.65)
-	GameTooltip:AddDoubleLine("Total Memory:", formatMem(totalMemory), 0.69, 0.31, 0.31, 0.84, 0.75, 0.65)
+	GameTooltip:AddDoubleLine(L["Home Latency:"], string.format("%d ms", homeLatency), 0.69, 0.31, 0.31, 0.84, 0.75, 0.65)
+	GameTooltip:AddDoubleLine(L["Total Memory:"], formatMem(totalMemory), 0.69, 0.31, 0.31, 0.84, 0.75, 0.65)
 
 	GameTooltip:AddLine(" ")
 	local i
@@ -103,4 +103,4 @@ local function OnUpdate(self, t)
 	end
 end
 
-DT:RegisterDatatext("System", nil, nil, OnUpdate, OnClick, OnEnter, OnLeave, "System")
+DT:RegisterDatatext("System", nil, nil, OnUpdate, OnClick, OnEnter, OnLeave, L["System"])

@@ -90,7 +90,7 @@ local function ApplyGameMenuSkin()
 
 	ApplyGameMenuChrome(frame)
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyGameMenuChrome(frame) end)
-	if not ok then E:Print("Skins (mainmenu): GameMenuFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

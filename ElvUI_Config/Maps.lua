@@ -282,9 +282,9 @@ E.Options.args.maps = {
 							desc = L["Change when the zone name above the minimap is shown."],
 							order = 1,
 							values = {
-								MOUSEOVER = "Minimap Mouseover",
-								SHOW = "Always Display",
-								HIDE = "Hide",
+								MOUSEOVER = L["Minimap Mouseover"],
+								SHOW = L["Always Display"],
+								HIDE = L["Hide"],
 							},
 							get = function() return E.db.general.minimap.locationText end,
 							set = function(_, value)

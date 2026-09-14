@@ -417,9 +417,7 @@ function UF:ShowUnitMenu(frame)
 	if not dropdownName then
 		if not ShowGenericUnitMenu(unit) and not unitMenuErrorPrinted then
 			unitMenuErrorPrinted = true
-			E:Print("UnitFrames: generic unit menu unavailable (FriendsDropDown "
-				.. (_G.FriendsDropDown and "exists" or "missing")
-				.. ", UnitPopup_ShowMenu " .. type(_G.UnitPopup_ShowMenu) .. ")")
+			E:Print(L["The right-click menu is not available for this frame."])
 		end
 		return
 	end
@@ -428,17 +426,15 @@ function UF:ShowUnitMenu(frame)
 	if not dropdown or type(_G.ToggleDropDownMenu) ~= "function" then
 		if not unitMenuErrorPrinted then
 			unitMenuErrorPrinted = true
-			E:Print("UnitFrames: no native unit menu on this client (" .. dropdownName
-				.. (dropdown and " exists" or " missing")
-				.. ", ToggleDropDownMenu " .. type(_G.ToggleDropDownMenu) .. ")")
+			E:Print(L["The right-click menu is not available for this frame."])
 		end
 		return
 	end
 
-	local ok, err = pcall(_G.ToggleDropDownMenu, 1, nil, dropdown, "cursor")
+	local ok = pcall(_G.ToggleDropDownMenu, 1, nil, dropdown, "cursor")
 	if not ok and not unitMenuErrorPrinted then
 		unitMenuErrorPrinted = true
-		E:Print("UnitFrames: unit menu failed for " .. unit .. ": " .. tostring(err))
+		E:Print(L["The right-click menu is not available for this frame."])
 	end
 end
 
@@ -949,7 +945,7 @@ end
 local function CASTBAR_SPELLCAST_FAILED()
 	local bar = UF.PlayerCastbar
 	if not bar or not bar.casting then return end
-	pcall(bar.Text.SetText, bar.Text, _G.FAILED or "Failed")
+	pcall(bar.Text.SetText, bar.Text, _G.FAILED or L["Failed"])
 	bar.casting = nil
 	bar.holdTime = 1
 end
@@ -957,7 +953,7 @@ end
 local function CASTBAR_SPELLCAST_INTERRUPTED()
 	local bar = UF.PlayerCastbar
 	if not bar then return end
-	pcall(bar.Text.SetText, bar.Text, _G.INTERRUPTED or "Interrupted")
+	pcall(bar.Text.SetText, bar.Text, _G.INTERRUPTED or L["Interrupted"])
 	bar.casting = nil
 	bar.channeling = nil
 	bar.holdTime = 1
@@ -995,7 +991,7 @@ local function ApplyCastbarMoverPreview()
 		if bar.casting or bar.channeling then return end
 		pcall(bar.SetMinMaxValues, bar, 0, 1)
 		pcall(bar.SetValue, bar, 1)
-		if bar.Text then pcall(bar.Text.SetText, bar.Text, _G.SPELLS or "Castbar") end
+		if bar.Text then pcall(bar.Text.SetText, bar.Text, _G.SPELLS or L["Castbar"]) end
 		if bar.Time then pcall(bar.Time.SetText, bar.Time, "") end
 		if bar.Spark then pcall(bar.Spark.Hide, bar.Spark) end
 		pcall(bar.SetAlpha, bar, 1)
@@ -1998,7 +1994,7 @@ function UF:UpdateFrame(frame)
 	-- list.
 	local tags = {}
 	if dead then
-		local statusText = (okGhost and isGhost) and "Ghost" or "Dead"
+		local statusText = (okGhost and isGhost) and L["Ghost"] or L["Dead"]
 		tags["health:current"] = statusText
 		tags["health:current-percent"] = statusText
 		tags["health:percent"] = statusText
@@ -2215,17 +2211,15 @@ function UF:ResizeCastbar(width, height)
 	pcall(bar.SetHeight, bar, height)
 end
 
--- Diagnostic wrapper: `ElvUF_Player` can stay
--- nil on the real 1.12.1 client with no visible Lua error even with
--- scriptErrors on -- prints any error straight to chat via AceConsole's
--- own Print, bypassing whatever's suppressing the client's native error
--- display (an error-catching addon swallowing it, scriptErrors not
--- actually taking effect, or something else client-specific). Shared by
--- every unit's spawn now that Target exists too, not just Player's.
+-- Build guard shared by every unit's spawn: one unit that fails to build must
+-- not stop the others. A failure can stay silent on the real 1.12.1 client
+-- even with scriptErrors on, so a short chat notice is printed instead of
+-- relying on the client's error display. The notice is written for players
+-- and names the effect only.
 local function SpawnUnitSafely(id)
-	local ok, err = pcall(function() UF:SpawnUnit(id) end)
+	local ok = pcall(function() UF:SpawnUnit(id) end)
 	if not ok then
-		UF:Print("UnitFrames "..id.." frame failed to build: "..tostring(err))
+		E:Print(L["A unit frame could not be created."])
 	end
 end
 

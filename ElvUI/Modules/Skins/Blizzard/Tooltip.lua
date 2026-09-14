@@ -138,7 +138,7 @@ local function SkinTooltip(tt)
 	local okShow = S:TryHookScript(tt, "OnShow", function() ApplyColors(tt) end)
 	local okHide = S:TryHookScript(tt, "OnHide", ScheduleReapply)
 	if not okShow or not okHide then
-		E:Print("Skins (tooltip): OnShow/OnHide hook failed to install on " .. (tt:GetName() or "?"))
+		S:ReportSkinProblem()
 	end
 end
 

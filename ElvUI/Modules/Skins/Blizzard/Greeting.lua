@@ -126,7 +126,7 @@ local function ApplyGreetingSkin()
 	-- the defensive chrome re-strip every window in this project does AND
 	-- overwriting that native colouring back to ours.
 	local ok = S:TryHookScript(panel, "OnShow", function() ApplyGreetingChrome(panel) end)
-	if not ok then E:Print("Skins (greeting): QuestFrameGreetingPanel OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

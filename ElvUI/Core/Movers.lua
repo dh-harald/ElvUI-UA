@@ -543,14 +543,16 @@ local function CreateMoverPanel()
 	local okTitle, title = pcall(panel.CreateFontString, panel, nil, "OVERLAY", "GameFontNormal")
 	if okTitle and title then
 		pcall(title.SetPoint, title, "TOP", panel, "TOP", 0, -10)
-		pcall(title.SetText, title, "Move UI")
+		pcall(title.SetText, title, L["Move UI"])
 		pcall(title.SetTextColor, title, 1, 0.82, 0)
 	end
 
+	-- Three separately placed lines, so a translation keeps each one short
+	-- enough for the panel width.
 	local hints = {
-		"Drag a highlighted frame to move it.",
-		"Click one, then use the arrow keys",
-		"to nudge it (hold Shift for 10px).",
+		L["Drag a highlighted frame to move it."],
+		L["Click one, then use the arrow keys"],
+		L["to nudge it (hold Shift for 10px)."],
 	}
 	local i
 	for i = 1, 3 do
@@ -579,7 +581,7 @@ local function CreateMoverPanel()
 		handle:SetScript("OnDragStop", MoverPanelStopDrag)
 	end
 
-	panel.lockButton = CreatePanelButton(panel, "ElvUIMoverLockButton", "Lock Movers", 130,
+	panel.lockButton = CreatePanelButton(panel, "ElvUIMoverLockButton", L["Lock Movers"], 130,
 		function() E:LockMovers() end)
 	if panel.lockButton then
 		pcall(panel.lockButton.SetPoint, panel.lockButton, "BOTTOMLEFT", panel, "BOTTOMLEFT", 12, 12)
@@ -588,7 +590,7 @@ local function CreateMoverPanel()
 	-- A mouse-clickable reset that's ALWAYS reachable regardless of where a
 	-- mover's own handle currently is -- an off-screen mover's handle is,
 	-- by definition, off-screen too and can't be clicked to fix itself.
-	panel.resetButton = CreatePanelButton(panel, "ElvUIMoverResetButton", "Reset All", 130,
+	panel.resetButton = CreatePanelButton(panel, "ElvUIMoverResetButton", L["Reset All"], 130,
 		function() E:ResetAllMovers() end)
 	if panel.resetButton then
 		pcall(panel.resetButton.SetPoint, panel.resetButton, "BOTTOMRIGHT", panel, "BOTTOMRIGHT", -12, 12)

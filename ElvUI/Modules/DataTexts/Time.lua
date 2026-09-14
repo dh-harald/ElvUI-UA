@@ -75,7 +75,7 @@ local function OnEnter(self)
 
 	local okTime, hour, minute = pcall(GetGameTime)
 	if okTime then
-		GameTooltip:AddDoubleLine("Realm Time:", string.format("%02d:|r%02d", hour, minute), 1, 1, 1, 0.8, 0.8, 0.8)
+		GameTooltip:AddDoubleLine(L["Realm Time:"], string.format("%02d:|r%02d", hour, minute), 1, 1, 1, 0.8, 0.8, 0.8)
 	end
 
 	GameTooltip:Show()
@@ -151,4 +151,4 @@ local function ValueColorUpdate(hex)
 end
 E.valueColorUpdateFuncs[ValueColorUpdate] = true
 
-DT:RegisterDatatext("Time", {"UPDATE_INSTANCE_INFO"}, OnEvent, OnUpdate, nil, OnEnter, OnLeave, "Time")
+DT:RegisterDatatext("Time", {"UPDATE_INSTANCE_INFO"}, OnEvent, OnUpdate, nil, OnEnter, OnLeave, L["Time"])

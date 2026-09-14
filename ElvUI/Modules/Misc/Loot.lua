@@ -280,7 +280,7 @@ local function LootOpened()
 	local items = GetNumLootItems()
 
 	if IsFishingLoot() then
-		lootFrame.title:SetText("Fishy Loot")
+		lootFrame.title:SetText(L["Fishy Loot"])
 	elseif not UnitIsFriend("player", "target") and UnitIsDead("target") then
 		lootFrame.title:SetText(UnitName("target"))
 	else
@@ -355,7 +355,7 @@ local function LootOpened()
 		local slot = lootFrame.slots[1] or createSlot(1)
 		local color = ITEM_QUALITY_COLORS[0]
 
-		slot.name:SetText("Empty Slot")
+		slot.name:SetText(L["Empty Slot"])
 		if color then
 			slot.name:SetTextColor(color.r, color.g, color.b)
 		end
@@ -413,7 +413,7 @@ function M:LoadLoot()
 	self:RegisterEvent("OPEN_MASTER_LOOT_LIST", OpenMasterLootList)
 	self:RegisterEvent("UPDATE_MASTER_LOOT_LIST", UpdateMasterLootList)
 
-	E:CreateMover(lootFrameHolder, "LootFrameMover", "Loot Frame")
+	E:CreateMover(lootFrameHolder, "LootFrameMover", L["Loot Frame"])
 
 	-- Permanently suppress the native loot window. UnregisterAllEvents
 	-- alone does not stop a frame from re-Show()ing itself on UA -- a frame

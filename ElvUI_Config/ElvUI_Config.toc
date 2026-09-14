@@ -5,6 +5,7 @@
 ## RequiredDeps: ElvUI
 
 Libraries\Load_Libraries.xml
+Locales\Load_Locales.xml
 Core.lua
 General.lua
 ActionBars.lua

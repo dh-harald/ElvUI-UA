@@ -360,13 +360,13 @@ local function ApplyCraftSkin()
 		ApplyCraftChrome(frame)
 		S:CloseOtherDoublewidePanels(frame)
 	end)
-	if not ok then E:Print("Skins (craft): CraftFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 
 	local selectionOk = pcall(function() S:SecureHook("CraftFrame_SetSelection", ApplySelectionChrome) end)
-	if not selectionOk then E:Print("Skins (craft): SecureHook(CraftFrame_SetSelection) failed") end
+	if not selectionOk then S:ReportSkinProblem() end
 
 	local updateOk = pcall(function() S:SecureHook("CraftFrame_Update", SetRankBarColor) end)
-	if not updateOk then E:Print("Skins (craft): SecureHook(CraftFrame_Update) failed") end
+	if not updateOk then S:ReportSkinProblem() end
 
 	if not rowGlyphPollStarted then
 		rowGlyphPollStarted = true

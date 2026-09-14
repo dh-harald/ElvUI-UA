@@ -53,7 +53,7 @@ local function Construct_PetFrame()
 
 	HideNativePetFrame()
 	UF:EnableUnitMouse(frame)
-	E:CreateMover(frame, "ElvUF_Pet", "Pet Frame")
+	E:CreateMover(frame, "ElvUF_Pet", L["Pet Frame"])
 
 	return frame
 end

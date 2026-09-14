@@ -368,7 +368,7 @@ local function ApplyVideoOptionsSkin()
 		-- measurement first; this one hasn't, so "the skin did nothing" and
 		-- "this client calls the window something else" have to be
 		-- distinguishable from the very first test.
-		E:Print("Skins (video): OptionsFrame does not exist -- Video Options skin skipped")
+		S:ReportSkinProblem()
 		return
 	end
 	videoOptionsSkinApplied = true
@@ -410,7 +410,7 @@ local function ApplyVideoOptionsSkin()
 	-- the controls from the current cvars, so it is a particularly likely
 	-- one to need it.
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyVideoOptionsChrome(frame) end)
-	if not ok then E:Print("Skins (video): OptionsFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

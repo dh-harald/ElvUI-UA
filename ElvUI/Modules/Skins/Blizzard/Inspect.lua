@@ -216,7 +216,7 @@ local function ApplyInspectSkin()
 	ApplyChrome(frame)
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyChrome(frame) end)
-	if not ok then E:Print("Skins (inspect): InspectFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

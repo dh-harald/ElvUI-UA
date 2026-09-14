@@ -47,11 +47,11 @@ E.Options.args.bags = {
 					type = "select",
 					name = L["Money Format"],
 					values = {
-						SMART = "Smart",
-						SHORT = "Short",
-						SHORTINT = "Short (Whole Numbers)",
-						CONDENSED = "Condensed",
-						BLIZZARD = "Blizzard",
+						SMART = L["Smart"],
+						SHORT = L["Short"],
+						SHORTINT = L["Short (Whole Numbers)"],
+						CONDENSED = L["Condensed"],
+						BLIZZARD = L["Blizzard"],
 					},
 					get = function() return E.db.bags.moneyFormat end,
 					set = function(_, value)

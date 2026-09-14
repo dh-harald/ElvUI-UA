@@ -18,10 +18,10 @@ local friendTable = {}
 
 -- Accent-coloured VALUE half -- see Armor.lua's own note on why this is a
 -- rebuilt format string and not a per-update format call.
-local displayString = "Friends: %d"
+local displayString = L["Friends"]..": %d"
 
 local function ValueColorUpdate(hex)
-	displayString = "Friends: "..hex.."%d|r"
+	displayString = L["Friends"]..": "..hex.."%d|r"
 end
 E.valueColorUpdateFuncs[ValueColorUpdate] = true
 
@@ -67,7 +67,7 @@ local function OnEnter(self)
 	DT:SetupTooltip(self)
 
 	local numberOfFriends, onlineFriends = GetNumberFriends()
-	GameTooltip:AddDoubleLine("Friends List", "Online: "..onlineFriends.."/"..numberOfFriends, 0.4, 0.78, 1, 0.4, 0.78, 1)
+	GameTooltip:AddDoubleLine(L["Friends List"], L["Online"]..": "..onlineFriends.."/"..numberOfFriends, 0.4, 0.78, 1, 0.4, 0.78, 1)
 
 	if onlineFriends > 0 then
 		BuildFriendTable(numberOfFriends)
@@ -77,6 +77,8 @@ local function OnEnter(self)
 			local status = info[6] or ""
 			local hideAFK = E.db.datatexts.friends and E.db.datatexts.friends.hideAFK
 			local hideDND = E.db.datatexts.friends and E.db.datatexts.friends.hideDND
+			-- `status` is the client's own text from GetFriendInfo, so these
+			-- English matches only recognise an English client's AFK/DND tag.
 			local isAFK = string.find(status, "AFK") ~= nil
 			local isDND = string.find(status, "DND") ~= nil
 			if not ((isAFK and hideAFK) or (isDND and hideDND)) then
@@ -91,4 +93,4 @@ local function OnEnter(self)
 	GameTooltip:Show()
 end
 
-DT:RegisterDatatext("Friends", {"PLAYER_LOGIN", "FRIENDLIST_UPDATE"}, OnEvent, nil, OnClick, OnEnter, nil, "Friends")
+DT:RegisterDatatext("Friends", {"PLAYER_LOGIN", "FRIENDLIST_UPDATE"}, OnEvent, nil, OnClick, OnEnter, nil, L["Friends"])

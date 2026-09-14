@@ -51,21 +51,21 @@ local function OnEnter(self)
 
 	local style = E.db.datatexts.goldFormat or "BLIZZARD"
 
-	GameTooltip:AddLine("Session:")
-	GameTooltip:AddDoubleLine("Earned:", E:FormatMoney(Profit, style), 1, 1, 1, 1, 1, 1)
-	GameTooltip:AddDoubleLine("Spent:", E:FormatMoney(Spent, style), 1, 1, 1, 1, 1, 1)
+	GameTooltip:AddLine(L["Session:"])
+	GameTooltip:AddDoubleLine(L["Earned:"], E:FormatMoney(Profit, style), 1, 1, 1, 1, 1, 1)
+	GameTooltip:AddDoubleLine(L["Spent:"], E:FormatMoney(Spent, style), 1, 1, 1, 1, 1, 1)
 
 	if Profit < Spent then
-		GameTooltip:AddDoubleLine("Deficit:", E:FormatMoney(Profit - Spent, style), 1, 0, 0, 1, 1, 1)
+		GameTooltip:AddDoubleLine(L["Deficit:"], E:FormatMoney(Profit - Spent, style), 1, 0, 0, 1, 1, 1)
 	elseif (Profit - Spent) > 0 then
-		GameTooltip:AddDoubleLine("Profit:", E:FormatMoney(Profit - Spent, style), 0, 1, 0, 1, 1, 1)
+		GameTooltip:AddDoubleLine(L["Profit:"], E:FormatMoney(Profit - Spent, style), 0, 1, 0, 1, 1, 1)
 	end
 
 	GameTooltip:AddLine(" ")
 
 	if ElvDB and ElvDB.gold and ElvDB.gold[E.myrealm] then
 		local totalGold = 0
-		GameTooltip:AddLine("Character:")
+		GameTooltip:AddLine(L["Character: "])
 
 		local k
 		for k in pairs(ElvDB.gold[E.myrealm]) do
@@ -79,14 +79,14 @@ local function OnEnter(self)
 		end
 
 		GameTooltip:AddLine(" ")
-		GameTooltip:AddLine("Server:")
-		GameTooltip:AddDoubleLine("Total:", E:FormatMoney(totalGold, style), 1, 1, 1, 1, 1, 1)
+		GameTooltip:AddLine(L["Server: "])
+		GameTooltip:AddDoubleLine(L["Total: "], E:FormatMoney(totalGold, style), 1, 1, 1, 1, 1, 1)
 	end
 
 	GameTooltip:AddLine(" ")
-	GameTooltip:AddLine("|cffaaaaaaReset Data: Hold Shift + Right Click|r")
+	GameTooltip:AddLine("|cffaaaaaa"..L["Reset Data: Hold Shift + Right Click"].."|r")
 
 	GameTooltip:Show()
 end
 
-DT:RegisterDatatext("Gold", {"PLAYER_ENTERING_WORLD", "PLAYER_MONEY", "SEND_MAIL_MONEY_CHANGED", "SEND_MAIL_COD_CHANGED", "PLAYER_TRADE_MONEY", "TRADE_MONEY_CHANGED"}, OnEvent, nil, OnClick, OnEnter, nil, "Gold")
+DT:RegisterDatatext("Gold", {"PLAYER_ENTERING_WORLD", "PLAYER_MONEY", "SEND_MAIL_MONEY_CHANGED", "SEND_MAIL_COD_CHANGED", "PLAYER_TRADE_MONEY", "TRADE_MONEY_CHANGED"}, OnEvent, nil, OnClick, OnEnter, nil, L["Gold"])

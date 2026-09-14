@@ -229,7 +229,7 @@ local function CreateToggleButton(name, label, onClick)
 		pcall(button.SetBackdropBorderColor, button, ar, ag, ab, 1)
 		GameTooltip:SetOwner(button, "ANCHOR_TOP")
 		GameTooltip:ClearLines()
-		GameTooltip:AddLine("Toggle Chat Frame")
+		GameTooltip:AddLine(L["Toggle Chat Frame"])
 		GameTooltip:Show()
 	end)
 	button:SetScript("OnLeave", function()
@@ -250,7 +250,7 @@ function CH:CreateChatPanels()
 	lchat:SetHeight(db.panelHeight)
 	lchat:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 4, 4)
 	E:SetTemplate(lchat, "Transparent")
-	E:CreateMover(lchat, "LeftChatMover", "Left Chat")
+	E:CreateMover(lchat, "LeftChatMover", L["Left Chat"])
 
 	local lchattab = CreateFrame("Frame", "LeftChatTab", lchat)
 	lchattab:SetHeight(PANEL_HEIGHT)
@@ -278,7 +278,7 @@ function CH:CreateChatPanels()
 	rchat:SetHeight(db.separateSizes and db.panelHeightRight or db.panelHeight)
 	rchat:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -4, 4)
 	E:SetTemplate(rchat, "Transparent")
-	E:CreateMover(rchat, "RightChatMover", "Right Chat")
+	E:CreateMover(rchat, "RightChatMover", L["Right Chat"])
 
 	local rchattab = CreateFrame("Frame", "RightChatTab", rchat)
 	rchattab:SetHeight(PANEL_HEIGHT)
@@ -796,8 +796,6 @@ end
 --     Not ported; `coloredName` is just `arg2` unchanged. Same reasoning
 --     drops `CheckKeyword`'s own classColorMentionsChat word-by-word
 --     coloring step -- only the KEYWORD-highlight half is ported.
---   - `L[...]` locale lookups -> hardcoded English strings, matching
---     Guild.lua/Friends.lua's own established no-AceLocale convention.
 --   - `E.media.hexvaluecolor` is read through this file's own `AccentHex()`
 --     accessor (it only exists from `OnInitialize` onwards, so it cannot be
 --     captured in a load-time local).
@@ -845,15 +843,24 @@ local GlobalStrings = {
 	CHAT_MSG_RAID_WARNING = CHAT_MSG_RAID_WARNING,
 }
 
-local DEFAULT_STRINGS = {
-	BATTLEGROUND = "BG",
-	GUILD = "G",
-	PARTY = "P",
-	RAID = "R",
-	OFFICER = "O",
-	BATTLEGROUND_LEADER = "BGL",
-	RAID_LEADER = "RL",
-}
+-- Built on first use, not at file load: this file loads before the "Addon
+-- Language" setting is applied (Locales/Locales.lua).
+local DEFAULT_STRINGS
+
+local function DefaultStrings()
+	if not DEFAULT_STRINGS then
+		DEFAULT_STRINGS = {
+			BATTLEGROUND = L["BG"],
+			GUILD = L["G"],
+			PARTY = L["P"],
+			RAID = L["R"],
+			OFFICER = L["O"],
+			BATTLEGROUND_LEADER = L["BGL"],
+			RAID_LEADER = L["RL"],
+		}
+	end
+	return DEFAULT_STRINGS
+end
 
 local FindURL_Events = {
 	"CHAT_MSG_WHISPER", "CHAT_MSG_WHISPER_INFORM", "CHAT_MSG_GUILD",
@@ -948,7 +955,7 @@ function CH:FindURL(event, msg, ...)
 end
 
 function CH:ShortChannel()
-	return string.format("|Hchannel:%s|h[%s]|h", self, DEFAULT_STRINGS[string.upper(self)] or string.gsub(self, "channel:", ""))
+	return string.format("|Hchannel:%s|h[%s]|h", self, DefaultStrings()[string.upper(self)] or string.gsub(self, "channel:", ""))
 end
 
 function CH:ConcatenateTimeStamp(msg)
@@ -1162,7 +1169,7 @@ local function OnTextChanged()
 			if unitname and realm then
 				unitname = unitname.."-"..string.gsub(realm, " ", "")
 			end
-			pcall(ChatFrame_SendTell, unitname or "Invalid Target", ChatFrame1)
+			pcall(ChatFrame_SendTell, unitname or L["Invalid Target"], ChatFrame1)
 		end
 
 		if string.sub(text, 1, 4) == "/gr " then
@@ -1445,12 +1452,16 @@ function CH:ChatFrame_OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, arg6, a
 			if E.db.chat.shortChannels then
 				body = string.gsub(body, "|Hchannel:(.-)|h%[(.-)%]|h", CH.ShortChannel)
 				body = string.gsub(body, "CHANNEL:", "")
-				body = string.gsub(body, "^(.-|h) whispers", "%1")
-				body = string.gsub(body, "^(.-|h) says", "%1")
-				body = string.gsub(body, "^(.-|h) yells", "%1")
-				body = string.gsub(body, "<"..GlobalStrings.AFK..">", "[|cffFF0000AFK|r] ")
-				body = string.gsub(body, "<"..GlobalStrings.DND..">", "[|cffE7E716DND|r] ")
-				body = string.gsub(body, "^%["..GlobalStrings.CHAT_MSG_RAID_WARNING.."%]", "[RW]")
+				-- The three verbs are matched against the client's own chat
+				-- line (built from its CHAT_*_GET globals), so their
+				-- translations must use that locale's client wording, and
+				-- must not contain Lua pattern magic characters.
+				body = string.gsub(body, "^(.-|h) "..L["whispers"], "%1")
+				body = string.gsub(body, "^(.-|h) "..L["says"], "%1")
+				body = string.gsub(body, "^(.-|h) "..L["yells"], "%1")
+				body = string.gsub(body, "<"..GlobalStrings.AFK..">", "[|cffFF0000"..L["AFK"].."|r] ")
+				body = string.gsub(body, "<"..GlobalStrings.DND..">", "[|cffE7E716"..L["DND"].."|r] ")
+				body = string.gsub(body, "^%["..GlobalStrings.CHAT_MSG_RAID_WARNING.."%]", "["..L["RW"].."]")
 			end
 			self:AddMessage(CH:ConcatenateTimeStamp(body), info.r, info.g, info.b, info.id)
 		end

@@ -323,7 +323,7 @@ local function ApplyWhoChrome()
 		if ok then
 			whoListUpdateHooked = true
 		else
-			E:Print("Skins (friends): SecureHook(WhoList_Update) failed: " .. tostring(err))
+			S:ReportSkinProblem()
 		end
 	end
 end
@@ -466,7 +466,7 @@ local function ApplyGuildChrome()
 		if ok then
 			guildStatusUpdateHooked = true
 		else
-			E:Print("Skins (friends): SecureHook(GuildStatus_Update) failed: " .. tostring(err))
+			S:ReportSkinProblem()
 		end
 	end
 end
@@ -658,7 +658,7 @@ local function LoadSkin()
 	ApplyOuterChrome(frame)
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyOuterChrome(frame) end)
-	if not ok then E:Print("Skins (friends): FriendsFrame OnShow hook failed to install") end
+	if not ok then S:ReportSkinProblem() end
 end
 
 S:AddBlizzardSkin("friends", LoadSkin)

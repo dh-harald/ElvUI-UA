@@ -12,10 +12,10 @@ local effectiveArmor = 0
 -- rather than formatted per update, because a `|cff...|r` string cannot be
 -- re-coloured once built. Starts uncoloured so a call that lands before the
 -- registry is driven still prints a value.
-local displayString = "Armor: %d"
+local displayString = L["Armor"]..": %d"
 
 local function ValueColorUpdate(hex)
-	displayString = "Armor: "..hex.."%d|r"
+	displayString = L["Armor"]..": "..hex.."%d|r"
 end
 E.valueColorUpdateFuncs[ValueColorUpdate] = true
 
@@ -43,7 +43,7 @@ end
 local function OnEnter(self)
 	DT:SetupTooltip(self)
 
-	GameTooltip:AddLine("Mitigation By Level:")
+	GameTooltip:AddLine(L["Mitigation By Level: "])
 	GameTooltip:AddLine(" ")
 
 	local playerLevel = UnitLevel("player") + 3
@@ -63,4 +63,4 @@ local function OnEnter(self)
 	GameTooltip:Show()
 end
 
-DT:RegisterDatatext("Armor", {"UNIT_RESISTANCES"}, OnEvent, nil, nil, OnEnter, nil, "Armor")
+DT:RegisterDatatext("Armor", {"UNIT_RESISTANCES"}, OnEvent, nil, nil, OnEnter, nil, L["Armor"])
