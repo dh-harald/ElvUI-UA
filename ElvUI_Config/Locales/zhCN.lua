@@ -101,6 +101,8 @@ L["Open the Lua error window by itself when a new error occurs. Errors are recor
 L["Addon Language"] = "插件语言"
 L["Overrides which language this addon's own text uses, independent of the game client's language. Automatic uses the game client's own language, falling back to English if unsupported. Requires /reload to take effect."] = "覆盖此插件自身文本所使用的语言,与游戏客户端的语言无关。“自动”使用游戏客户端自身的语言,若不受支持则回退为英语。需要 /reload 才能生效。"
 L["Automatic (Game Client Language)"] = "自动(游戏客户端语言)"
+L["Auto Repair"] = "自动修理"
+L["Automatically repair using the following method when visiting a merchant."] = "使用以下方式来自动修理装备"
 
 --Shared value labels
 L["None"] = "无"
@@ -214,6 +216,13 @@ L["Button Size (Bank)"] = "按钮大小(银行)"
 L["The size of the individual buttons on the bank frame."] = "银行窗口中单个按钮的大小。"
 L["Panel Width (Bank)"] = "面板宽度(银行)"
 L["Adjust the width of the bank frame. The number of columns follows from it and the slot size."] = "调整银行窗口宽度。列数由宽度和格子大小共同决定。"
+L["Vendor Grays"] = "出售灰色物品"
+L["Automatically vendor gray items when visiting a vendor."] = "当访问商人时自动出售灰色物品"
+L["Sell Interval"] = "售卖周期"
+L["Will attempt to sell another item in set interval after previous one was sold."] = "尝试在设定的周期后卖下一个物品"
+L["Vendor Gray Detailed Report"] = "出售灰色物品详细报告"
+L["Displays a detailed report of every item sold when enabled."] = "启用后显示包含每个物品金额的详细报告"
+L["Progress Bar"] = "进度条"
 
 --Tooltip
 L["Setup options for the Tooltip."] = "鼠标提示的设置选项。"

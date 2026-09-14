@@ -101,6 +101,8 @@ L["Open the Lua error window by itself when a new error occurs. Errors are recor
 L["Addon Language"] = "Langue de l'addon"
 L["Overrides which language this addon's own text uses, independent of the game client's language. Automatic uses the game client's own language, falling back to English if unsupported. Requires /reload to take effect."] = "Remplace la langue utilisée par les textes propres à cet addon, indépendamment de la langue du client de jeu. Automatique utilise la langue du client de jeu, avec repli sur l'anglais si elle n'est pas prise en charge. Nécessite /reload pour prendre effet."
 L["Automatic (Game Client Language)"] = "Automatique (langue du client de jeu)"
+L["Auto Repair"] = "Réparation automatique"
+L["Automatically repair using the following method when visiting a merchant."] = "Répare automatiquement votre équipement chez le marchand selon le mode de réparation sélectionné."
 
 --Shared value labels
 L["None"] = "Aucun"
@@ -214,6 +216,13 @@ L["Button Size (Bank)"] = "Taille des boutons (Banque)"
 L["The size of the individual buttons on the bank frame."] = "La taille des boutons individuels sur la fenêtre de la banque."
 L["Panel Width (Bank)"] = "Largeur du panneau (Banque)"
 L["Adjust the width of the bank frame. The number of columns follows from it and the slot size."] = "Ajuste la largeur de la fenêtre de banque. Le nombre de colonnes en découle, avec la taille des emplacements."
+L["Vendor Grays"] = "Vendre les objets gris"
+L["Automatically vendor gray items when visiting a vendor."] = "Vendre automatiquement les objets gris quand vous rendez visite à un marchand."
+L["Sell Interval"] = "Intervalle de vente"
+L["Will attempt to sell another item in set interval after previous one was sold."] = "Tentera de vendre l'objet suivant après l'intervalle défini, une fois le précédent vendu."
+L["Vendor Gray Detailed Report"] = "Rapport détaillé des ventes d'objets gris"
+L["Displays a detailed report of every item sold when enabled."] = "Affiche un rapport détaillé de chaque objet vendu lorsque activé."
+L["Progress Bar"] = "Barre de progression"
 
 --Tooltip
 L["Setup options for the Tooltip."] = "Options de configuration de l'infobulle."

@@ -35,8 +35,9 @@
 --
 -- Scope of this file so far: the window shell and its movers, the takeover of
 -- the native bag entry points, the merged item grid, the equipped-bag strip,
--- the keyring, the money display, the search filter and the bank. The sort
--- button and vendor-grays attach to the same frames afterwards.
+-- the keyring, the money display, the search filter, the bank, and selling
+-- gray items at a merchant (see B:InitializeVendorGrays). The sort button and
+-- the manual vendor-grays header button attach to the same frames afterwards.
 --
 -- The bank works the same way, with one structural difference: its generic
 -- rows (BankFrameItem1-24) are borrowed from the native BankFrame rather than
@@ -1507,7 +1508,270 @@ function B:TakeOverNativeToggles()
 	end
 end
 
+-- Vendor grays: at a merchant, every poor-quality item in the carried bags is
+-- sold one at a time (real ElvUI's P.bags.vendorGrays). Independent of the bag
+-- window -- real ElvUI sells grays with its Bags module disabled too.
+--
+-- THROTTLED on two conditions, and both must hold before the next
+-- UseContainerItem: the configured interval has passed since the previous
+-- sale, AND that sale has been confirmed -- its slot no longer holds the item.
+-- The server answers every sale asynchronously, so a fixed interval alone
+-- keeps firing requests while earlier ones are still unanswered. A sale that
+-- is never confirmed (the merchant refused the item) is given up after
+-- SELL_CONFIRM_TIMEOUT seconds and not counted.
+--
+-- "Gray" is read from the link colour, the same test pfUI's autovendor uses:
+-- GetItemInfo needs the item cache, and GetContainerItemInfo's quality return
+-- is not measured on either client here. An item is only queued with a known
+-- sell price above zero (LibItemPrice-1.1), as in real ElvUI, which keeps
+-- items without a vendor value out of the queue.
+--
+-- pfUI and UnrealUI clear the cursor before each sale; this waits instead
+-- while the cursor carries an item, so an item the player is moving is never
+-- taken off the cursor.
+local GRAY_LINK_COLOR = "ff9d9d9d"
+local MIN_SELL_INTERVAL = 0.1
+local SELL_CONFIRM_TIMEOUT = 3
+
+local function GetSellPrice(link)
+	local LIP = LibStub("ItemPrice-1.1", true)
+	if not LIP then return nil end
+
+	local _, _, idText = string.find(link, "item:(%d+)")
+	local id = tonumber(idText)
+	if not id then return nil end
+
+	return LIP:GetPriceById(id)
+end
+
+function B:CollectGrays()
+	local list = {}
+
+	local bag
+	for bag = 0, (NUM_BAG_SLOTS or 4) do
+		local slot
+		for slot = 1, (GetContainerNumSlots(bag) or 0) do
+			local link = GetContainerItemLink(bag, slot)
+			if link and string.find(string.lower(link), GRAY_LINK_COLOR, 1, true) then
+				local price = GetSellPrice(link)
+				if price and price > 0 then
+					table.insert(list, { bag = bag, slot = slot, link = link, price = price })
+				end
+			end
+		end
+	end
+
+	return list
+end
+
+function B:GetSellInterval()
+	local interval = tonumber(E.db.bags.vendorGrays.interval) or 0.2
+	if interval < MIN_SELL_INTERVAL then interval = MIN_SELL_INTERVAL end
+
+	return interval
+end
+
+-- The progress window and the frame that drives the queue are separate: the
+-- driver's OnUpdate has to run whether or not the progress bar is enabled, and
+-- a hidden frame gets no OnUpdate at all.
+function B:CreateSellFrame()
+	local sell = CreateFrame("Frame", "ElvUIVendorGraysFrame", UIParent)
+	sell:SetWidth(200)
+	sell:SetHeight(40)
+	sell:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+	sell:SetFrameStrata("DIALOG")
+	E:SetTemplate(sell, "Transparent")
+	sell:Hide()
+
+	sell.title = sell:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	sell.title:SetPoint("TOP", sell, "TOP", 0, -4)
+	sell.title:SetText(L["Vendoring Grays"])
+
+	sell.statusbar = Util.CreateStatusBar(sell, {
+		name = "ElvUIVendorGraysFrameStatusbar",
+		width = 180,
+		height = 16,
+		color = { 1, 0, 0, 1 },
+		texture = E.media and E.media.normTex,
+	})
+	sell.statusbar:SetPoint("BOTTOM", sell, "BOTTOM", 0, 5)
+	-- Above the window's own level: on UA a frame's own backdrop is drawn over
+	-- children that do not sit above it (see B:PinBorrowedButton).
+	local okLevel, level = pcall(sell.GetFrameLevel, sell)
+	if okLevel and tonumber(level) then
+		pcall(sell.statusbar.SetFrameLevel, sell.statusbar, level + 2)
+	end
+
+	sell.statusbar.ValueText = sell.statusbar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	sell.statusbar.ValueText:SetPoint("CENTER", sell.statusbar, "CENTER", 0, 0)
+
+	sell.driver = CreateFrame("Frame", nil, UIParent)
+	sell.driver:Hide()
+	sell.driver:SetScript("OnUpdate", function() B:VendorGraysTick() end)
+
+	self.SellFrame = sell
+end
+
+-- Live config: the progress window follows the toggle even mid-run. The
+-- interval needs no push, it is read on every sale.
+function B:UpdateSellFrameSettings()
+	local sell = self.SellFrame
+	if not sell then return end
+
+	if sell.active and E.db.bags.vendorGrays.progressBar then
+		sell:Show()
+	else
+		sell:Hide()
+	end
+end
+
+function B:UpdateSellProgress()
+	local sell = self.SellFrame
+	if not sell or not sell.active then return end
+
+	local remaining = sell.total - sell.processed
+	sell.statusbar:SetValue(sell.processed)
+	sell.statusbar.ValueText:SetText(string.format("%d / %d ( %.1fs )",
+		sell.processed, sell.total, remaining * self:GetSellInterval()))
+end
+
+function B:VendorGrays()
+	local sell = self.SellFrame
+	if not sell or sell.active or not self.merchantOpen then return end
+
+	local list = self:CollectGrays()
+	local total = table.getn(list)
+	if total == 0 then return end
+
+	sell.itemList = list
+	sell.index = 1
+	sell.total = total
+	sell.processed = 0
+	sell.goldGained = 0
+	sell.pending = nil
+	sell.nextTick = 0
+	sell.active = true
+
+	sell.statusbar:SetMinMaxValues(0, total)
+	self:UpdateSellProgress()
+	self:UpdateSellFrameSettings()
+	sell.driver:Show()
+end
+
+function B:FinishVendorGrays()
+	local sell = self.SellFrame
+	if not sell or not sell.active then return end
+
+	sell.active = nil
+	sell.driver:Hide()
+	sell:Hide()
+	sell.itemList = nil
+	sell.pending = nil
+
+	if sell.goldGained > 0 then
+		E:Print(string.format(L["Vendored gray items for: %s"],
+			E:FormatMoney(sell.goldGained, E.db.bags.moneyFormat)))
+	end
+end
+
+local function SkipQueuedItem(module, sell)
+	sell.index = sell.index + 1
+	sell.processed = sell.processed + 1
+	module:UpdateSellProgress()
+end
+
+function B:VendorGraysTick()
+	local sell = self.SellFrame
+	if not sell or not sell.active then return end
+
+	local now = GetTime()
+	if now < sell.nextTick then return end
+
+	-- MERCHANT_CLOSED ends the run too; this covers a close that raced the
+	-- driver's last frame.
+	if not self.merchantOpen then
+		self:FinishVendorGrays()
+		return
+	end
+
+	local pending = sell.pending
+	if pending then
+		if GetContainerItemLink(pending.bag, pending.slot) == pending.link then
+			if now - pending.sentAt < SELL_CONFIRM_TIMEOUT then return end
+		else
+			sell.goldGained = sell.goldGained + pending.value
+			if E.db.bags.vendorGrays.details then
+				E:Print(string.format("%s|cFF00DDDDx%d|r %s", pending.link, pending.count,
+					E:FormatMoney(pending.value, E.db.bags.moneyFormat)))
+			end
+		end
+
+		sell.pending = nil
+		sell.processed = sell.processed + 1
+		self:UpdateSellProgress()
+	end
+
+	local item = sell.itemList[sell.index]
+	if not item then
+		self:FinishVendorGrays()
+		return
+	end
+
+	if type(CursorHasItem) == "function" and CursorHasItem() then return end
+
+	-- The queue was built when the merchant opened; the player may have moved,
+	-- sold or destroyed the item since.
+	if GetContainerItemLink(item.bag, item.slot) ~= item.link then
+		SkipQueuedItem(self, sell)
+		return
+	end
+
+	local _, count, locked = GetContainerItemInfo(item.bag, item.slot)
+	if locked then
+		item.lockedSince = item.lockedSince or now
+		if now - item.lockedSince >= SELL_CONFIRM_TIMEOUT then
+			SkipQueuedItem(self, sell)
+		end
+		return
+	end
+
+	count = tonumber(count) or 1
+	sell.index = sell.index + 1
+	sell.pending = {
+		bag = item.bag,
+		slot = item.slot,
+		link = item.link,
+		count = count,
+		value = item.price * count,
+		sentAt = now,
+	}
+	sell.nextTick = now + self:GetSellInterval()
+
+	pcall(UseContainerItem, item.bag, item.slot)
+end
+
+-- The merchant state is tracked from the events rather than read from
+-- MerchantFrame:IsShown(), so a skin or another addon hiding that window does
+-- not stop a run. AceEvent passes no event arguments on UA; none are needed.
+function B:InitializeVendorGrays()
+	self:CreateSellFrame()
+
+	self:RegisterEvent("MERCHANT_SHOW", function()
+		B.merchantOpen = true
+		if E.db.bags.vendorGrays.enable then B:VendorGrays() end
+	end)
+	self:RegisterEvent("MERCHANT_CLOSED", function()
+		B.merchantOpen = nil
+		B:FinishVendorGrays()
+	end)
+end
+
 function B:Initialize()
+	-- Before the enable guard below, and independent of it: vendoring grays
+	-- does not need the bag window. pcall'd for the same reason that guard
+	-- exists.
+	pcall(self.InitializeVendorGrays, self)
+
 	-- Guarded rather than a bare E.private.bags.enable: AddOn:OnEnable runs
 	-- every module's Initialize in one unprotected loop, so an error raised
 	-- here would also stop every module registered after this one.

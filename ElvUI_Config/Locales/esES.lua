@@ -101,6 +101,8 @@ L["Open the Lua error window by itself when a new error occurs. Errors are recor
 L["Addon Language"] = "Idioma del addon"
 L["Overrides which language this addon's own text uses, independent of the game client's language. Automatic uses the game client's own language, falling back to English if unsupported. Requires /reload to take effect."] = "Anula el idioma que usa el propio texto de este addon, independientemente del idioma del cliente del juego. Automático usa el idioma propio del cliente del juego, con reserva al inglés si no es compatible. Requiere /reload para tener efecto."
 L["Automatic (Game Client Language)"] = "Automático (idioma del cliente del juego)"
+L["Auto Repair"] = "Reparación Automática"
+L["Automatically repair using the following method when visiting a merchant."] = "Repara de forma automática usando el siguiente método cuando visites un comerciante."
 
 --Shared value labels
 L["None"] = "Ninguno"
@@ -214,6 +216,13 @@ L["Button Size (Bank)"] = "Tamaño de los Botones (Banco)"
 L["The size of the individual buttons on the bank frame."] = "El tamaño de los botones individuales en el marco del banco"
 L["Panel Width (Bank)"] = "Ancho del Panel (Banco)"
 L["Adjust the width of the bank frame. The number of columns follows from it and the slot size."] = "Ajusta el ancho del marco del banco. El número de columnas se deriva de este y del tamaño de espacio."
+L["Vendor Grays"] = "Vender Objetos Grises"
+L["Automatically vendor gray items when visiting a vendor."] = "Vender automáticamente los objetos grises al visitar al vendedor."
+L["Sell Interval"] = "Intervalo de venta"
+L["Will attempt to sell another item in set interval after previous one was sold."] = "Intentará vender otro objeto tras el intervalo establecido, una vez vendido el anterior."
+L["Vendor Gray Detailed Report"] = "Informe detallado de venta de grises"
+L["Displays a detailed report of every item sold when enabled."] = "Muestra un informe detallado de cada objeto vendido cuando está activado."
+L["Progress Bar"] = "Barra de progreso"
 
 --Tooltip
 L["Setup options for the Tooltip."] = "Opciones de configuración del tooltip."

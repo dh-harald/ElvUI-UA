@@ -124,6 +124,8 @@ L["Open the Lua error window by itself when a new error occurs. Errors are recor
 L["Addon Language"] = true
 L["Overrides which language this addon's own text uses, independent of the game client's language. Automatic uses the game client's own language, falling back to English if unsupported. Requires /reload to take effect."] = true
 L["Automatic (Game Client Language)"] = true
+L["Auto Repair"] = true
+L["Automatically repair using the following method when visiting a merchant."] = true
 
 --Shared value labels
 L["None"] = true
@@ -237,6 +239,13 @@ L["Button Size (Bank)"] = true
 L["The size of the individual buttons on the bank frame."] = true
 L["Panel Width (Bank)"] = true
 L["Adjust the width of the bank frame. The number of columns follows from it and the slot size."] = true
+L["Vendor Grays"] = true
+L["Automatically vendor gray items when visiting a vendor."] = true
+L["Sell Interval"] = true
+L["Will attempt to sell another item in set interval after previous one was sold."] = true
+L["Vendor Gray Detailed Report"] = true
+L["Displays a detailed report of every item sold when enabled."] = true
+L["Progress Bar"] = true
 
 --Tooltip
 L["Setup options for the Tooltip."] = true

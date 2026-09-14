@@ -101,6 +101,8 @@ L["Open the Lua error window by itself when a new error occurs. Errors are recor
 L["Addon Language"] = "Язык аддона"
 L["Overrides which language this addon's own text uses, independent of the game client's language. Automatic uses the game client's own language, falling back to English if unsupported. Requires /reload to take effect."] = "Переопределяет язык, который использует собственный текст этого аддона, независимо от языка игрового клиента. «Автоматически» использует язык самого игрового клиента, с откатом на английский, если он не поддерживается. Требует /reload для применения."
 L["Automatic (Game Client Language)"] = "Автоматически (язык игрового клиента)"
+L["Auto Repair"] = "Автоматический ремонт"
+L["Automatically repair using the following method when visiting a merchant."] = "Автоматически чинить экипировку за счет выбранного источника при посещении торговца."
 
 --Shared value labels
 L["None"] = "Нет"
@@ -214,6 +216,13 @@ L["Button Size (Bank)"] = "Размер слотов банка"
 L["The size of the individual buttons on the bank frame."] = "Размер каждого слота в банке"
 L["Panel Width (Bank)"] = "Ширина банка"
 L["Adjust the width of the bank frame. The number of columns follows from it and the slot size."] = "Регулирует ширину окна банка. Число столбцов определяется этим значением и размером ячейки."
+L["Vendor Grays"] = "Продавать серые предметы"
+L["Automatically vendor gray items when visiting a vendor."] = "Автоматически продавать предметы серого качества при посещении торговца."
+L["Sell Interval"] = "Интервал продажи"
+L["Will attempt to sell another item in set interval after previous one was sold."] = "Будет пытаться продать следующий предмет через установленный интервал после предыдущего."
+L["Vendor Gray Detailed Report"] = "Подробности продажи"
+L["Displays a detailed report of every item sold when enabled."] = "Показывать подробный отчет по каждому проданному серому предмету."
+L["Progress Bar"] = "Полоса прогресса"
 
 --Tooltip
 L["Setup options for the Tooltip."] = "Настройки всплывающей подсказки."

@@ -64,6 +64,10 @@ L["Cursor"] = "Curseur"
 L["BoP"] = "BoP"
 L["BoE"] = "BoE"
 
+--Misc
+L["Your items have been repaired for: "] = "Votre équipement a été réparé pour: "
+L["You don't have enough money to repair."] = "Vous n'avez pas assez d'argent pour réparer votre équipement."
+
 --Tooltip (fallbacks for a missing client global)
 L["Level"] = "Niveau"
 L["Rare"] = "Rare"
@@ -121,6 +125,8 @@ L["All slots purchased."] = "Tous les emplacements ont été achetés."
 L["Search"] = "Rechercher"
 L["Bag Mover"] = "Bag Mover"
 L["Bank Mover"] = "Déplacement de la banque"
+L["Vendoring Grays"] = "Vente des objets gris"
+L["Vendored gray items for: %s"] = "Objets gris vendus pour : %s"
 
 --Chat
 L["Toggle Chat Frame"] = "Activer la fenêtre de discussion"

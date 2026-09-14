@@ -101,6 +101,8 @@ L["Open the Lua error window by itself when a new error occurs. Errors are recor
 L["Addon Language"] = "Addon-Sprache"
 L["Overrides which language this addon's own text uses, independent of the game client's language. Automatic uses the game client's own language, falling back to English if unsupported. Requires /reload to take effect."] = "Überschreibt, welche Sprache die eigenen Texte dieses Addons verwenden, unabhängig von der Sprache des Spielclients. Automatisch verwendet die Sprache des Spielclients selbst, mit Rückfall auf Englisch, falls nicht unterstützt. Erfordert /reload, um wirksam zu werden."
 L["Automatic (Game Client Language)"] = "Automatisch (Sprache des Spielclients)"
+L["Auto Repair"] = "Auto-Reparatur"
+L["Automatically repair using the following method when visiting a merchant."] = "Repariere automatisch deine Ausrüstungsgegenstände, wenn du eine der folgenden Methoden auswählst."
 
 --Shared value labels
 L["None"] = "Nichts"
@@ -214,6 +216,13 @@ L["Button Size (Bank)"] = "Tasten Größe (Bank)"
 L["The size of the individual buttons on the bank frame."] = "Die Größe der einzelnen Tasten auf dem Bankfenster."
 L["Panel Width (Bank)"] = "Leistenbreite (Bank)"
 L["Adjust the width of the bank frame. The number of columns follows from it and the slot size."] = "Passt die Breite des Bankfensters an. Die Spaltenzahl ergibt sich daraus zusammen mit der Feldgröße."
+L["Vendor Grays"] = "Graue Gegenstände verkaufen"
+L["Automatically vendor gray items when visiting a vendor."] = "Automatischer Verkauf von grauen Gegenständen bei einem Händlerbesuch."
+L["Sell Interval"] = "Verkaufsintervall"
+L["Will attempt to sell another item in set interval after previous one was sold."] = "Versucht einen anderen Gegenstand in einem bestimmten Intervall zu verkaufen, nachdem der vorherige verkauft wurde."
+L["Vendor Gray Detailed Report"] = "Graue Gegenstände detaillierter Report"
+L["Displays a detailed report of every item sold when enabled."] = "Zeigt einen detaillierten Report von jedem verkauften Gegenstand wenn aktiviert."
+L["Progress Bar"] = "Fortschrittsbalken"
 
 --Tooltip
 L["Setup options for the Tooltip."] = "Einstellungen für den Tooltip."

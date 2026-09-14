@@ -106,6 +106,10 @@ L["Cursor"] = true
 L["BoP"] = true
 L["BoE"] = true
 
+--Misc
+L["Your items have been repaired for: "] = true
+L["You don't have enough money to repair."] = true
+
 --Tooltip (fallbacks for a missing client global)
 L["Level"] = true
 L["Rare"] = true
@@ -163,6 +167,8 @@ L["All slots purchased."] = true
 L["Search"] = true
 L["Bag Mover"] = true
 L["Bank Mover"] = true
+L["Vendoring Grays"] = true
+L["Vendored gray items for: %s"] = true
 
 --Chat
 L["Toggle Chat Frame"] = true

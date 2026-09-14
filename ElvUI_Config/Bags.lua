@@ -1,4 +1,5 @@
 local E, L, V, P, G = unpack(ElvUI)
+local getn = ElvUI.Compat.getn
 
 --]]
 E.Options.args.bags = {
@@ -131,6 +132,47 @@ E.Options.args.bags = {
 						E.db.bags.bankWidth = value
 						if E.Bags then E.Bags:Layout(true) end
 					end,
+				},
+			},
+		},
+		-- Real ElvUI's order and keys. No manual header: a tree page is
+		-- auto-titled from the group's own name (see `general` above).
+		vendorGrays = {
+			order = 8,
+			type = "group",
+			name = L["Vendor Grays"],
+			get = function(info) return E.db.bags.vendorGrays[ info[getn(info)] ] end,
+			set = function(info, value)
+				E.db.bags.vendorGrays[ info[getn(info)] ] = value
+				if E.Bags then E.Bags:UpdateSellFrameSettings() end
+			end,
+			args = {
+				enable = {
+					order = 2,
+					type = "toggle",
+					name = L["Enable"],
+					desc = L["Automatically vendor gray items when visiting a vendor."],
+				},
+				interval = {
+					order = 3,
+					type = "range",
+					name = L["Sell Interval"],
+					desc = L["Will attempt to sell another item in set interval after previous one was sold."],
+					min = 0.1, max = 1, step = 0.1,
+					disabled = function() return not E.db.bags.vendorGrays.enable end,
+				},
+				details = {
+					order = 4,
+					type = "toggle",
+					name = L["Vendor Gray Detailed Report"],
+					desc = L["Displays a detailed report of every item sold when enabled."],
+					disabled = function() return not E.db.bags.vendorGrays.enable end,
+				},
+				progressBar = {
+					order = 5,
+					type = "toggle",
+					name = L["Progress Bar"],
+					disabled = function() return not E.db.bags.vendorGrays.enable end,
 				},
 			},
 		},

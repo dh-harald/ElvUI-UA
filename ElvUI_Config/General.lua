@@ -94,6 +94,20 @@ E.Options.args.general = {
 			type = "group",
 			name = L["General"],
 			args = {
+				-- Real ElvUI also offers "GUILD"; guild bank repair does not
+				-- exist on this client version, so only the two meaningful
+				-- values are listed. Modules/Misc/Misc.lua treats an imported
+				-- "GUILD" as a player repair.
+				autoRepair = {
+					order = 4,
+					type = "select",
+					name = L["Auto Repair"],
+					desc = L["Automatically repair using the following method when visiting a merchant."],
+					values = {
+						NONE = L["None"],
+						PLAYER = L["Player"],
+					},
+				},
 				autoRoll = {
 					order = 7,
 					type = "toggle",

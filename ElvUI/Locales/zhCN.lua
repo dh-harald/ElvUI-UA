@@ -64,6 +64,10 @@ L["Cursor"] = "光标"
 L["BoP"] = "BoP"
 L["BoE"] = "BoE"
 
+--Misc
+L["Your items have been repaired for: "] = "装备已修复: "
+L["You don't have enough money to repair."] = "没有足够的资金来修复."
+
 --Tooltip (fallbacks for a missing client global)
 L["Level"] = "等级"
 L["Rare"] = "珍稀"
@@ -121,6 +125,8 @@ L["All slots purchased."] = "所有格子均已购买。"
 L["Search"] = "搜索"
 L["Bag Mover"] = "背包框架"
 L["Bank Mover"] = "银行移动手柄"
+L["Vendoring Grays"] = "正在出售灰色物品"
+L["Vendored gray items for: %s"] = "出售灰色物品获得: %s"
 
 --Chat
 L["Toggle Chat Frame"] = "开关聊天框架"
