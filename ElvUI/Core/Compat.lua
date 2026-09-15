@@ -124,6 +124,27 @@ Compat.mod = math.mod or function(a, b)
 	return a - math.floor(a / b) * b
 end
 
+-- Boolean-flag API returns, normalized to a real boolean by VALUE, not by
+-- client: nil, false and 0 -> false; anything else -> true.
+--
+-- The two clients report the same yes/no state in different shapes: the
+-- legacy 1.12.1 client returns 1/nil from most flag getters and 1/0 from
+-- some (`Button:IsEnabled()` -- measured; FrameXML itself compares
+-- `IsEnabled() == 0`), while UA returns true/false. Plain truthiness breaks
+-- on the 0 (`not 0` is false in Lua), `== 1` breaks on UA's true, and
+-- `== nil` breaks on UA's false.
+--
+-- ONLY for yes/no flags. Never for:
+--   * numbers that are values (counts, indices, levels, scales) -- 0 is a
+--     real value there;
+--   * tri-state returns where nil and 0 mean different things, e.g.
+--     `IsActionInRange` (1 in range, 0 out of range, nil = no range);
+--   * strings: `GetCVar` returns "0"/"1", and "0" is truthy -- compare the
+--     string instead.
+function Compat.bool(value)
+	return value ~= nil and value ~= false and value ~= 0
+end
+
 -- BetterDate: a Blizzard wrapper around date() added in a later expansion
 -- (2.0.1+). Real vanilla 1.12.1 has it natively; missing/erroring on UA.
 -- Always uses this own reimplementation rather than the native global on

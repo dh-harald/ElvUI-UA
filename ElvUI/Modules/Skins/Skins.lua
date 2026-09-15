@@ -20,6 +20,7 @@ local E, L, V, P, G = unpack(ElvUI)
 -- (LoadOnDemand windows -- see that function). Payloads are deliberately
 -- never read from it; this project's copy doesn't forward them.
 local S = E:NewModule("Skins", "AceHook-3.0", "AceEvent-3.0")
+local Compat = ElvUI.Compat
 E.Skins = S
 
 -- Settings: `V.skins.blizzard.*` (Settings/Private.lua) -- a master enable
@@ -188,6 +189,9 @@ S.ACCENT_COLOR = S.ACCENT_COLOR or { 1, 0.82, 0 }
 -- "Guild") are natively `:Disable()`'d based on real game state (not in a
 -- guild) and need to keep looking disabled, not always gold.
 S.ACCENT_COLOR_DISABLED = S.ACCENT_COLOR_DISABLED or { 0.5, 0.5, 0.5 }
+-- Text of the SELECTED tab: white, as the native tab templates' DisabledFont
+-- (`GameFontHighlightSmall`) draws it. See `ColorTab` above `S:StyleTab`.
+S.TAB_SELECTED_COLOR = S.TAB_SELECTED_COLOR or { 1, 1, 1 }
 -- Tab fill -- deliberately LIGHTER than the panel a tab sits on, so the
 -- tab strip reads as a separate row of controls instead of melting into
 -- the window.
@@ -532,6 +536,97 @@ S.TAB_INSET_X = 10
 S.TAB_INSET_TOP = 1
 S.TAB_INSET_BOTTOM = 3
 
+-- Tab text colour by state: unusable -> `S.ACCENT_COLOR_DISABLED`, selected
+-- -> `S.TAB_SELECTED_COLOR`, otherwise `S.ACCENT_COLOR`. These are the three
+-- colours the native tab templates produce (NormalFont `GameFontNormalSmall`,
+-- DisabledFont `GameFontHighlightSmall`, and the `SetDisabledTextColor(GRAY)`
+-- of `PanelTemplates_SetDisabledTabState`).
+--
+-- The FontString is coloured directly, and again after every native state
+-- change: on the legacy 1.12.1 client an addon-set FontString colour is what
+-- renders and it survives Enable()/Disable(), so a colour set once on OnShow
+-- would stick through tab switches; UA re-applies the state font instead.
+-- Button-level `SetDisabledTextColor` does not get through on legacy.
+-- On UA the same recolouring fights that state font, so there it is limited
+-- to the old gold/grey on OnShow and the client supplies the white
+-- (`Compat.isUA` below and in `InstallTabStateHooks`).
+--
+-- "Selected" and "unusable" share the widget's disabled bit
+-- (`PanelTemplates_SelectTab` calls `Disable()` on the selected tab,
+-- `PanelTemplates_SetDisabledTabState` on an unusable one --
+-- FrameXML/UIPanelTemplates.lua). The plain field `tab.isDisabled`, set by
+-- `PanelTemplates_DisableTab`, tells them apart; `tab.elvForceDisabled` is a
+-- caller's authoritative override (Friends.lua's Guild tab: `not
+-- IsInGuild()`). `IsEnabled()` returns 1/0 on legacy and true/false on UA,
+-- so both falsy forms and 0 count as disabled.
+--
+-- `$parentText` is the CharacterFrame/Friends tab templates' named
+-- FontString; `SpellBookFrameTabButtonTemplate`'s `<ButtonText>` has no name,
+-- hence the `GetFontString` fallback.
+local function ColorTab(tab)
+	local okName, name = pcall(tab.GetName, tab)
+	local text = okName and name and _G[name.."Text"]
+	if not text then
+		local okFS, fontString = pcall(tab.GetFontString, tab)
+		text = okFS and fontString or nil
+	end
+	if not text then return end
+
+	local color = S.ACCENT_COLOR
+	if tab.elvForceDisabled or tab.isDisabled then
+		color = S.ACCENT_COLOR_DISABLED
+	elseif not Compat.isUA then
+		-- UA only ever gets gold or grey here: its own state font draws the
+		-- selected tab white, and an addon-set white on UA sticks to that tab
+		-- after it is deselected (measured: the tab selected when the window
+		-- opened stayed white through every later tab switch).
+		local okEnabled, enabled = pcall(tab.IsEnabled, tab)
+		if okEnabled and not Compat.bool(enabled) then
+			color = S.TAB_SELECTED_COLOR
+		end
+	end
+	pcall(text.SetTextColor, text, color[1], color[2], color[3])
+end
+
+-- Every tab `S:StyleTab` has seen, recoloured together after each native tab
+-- state change. The handler ignores the hooked function's arguments, so it
+-- does not depend on the hook passing the tab through; recolouring all of
+-- them is cheap. `PanelTemplates_UpdateTabs` calls Select/Deselect once per
+-- tab, so the last call of a pass leaves every tab in its final colour. Tabs
+-- whose window selects them without these functions (SpellBook) are
+-- recoloured by that window's own update hook calling `S:StyleTab`.
+local styledTabs = {}
+local function RecolorStyledTabs()
+	local i
+	for i = 1, table.getn(styledTabs) do
+		ColorTab(styledTabs[i])
+	end
+end
+
+local TAB_STATE_FUNCTIONS = {
+	"PanelTemplates_SelectTab",
+	"PanelTemplates_DeselectTab",
+	"PanelTemplates_SetDisabledTabState",
+}
+local tabStateHooksInstalled = false
+local function InstallTabStateHooks()
+	if tabStateHooksInstalled then return end
+	tabStateHooksInstalled = true
+	-- Not on UA: the client re-applies the state font itself, and recolouring
+	-- after its state changes makes the two fight (measured: tabs left white
+	-- after deselection, then every tab stuck gold). With the hooks off, UA's
+	-- own colours follow tab switches correctly.
+	if Compat.isUA then return end
+	local i
+	for i = 1, table.getn(TAB_STATE_FUNCTIONS) do
+		local functionName = TAB_STATE_FUNCTIONS[i]
+		if type(_G[functionName]) == "function" then
+			local ok = pcall(function() S:SecureHook(functionName, RecolorStyledTabs) end)
+			if not ok then S:ReportSkinProblem() end
+		end
+	end
+end
+
 function S:StyleTab(tab, insetX, insetTop, insetBottom, forceDisabled)
 	if not tab then return end
 	pcall(tab.SetBackdrop, tab, nil)
@@ -573,77 +668,16 @@ function S:StyleTab(tab, insetX, insetTop, insetBottom, forceDisabled)
 	-- no-op on the tab templates that never had one.
 	pcall(tab.SetDisabledTexture, tab, "")
 
-	-- Some tabs are natively `:Disable()`'d based on real game state (Guild,
-	-- when not in a guild -- see `FriendsFrameTab3`'s own OnLoad,
-	-- `InGuildCheck()`), always-enabled on Character.lua's own 5 tabs -- an
-	-- unconditional gold recolor would make a natively `:Disable()`'d tab
-	-- look identical to an enabled one, losing the native "you can't click
-	-- this" grey signal entirely. Fixed: check `IsEnabled()` and use
-	-- `S.ACCENT_COLOR_DISABLED` when it reports disabled. Re-evaluated
-	-- every time chrome re-applies (every OnShow), same as every other
-	-- per-tab styling call in this project -- not a live poll, so a state
-	-- change WHILE the window is already open (e.g. joining a guild
-	-- mid-session) won't recolor until the next open/close.
-	--
-	-- **`IsEnabled()` ALONE IS THE WRONG SOURCE OF TRUTH.** The Guild tab
-	-- can intermittently come back GOLD despite the player not being in a
-	-- guild, reliably reproduced by (open Social, close, open SpellBook,
-	-- close, open Social). Reading the real FrameXML explains why that
-	-- predicate could never be reliable: `Enable()`/`Disable()` are
-	-- OVERLOADED on these tabs. `PanelTemplates_SelectTab` calls
-	-- `tab:Disable()` to mark the CURRENTLY SELECTED tab, and
-	-- `PanelTemplates_DeselectTab` calls `tab:Enable()` on every other one
-	-- -- both fired from `PanelTemplates_UpdateTabs`, which runs on every
-	-- tab switch and every `FriendsFrame_Update`
-	-- (source/wow-ui-source/FrameXML/UIPanelTemplates.lua:15-29,107-133).
-	-- So the widget's enabled bit means "selected or unusable", churns on
-	-- unrelated native updates, and can be read mid-flight.
-	--
-	-- The flag Blizzard actually maintains for "this tab is UNUSABLE" is
-	-- the plain Lua field **`tab.isDisabled`** (`PanelTemplates_DisableTab`
-	-- sets it, `PanelTemplates_EnableTab` clears it, and
-	-- `PanelTemplates_UpdateTabs` checks it FIRST, before either overload
-	-- above). Reading a plain field the native code already maintains,
-	-- instead of trusting a widget getter, is this project's own
-	-- established answer to exactly this class of problem -- the same move
-	-- `PollPlusMinusGlyphs` made for `.isCollapsed`/`.isExpanded`.
-	--
-	-- The predicate is deliberately ADDITIVE (`isDisabled` OR the old
-	-- `IsEnabled()` check OR an explicit caller override): every term can
-	-- only ever make a tab grey, never gold. The reported failure is
-	-- "should be grey, went gold", so a strictly-more-disabling predicate
-	-- cannot regress it in the other direction, and tab families where
-	-- `isDisabled` is never set behave exactly as before.
-	--
-	-- `forceDisabled` lets a caller supply the authoritative answer where
-	-- one exists. Friends.lua passes `not IsInGuild()` for tab 3 -- the
-	-- SAME test Blizzard's own `ToggleFriendsFrame` uses to make that tab
-	-- a no-op (FriendsFrame.lua:750) -- so the Guild tab is correct even
-	-- if neither `isDisabled` nor `IsEnabled()` is trustworthy on this
-	-- client.
-	-- `$parentText` is the CharacterFrame/Friends tab templates' own named
-	-- FontString, but `SpellBookFrameTabButtonTemplate`'s `<ButtonText>` is
-	-- declared WITHOUT a name -- fall back to the widget-level getter so
-	-- the accent color reaches those tabs too (same fallback
-	-- `StyleColumnHeader` already uses in Friends.lua).
-	local text = okName and name and _G[name.."Text"]
-	if not text then
-		local okFS, fontString = pcall(tab.GetFontString, tab)
-		text = okFS and fontString or nil
+	-- Text colour by state, re-applied after every native tab state change
+	-- -- see `ColorTab` and `InstallTabStateHooks` above. `forceDisabled` is
+	-- kept on the tab so those later re-applications still honour it.
+	tab.elvForceDisabled = forceDisabled and true or nil
+	if not tab.elvTabRegistered then
+		tab.elvTabRegistered = true
+		table.insert(styledTabs, tab)
 	end
-	if text then
-		local disabled = false
-		if forceDisabled then
-			disabled = true
-		elseif tab.isDisabled then
-			disabled = true
-		else
-			local okEnabled, enabled = pcall(tab.IsEnabled, tab)
-			if okEnabled and not enabled then disabled = true end
-		end
-		local color = disabled and S.ACCENT_COLOR_DISABLED or S.ACCENT_COLOR
-		pcall(text.SetTextColor, text, color[1], color[2], color[3])
-	end
+	InstallTabStateHooks()
+	ColorTab(tab)
 
 	ElvUI.Util.CreateButtonBorder(tab,
 		tonumber(insetX) or S.TAB_INSET_X,
@@ -660,8 +694,8 @@ function S:StyleTab(tab, insetX, insetTop, insetBottom, forceDisabled)
 	end
 
 	-- Marks the tab as ours WITHOUT guarding the function -- callers still
-	-- re-apply on every OnShow, which is what keeps the text colour correct
-	-- after a native tab switch. The flag exists purely so `S:SkinChildren`'s
+	-- re-apply on every OnShow (the colour after a native tab switch comes
+	-- from `InstallTabStateHooks`). The flag exists purely so `S:SkinChildren`'s
 	-- own tab branch can tell an ALREADY-styled tab from
 	-- a fresh one and leave it alone.
 	--
@@ -2174,7 +2208,7 @@ function S:StyleOptionsSlider(slider)
 				--     enumerable). So a hidden thumb is always the client's
 				--     doing.
 				local okEnabled, enabled = pcall(slider.IsEnabled, slider)
-				if okEnabled and (enabled == 0 or enabled == false) then return end
+				if okEnabled and not Compat.bool(enabled) then return end
 				if thumb then
 					local okThumbShown, thumbShown = pcall(thumb.IsShown, thumb)
 					if okThumbShown and not thumbShown then return end

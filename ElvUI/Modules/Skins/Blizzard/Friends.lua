@@ -627,6 +627,13 @@ end
 local inGuildCheckHooked = false
 local function HookInGuildCheck()
 	if inGuildCheckHooked then return end
+	-- Not on UA: `InGuildCheck` also runs on every Social tab click (via
+	-- `FriendsFrame_OnShow`), and recolouring after a tab state change fights
+	-- UA's own state font -- see `InstallTabStateHooks` in Skins.lua.
+	if ElvUI.Compat.isUA then
+		inGuildCheckHooked = true
+		return
+	end
 	-- A client whose FrameXML has no such global keeps the OnShow-only
 	-- colouring instead of reporting a skin problem on every open.
 	if type(_G.InGuildCheck) ~= "function" then

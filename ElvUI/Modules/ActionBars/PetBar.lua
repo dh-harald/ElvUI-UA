@@ -293,7 +293,7 @@ local function UpdateCheckedState()
 		local button = bar.buttons[i]
 		if button then
 			local ok, _, _, _, _, isActive = pcall(GetPetActionInfo, i)
-			pcall(button.SetChecked, button, ok and isActive == 1)
+			pcall(button.SetChecked, button, ok and Compat.bool(isActive))
 		end
 	end
 end

@@ -50,6 +50,7 @@
 
 local E, L, V, P, G = unpack(ElvUI)
 local UF = E:GetModule("UnitFrames")
+local Compat = ElvUI.Compat
 
 local SCAN_TOOLTIP = "ElvUIHealPredictScanTooltip"
 -- Seconds a noted spell stays valid for the cast event that follows it.
@@ -290,14 +291,14 @@ local function OnUseAction(slot, checkCursor, onSelf)
 	slot = tonumber(slot)
 	if not slot then return end
 	local name, rank = ActionSpell(slot)
-	Note(name, rank, CastTarget(onSelf == 1 or onSelf == true))
+	Note(name, rank, CastTarget(Compat.bool(onSelf)))
 end
 
 local function OnCastSpellByName(text, onSelf)
 	if type(text) ~= "string" then return end
 	local _, _, name, rank = string.find(text, "^%s*(.-)%s*%((.-)%)%s*$")
 	if not name then name = string.gsub(text, "^%s*(.-)%s*$", "%1") end
-	Note(name, rank, CastTarget(onSelf == 1 or onSelf == true))
+	Note(name, rank, CastTarget(Compat.bool(onSelf)))
 end
 
 local function OnCastSpell(id, bookType)
