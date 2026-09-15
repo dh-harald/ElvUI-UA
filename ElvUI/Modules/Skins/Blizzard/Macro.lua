@@ -77,6 +77,24 @@ local S = E:GetModule("Skins")
 local MAX_MACROS_COUNT = tonumber(_G.MAX_MACROS) or 18
 local NUM_MACRO_ICONS = tonumber(_G.NUM_MACRO_ICONS_SHOWN) or 20
 
+-- Everything the native XML anchors to `MacroFrameSelectedMacroBackground`,
+-- as TOPLEFT offsets from MacroFrame's own TOPLEFT. Each value is the native
+-- offset plus the texture's own position (TOPLEFT 16,-228, 64x64), so the
+-- result is pixel-identical to the native layout.
+local SLOT_ART_DEPENDENTS = {
+	{ "MacroFrameSelectedMacroButton", 30, -242 },
+	{ "MacroFrameSelectedMacroName", 76, -243 },
+	{ "MacroEditButton", 67, -258 },
+	{ "MacroFrameEnterMacroText", 24, -292 },
+	{ "MacroFrameScrollFrame", 27, -310 },
+}
+
+local function Reanchor(region, point, relativeTo, relativePoint, x, y)
+	if not (region and relativeTo) then return end
+	pcall(region.ClearAllPoints, region)
+	pcall(region.SetPoint, region, point, relativeTo, relativePoint, x, y)
+end
+
 -- Shared by MacroFrameSelectedMacroButton, MacroButton1-18 and
 -- MacroPopupButton1-20 -- all three families inherit MacroFrameButtonTemplate
 -- (see header). Strip pattern ported from SpellBook.lua's own
@@ -197,6 +215,28 @@ local function ApplyMacroFrameChrome(frame)
 		pcall(slotArt.SetAlpha, slotArt, 0)
 		S:Kill(slotArt)
 	end
+
+	-- A hidden Texture does not resolve as an anchor on the legacy 1.12.1
+	-- client: its GetTop() returns a stale off-screen value, SetPoint() on it
+	-- has no effect while it stays hidden, and everything anchored to it (the
+	-- preview icon, its name, Change Name/Icon, the "Enter Macro Commands:"
+	-- label and the whole macro-body scroll frame) renders 130-160px too
+	-- low. So the dependents are anchored to MacroFrame instead. Keeping the
+	-- texture shown and merely blank is not an alternative: on UA
+	-- SetTexture(nil) does not reliably stop a native texture from
+	-- rendering, and the gold slot ring would come back.
+	local j
+	for j = 1, table.getn(SLOT_ART_DEPENDENTS) do
+		local entry = SLOT_ART_DEPENDENTS[j]
+		Reanchor(_G[entry[1]], "TOPLEFT", frame, "TOPLEFT", entry[2], entry[3])
+	end
+
+	-- The character counter natively overlaps the text field's bottom edge
+	-- by a few pixels, hidden by the native backdrop's 5px inset. The field
+	-- surface below is a child frame drawn above MacroFrame's own regions,
+	-- so the counter would be half covered; it goes directly under the field
+	-- instead (real ElvUI moves it below the field as well).
+	Reanchor(_G.MacroFrameCharLimitText, "TOP", _G.MacroFrameTextBackground, "BOTTOM", 0, -1)
 
 	S:CreatePanel(frame, 10, -11, -32, 71)
 
