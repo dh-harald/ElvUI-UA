@@ -251,7 +251,9 @@ end
 local plateCount = 0
 
 local function ApplyFont(fontString, size)
-	pcall(fontString.SetFont, fontString, "Fonts\\FRIZQT__.TTF", size or NPdb.fontSize,
+	local LSM = LibStub("LibSharedMedia-3.0", true)
+	local path = (LSM and LSM:Fetch("font", NPdb.font)) or "Fonts\\FRIZQT__.TTF"
+	pcall(fontString.SetFont, fontString, path, size or NPdb.fontSize,
 		NPdb.fontOutline == "NONE" and "" or NPdb.fontOutline)
 end
 

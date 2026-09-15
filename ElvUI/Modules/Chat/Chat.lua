@@ -214,6 +214,9 @@ local function CreateToggleButton(name, label, onClick)
 	E:SetTemplate(button, "Transparent")
 
 	button.text = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	-- Real ElvUI's chat toggle button text (Layout `lchattb.text`): the UI
+	-- font at its defaults.
+	E:FontTemplate(button.text)
 	button.text:SetPoint("CENTER")
 	-- Upstream leaves this arrow the font's own colour and never recolours
 	-- the button border on hover -- both are this project's own additions.

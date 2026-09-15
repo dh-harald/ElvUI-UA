@@ -41,7 +41,12 @@
 -- problems follow from that, and they need different answers:
 --
 --   1. Static text (titles, captions, the description body) is recoloured
---      once per chrome pass -- `RECOLOR_*` below.
+--      on every chrome pass AND after every detail-pane rebuild --
+--      `RECOLOR_*` below. The rebuild runs the native
+--      `QuestFrameItems_Update`, which recolours the reward section's
+--      captions (`QuestLogRewardTitleText`, `QuestLogItemReceiveText`, ...)
+--      back to the parchment tones, the same native recolouring
+--      Skins/Blizzard/Quest.lua undoes for the quest dialog.
 --   2. The objective lines and the required-money line go dark again
 --      whenever the client rebuilds the detail pane -- on every quest
 --      selection and on a header toggle. They are re-asserted from a poll;
@@ -57,14 +62,12 @@
 -- on font family or size, which keeps a later font pass separable.
 --
 -- SCOPE: outer chrome, the panel and hit rect, a drag handle, both scroll
--- frames and their scrollbars, the close button, text visibility, and the
--- collapse glyphs on the header rows and the "All" button.
+-- frames and their scrollbars, the close button, text visibility, the
+-- collapse glyphs on the header rows and the "All" button, and the reward
+-- item slots.
 --
--- Deliberately NOT done, each its own pass: the reward item buttons
--- (`QuestLogItem1..10` -- their icon is a Texture region of the Button
--- itself, so they need the targeted "keep the icon, border the button"
--- recipe rather than a strip), the `Track Quest` control (not part of real
--- 1.12.1 at all -- this client adds it), and real ElvUI's own layout
+-- Deliberately NOT done, each its own pass: the `Track Quest` control (not
+-- part of real 1.12.1 at all -- this client adds it), and real ElvUI's own layout
 -- surgery (resizing the window to 685x490, re-anchoring both scroll frames,
 -- `QUESTS_DISPLAYED = 25` with nineteen extra row buttons, and its
 -- replacement Track button).
@@ -122,11 +125,11 @@ local RECOLOR_BODY = {
 	"QuestLogTimerText",
 }
 
--- The two tones the client's own black/near-black pair is remapped onto.
--- Completed stays deliberately dimmer than incomplete, preserving the
--- distinction the native colours carry.
-local OBJECTIVE_COLOR = {1, 1, 1}
-local OBJECTIVE_DONE_COLOR = {0.55, 0.55, 0.55}
+-- The two tones the client's own black/near-black objective pair is remapped
+-- onto: real ElvUI's own (Skins/Blizzard/Quest.lua `QuestObjectiveTextColor`),
+-- a completed objective gold, an incomplete one grey.
+local OBJECTIVE_COLOR = {0.6, 0.6, 0.6}
+local OBJECTIVE_DONE_COLOR = {1, 0.80, 0.10}
 local MONEY_COLOR = {1, 0.80, 0.10}
 local MONEY_SHORT_COLOR = {0.6, 0.6, 0.6}
 
@@ -184,6 +187,28 @@ local function ReassertObjectiveColors()
 			c = MONEY_SHORT_COLOR
 		end
 		pcall(money.SetTextColor, money, c[1], c[2], c[3])
+	end
+end
+
+-- Everything a detail-pane rebuild can turn dark again: the static captions
+-- (the reward section's among them) and the objective/money lines.
+local function ReassertDetailText()
+	S:RecolorNames(RECOLOR_HEADINGS, S.ACCENT_COLOR[1], S.ACCENT_COLOR[2], S.ACCENT_COLOR[3])
+	S:RecolorNames(RECOLOR_BODY, 1, 1, 1)
+	ReassertObjectiveColors()
+end
+
+-- Reward item slots (`QuestLogItem1..10`, `QuestLogRewardItemTemplate`, which
+-- inherits `QuestItemTemplate`): the merchant window's item-slot look through
+-- the shared `S:StyleQuestItemSlot`, same as the trade skill reagents. Real
+-- ElvUI borders the whole slot instead; this keeps every item slot in the
+-- project on one look. The native 147x41 size is kept, since the client's own
+-- item layout positions the slots.
+local function StyleRewardItems()
+	local count = tonumber(_G.MAX_NUM_ITEMS) or 10
+	local i
+	for i = 1, count do
+		S:StyleQuestItemSlot(_G["QuestLogItem" .. i])
 	end
 end
 
@@ -352,7 +377,7 @@ local function WrapQuestLogUpdate()
 	if type(origDetails) == "function" then
 		_G.QuestLog_UpdateQuestDetails = function(doNotScroll)
 			origDetails(doNotScroll)
-			pcall(ReassertObjectiveColors)
+			pcall(ReassertDetailText)
 		end
 	end
 end
@@ -369,7 +394,7 @@ local function StartGlyphPoll()
 		local frame = _G.QuestLogFrame
 		if frame and frame:IsShown() then
 			UpdateRowGlyphs()
-			ReassertObjectiveColors()
+			ReassertDetailText()
 		end
 	end, 0.2)
 end
@@ -385,10 +410,8 @@ local function ApplyQuestLogChrome(frame)
 	S:CreatePanel(frame, PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM)
 
 	PromotePanelText()
-	S:RecolorNames(RECOLOR_HEADINGS, S.ACCENT_COLOR[1], S.ACCENT_COLOR[2], S.ACCENT_COLOR[3])
-	S:RecolorNames(RECOLOR_BODY, 1, 1, 1)
-
-	ReassertObjectiveColors()
+	ReassertDetailText()
+	StyleRewardItems()
 
 	-- ONLY the detail pane gets a field surface. The quest list must not:
 	-- `QuestLogTitle1..n` are children of `QuestLogFrame`, NOT of

@@ -347,26 +347,36 @@ function S:CreateField(frame, l, t, r, b, keepDefaultLevel)
 	return S:CreateSurface(frame, S.WIDGET_COLOR, l, t, r, b, keepDefaultLevel)
 end
 
--- Item slot in the QuestItemTemplate shape (trade skill and craft reagents),
--- styled like the merchant window's item slots (Blizzard/Merchant.lua): a
--- 37x37 icon with the shared 1px button border, the name beside it, and a
--- field surface from just past the icon to the slot's right edge, as tall as
--- the icon. No border around the whole slot, no quality tint.
+-- Item slot in the QuestItemTemplate shape (quest log rewards, trade skill and
+-- craft reagents), styled like the merchant window's item slots
+-- (Blizzard/Merchant.lua): a 37x37 icon with a 1px border, the name beside
+-- it, and a bordered field from just past the icon to the slot's right edge,
+-- as tall as the icon. No border around the whole slot, no quality tint.
 --
--- Unlike a merchant slot, the icon and name are regions of the slot button
--- itself, and the field is a child frame at the button's own level, which
--- draws over the button's BACKGROUND/ARTWORK regions; the name is raised to
--- OVERLAY. So is the icon, which then covers the count text (`$parentCount`,
--- natively ARTWORK) -- the count is raised to OVERLAY too, AFTER the icon,
--- the order confirmed live to draw it on top. The icon border is
--- a holder frame pinned to the slot's level BEFORE Util.CreateButtonBorder,
--- which puts its backdrop one level below its target: a holder at the default
--- child level would put that backdrop above the icon.
+-- Built ENTIRELY from the slot button's own texture regions, never from a
+-- frame. On the legacy client a frame created at runtime inside a scroll child
+-- draws over the button's regions whatever its frame level, as a child and as
+-- a sibling alike (measured on QuestLogItem1, icon and name raised to OVERLAY
+-- still covered); regions of the button itself are ordered by draw layer on
+-- both clients. Layers: icon border and field border BACKGROUND, field fill
+-- BORDER, icon/name/count OVERLAY.
+--
+-- The count text (`$parentCount`, natively ARTWORK) is raised to OVERLAY
+-- AFTER the icon: the icon is raised too, and in the other order it covers the
+-- count (confirmed live).
 --
 -- `width`/`height` resize the slot (native QuestItemTemplate: 147x41).
 local QUEST_ITEM_ICON_SIZE = 37
 local QUEST_ITEM_FIELD_GAP = 4
 local QUEST_ITEM_TEXT_GAP = 8
+
+local function SolidRegion(slot, layer, color)
+	local ok, tex = pcall(slot.CreateTexture, slot, nil, layer)
+	if not ok or not tex then return nil end
+	pcall(tex.SetTexture, tex, "Interface\\Buttons\\WHITE8x8")
+	pcall(tex.SetVertexColor, tex, color[1], color[2], color[3], color[4] or 1)
+	return tex
+end
 
 function S:StyleQuestItemSlot(slot, width, height)
 	if not slot then return end
@@ -377,35 +387,42 @@ function S:StyleQuestItemSlot(slot, width, height)
 	if height then pcall(slot.SetHeight, slot, height) end
 	S:Kill(_G[name .. "NameFrame"])
 
-	if not slot.elvIconHolder then
-		local okHolder, holder = pcall(CreateFrame, "Frame", nil, slot)
-		if okHolder and holder then
-			pcall(holder.SetWidth, holder, QUEST_ITEM_ICON_SIZE)
-			pcall(holder.SetHeight, holder, QUEST_ITEM_ICON_SIZE)
-			pcall(holder.SetPoint, holder, "TOPLEFT", slot, "TOPLEFT", 0, 0)
-			local okLevel, level = pcall(slot.GetFrameLevel, slot)
-			pcall(holder.SetFrameLevel, holder, (okLevel and tonumber(level)) or 4)
-			if ElvUI.Util and ElvUI.Util.CreateButtonBorder then
-				ElvUI.Util.CreateButtonBorder(holder)
-			end
-			slot.elvIconHolder = holder
+	if not slot.elvIconBorder then
+		local border = SolidRegion(slot, "BACKGROUND", S.BORDER_COLOR)
+		if border then
+			pcall(border.SetWidth, border, QUEST_ITEM_ICON_SIZE)
+			pcall(border.SetHeight, border, QUEST_ITEM_ICON_SIZE)
+			pcall(border.SetPoint, border, "TOPLEFT", slot, "TOPLEFT", 0, 0)
+			slot.elvIconBorder = border
 		end
 	end
-	local holder = slot.elvIconHolder
+	local iconBorder = slot.elvIconBorder
 
-	if not slot.elvBackground then
+	if not slot.elvFieldBorder then
 		local okHeight, slotHeight = pcall(slot.GetHeight, slot)
 		local bottom = ((okHeight and tonumber(slotHeight)) or QUEST_ITEM_ICON_SIZE) - QUEST_ITEM_ICON_SIZE
 		if bottom < 0 then bottom = 0 end
-		S:CreateField(slot, QUEST_ITEM_ICON_SIZE + QUEST_ITEM_FIELD_GAP, 0, 0, bottom)
+
+		local fieldBorder = SolidRegion(slot, "BACKGROUND", S.BORDER_COLOR)
+		if fieldBorder then
+			pcall(fieldBorder.SetPoint, fieldBorder, "TOPLEFT", slot, "TOPLEFT", QUEST_ITEM_ICON_SIZE + QUEST_ITEM_FIELD_GAP, 0)
+			pcall(fieldBorder.SetPoint, fieldBorder, "BOTTOMRIGHT", slot, "BOTTOMRIGHT", 0, bottom)
+			slot.elvFieldBorder = fieldBorder
+
+			local fill = SolidRegion(slot, "BORDER", S.WIDGET_COLOR)
+			if fill then
+				pcall(fill.SetPoint, fill, "TOPLEFT", fieldBorder, "TOPLEFT", 1, -1)
+				pcall(fill.SetPoint, fill, "BOTTOMRIGHT", fieldBorder, "BOTTOMRIGHT", -1, 1)
+			end
+		end
 	end
 
 	local icon = _G[name .. "IconTexture"]
-	if icon and holder then
+	if icon and iconBorder then
 		pcall(icon.SetTexCoord, icon, 0.08, 0.92, 0.08, 0.92)
 		pcall(icon.ClearAllPoints, icon)
-		pcall(icon.SetPoint, icon, "TOPLEFT", holder, "TOPLEFT", 1, -1)
-		pcall(icon.SetPoint, icon, "BOTTOMRIGHT", holder, "BOTTOMRIGHT", -1, 1)
+		pcall(icon.SetPoint, icon, "TOPLEFT", iconBorder, "TOPLEFT", 1, -1)
+		pcall(icon.SetPoint, icon, "BOTTOMRIGHT", iconBorder, "BOTTOMRIGHT", -1, 1)
 		pcall(icon.SetDrawLayer, icon, "OVERLAY")
 	end
 
@@ -413,9 +430,9 @@ function S:StyleQuestItemSlot(slot, width, height)
 	if count then pcall(count.SetDrawLayer, count, "OVERLAY") end
 
 	local label = _G[name .. "Name"]
-	if label and holder then
+	if label and iconBorder then
 		pcall(label.ClearAllPoints, label)
-		pcall(label.SetPoint, label, "LEFT", holder, "RIGHT", QUEST_ITEM_TEXT_GAP, 0)
+		pcall(label.SetPoint, label, "LEFT", iconBorder, "RIGHT", QUEST_ITEM_TEXT_GAP, 0)
 		pcall(label.SetDrawLayer, label, "OVERLAY")
 	end
 end
@@ -885,7 +902,7 @@ function S:StyleCloseButton(button)
 
 	if not button.elvCloseText then
 		local text = button:CreateFontString(nil, "OVERLAY")
-		pcall(text.SetFont, text, "Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+		E:FontTemplate(text, nil, 10, "OUTLINE")
 		pcall(text.SetText, text, "X")
 		pcall(text.SetPoint, text, "CENTER", button, "CENTER", 0, 0)
 		button.elvCloseText = text

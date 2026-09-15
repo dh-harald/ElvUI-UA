@@ -19,6 +19,86 @@ local function STATUSBAR_VALUES()
 	return list
 end
 
+-- Every LSM-registered font, built per render for the same reason as
+-- STATUSBAR_VALUES above.
+local function FONT_VALUES()
+	local LSM = LibStub("LibSharedMedia-3.0", true)
+	local list = {}
+	if LSM then
+		local names = LSM:List("font")
+		local i
+		for i = 1, getn(names) do
+			list[names[i]] = names[i]
+		end
+	end
+	return list
+end
+
+-- Writes `value` only into a key the profile already declares: every declared
+-- default is merged into E.db, so an undeclared key reads nil.
+local function SetDeclared(tbl, key, value)
+	if type(tbl) == "table" and tbl[key] ~= nil then
+		tbl[key] = value
+	end
+end
+
+-- Real ElvUI's APPLY_FONT_WARNING (Core/StaticPopups.lua), same key list:
+-- copies the General -> Media font and font size into every module's own font
+-- settings. Upstream also writes keys this project does not declare
+-- (`chat.fontSize`, `tooltip.fontSize`, the minimap location font, the raid
+-- debuff fonts, and a misspelt `chat.tapFontSize`); SetDeclared skips those
+-- rather than add stray keys to the profile. Most modules read their font
+-- when they build their frames, hence the reload prompt.
+local function ApplyFontToAll()
+	local db = E.db
+	local font = db.general.font
+	local fontSize = db.general.fontSize
+
+	SetDeclared(db.bags, "itemLevelFont", font)
+	SetDeclared(db.bags, "itemLevelFontSize", fontSize)
+	SetDeclared(db.bags, "countFont", font)
+	SetDeclared(db.bags, "countFontSize", fontSize)
+	SetDeclared(db.nameplates, "font", font)
+	SetDeclared(db.nameplates, "fontSize", fontSize)
+	SetDeclared(db.actionbar, "font", font)
+	SetDeclared(db.actionbar, "fontSize", fontSize)
+	SetDeclared(db.auras, "font", font)
+	SetDeclared(db.auras, "fontSize", fontSize)
+	SetDeclared(db.chat, "font", font)
+	SetDeclared(db.chat, "fontSize", fontSize)
+	SetDeclared(db.chat, "tabFont", font)
+	SetDeclared(db.chat, "tapFontSize", fontSize)
+	SetDeclared(db.datatexts, "font", font)
+	SetDeclared(db.datatexts, "fontSize", fontSize)
+	SetDeclared(db.general.minimap, "locationFont", font)
+	SetDeclared(db.tooltip, "font", font)
+	SetDeclared(db.tooltip, "fontSize", fontSize)
+	SetDeclared(db.tooltip, "headerFontSize", fontSize)
+	SetDeclared(db.tooltip, "textFontSize", fontSize)
+	SetDeclared(db.tooltip, "smallTextFontSize", fontSize)
+	SetDeclared(db.tooltip and db.tooltip.healthBar, "font", font)
+	SetDeclared(db.tooltip and db.tooltip.healthBar, "fontSize", fontSize)
+	SetDeclared(db.unitframe, "font", font)
+	SetDeclared(db.unitframe, "fontSize", fontSize)
+
+	local units = db.unitframe and db.unitframe.units
+	SetDeclared(units and units.party and units.party.rdebuffs, "font", font)
+	SetDeclared(units and units.raid and units.raid.rdebuffs, "font", font)
+
+	E:RequestReload()
+end
+
+E.PopupDialogs = E.PopupDialogs or {}
+E.PopupDialogs["APPLY_FONT_WARNING"] = {
+	text = L["Are you sure you want to apply this font to all ElvUI elements?"],
+	button1 = E.PopupAccept,
+	button2 = E.PopupCancel,
+	OnAccept = ApplyFontToAll,
+	timeout = 0,
+	whileDead = 1,
+	hideOnEscape = false,
+}
+
 -- Top-level "General" category (real ElvUI: E.Options.args.general,
 -- source/ElvUI-vanilla/ElvUI_Config/General.lua:24-29, order=1,
 -- childGroups="tab" with many tabs -- general/colors/skins/chatBubbles/
@@ -410,11 +490,84 @@ E.Options.args.general = {
 			type = "group",
 			name = L["Media"],
 			order = 3,
+			-- Group-level get/set for the PROFILE font keys, as in real ElvUI;
+			-- every other entry below carries its own. Applied live by
+			-- re-running the Font-object pass and every E:FontTemplate string.
+			get = function(info) return E.db.general[ info[getn(info)] ] end,
+			set = function(info, value)
+				E.db.general[ info[getn(info)] ] = value
+				E:UpdateBlizzardFonts()
+				E:UpdateFontTemplates()
+			end,
 			args = {
-				-- Real ElvUI's own entry names and orders. Its Media group also
-				-- carries font and colour settings (orders 1-8 and 16+), which
-				-- this project does not implement -- hence the jump straight to
-				-- the textures block at order 10.
+				-- Real ElvUI's own entry names and orders. `fontStyle` (order 4)
+				-- is not exposed: nothing reads it.
+				fontHeader = {
+					order = 1,
+					type = "header",
+					name = L["Fonts"],
+				},
+				font = {
+					order = 2,
+					type = "select",
+					dialogControl = "LSM30_Font",
+					name = L["Default Font"],
+					desc = L["The font that the core of the UI will use."],
+					values = FONT_VALUES,
+				},
+				fontSize = {
+					order = 3,
+					type = "range",
+					name = L["Font Size"],
+					desc = L["Set the font size for everything in UI. Note: This doesn't effect somethings that have their own seperate options (UnitFrame Font, Datatext Font, ect..)"],
+					min = 4,
+					max = 33,
+					step = 1,
+				},
+				applyFontToAll = {
+					order = 5,
+					type = "execute",
+					name = L["Apply Font To All"],
+					desc = L["Applies the font and font size settings throughout the entire user interface. Note: Some font size settings will be skipped due to them having a smaller font size by default."],
+					func = function() E:StaticPopup_Show("APPLY_FONT_WARNING") end,
+				},
+				dmgfont = {
+					order = 6,
+					type = "select",
+					dialogControl = "LSM30_Font",
+					name = L["CombatText Font"],
+					desc = L["The font that combat text will use. |cffFF0000WARNING: This requires a game restart or re-log for this change to take effect.|r"],
+					values = FONT_VALUES,
+					get = function(info) return E.private.general[ info[getn(info)] ] end,
+					set = function(info, value)
+						E.private.general[ info[getn(info)] ] = value
+						E:RequestReload("private")
+					end,
+				},
+				namefont = {
+					order = 7,
+					type = "select",
+					dialogControl = "LSM30_Font",
+					name = L["Name Font"],
+					desc = L["The font that appears on the text above players heads. |cffFF0000WARNING: This requires a game restart or re-log for this change to take effect.|r"],
+					values = FONT_VALUES,
+					get = function(info) return E.private.general[ info[getn(info)] ] end,
+					set = function(info, value)
+						E.private.general[ info[getn(info)] ] = value
+						E:RequestReload("private")
+					end,
+				},
+				replaceBlizzFonts = {
+					order = 8,
+					type = "toggle",
+					name = L["Replace Blizzard Fonts"],
+					desc = L["Replaces the default Blizzard fonts on various panels and frames with the fonts chosen in the Media section of the ElvUI config. NOTE: Any font that inherits from the fonts ElvUI usually replaces will be affected as well if you disable this. Enabled by default."],
+					get = function(info) return E.private.general[ info[getn(info)] ] end,
+					set = function(info, value)
+						E.private.general[ info[getn(info)] ] = value
+						E:RequestReload("private")
+					end,
+				},
 				texturesHeader = {
 					order = 10,
 					type = "header",

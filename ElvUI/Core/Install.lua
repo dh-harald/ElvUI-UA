@@ -63,7 +63,7 @@ local function ShowStepComplete(message)
 
 		local okText, text = pcall(imsg.CreateFontString, imsg, nil, "OVERLAY")
 		if okText and text then
-			pcall(text.SetFont, text, "Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
+			E:FontTemplate(text, E.media and E.media.normFont, 32, "OUTLINE")
 			pcall(text.SetPoint, text, "BOTTOM", imsg, "BOTTOM", 0, 16)
 			pcall(text.SetTextColor, text, 1, 0.82, 0)
 			pcall(text.SetJustifyH, text, "CENTER")
@@ -813,6 +813,9 @@ local function CreateInstallFrame()
 
 	local okTitle, title = pcall(frame.CreateFontString, frame, nil, "OVERLAY", "GameFontNormalLarge")
 	if okTitle and title then
+		-- Font arguments of real ElvUI's install frame: SubTitle 15, the
+		-- descriptions and the status text at the defaults.
+		E:FontTemplate(title, nil, 15)
 		pcall(title.SetPoint, title, "TOP", frame, "TOP", 0, -16)
 		pcall(title.SetTextColor, title, 1, 0.82, 0)
 	end
@@ -822,6 +825,7 @@ local function CreateInstallFrame()
 	for i = 1, 3 do
 		local okDesc, desc = pcall(frame.CreateFontString, frame, nil, "OVERLAY", "GameFontHighlightSmall")
 		if okDesc and desc then
+			E:FontTemplate(desc)
 			pcall(desc.SetPoint, desc, "TOP", frame, "TOP", 0, -50 - (i - 1) * 34)
 			pcall(desc.SetWidth, desc, 440)
 			pcall(desc.SetJustifyH, desc, "CENTER")
@@ -852,6 +856,7 @@ local function CreateInstallFrame()
 
 	local okProgressText, progressText = pcall(frame.CreateFontString, frame, nil, "OVERLAY", "GameFontNormalSmall")
 	if okProgressText and progressText then
+		E:FontTemplate(progressText)
 		pcall(progressText.SetPoint, progressText, "BOTTOM", frame, "BOTTOM", 0, 80)
 	end
 	frame.ProgressText = progressText

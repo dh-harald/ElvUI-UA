@@ -87,6 +87,14 @@ P.general = {
 	backdropcolor = { r = 0.1, g = 0.1, b = 0.1 },
 	backdropfadecolor = { r = 0.06, g = 0.06, b = 0.06, a = 0.8 },
 	valuecolor = { r = 254/255, g = 123/255, b = 44/255 },
+
+	-- The UI font, real ElvUI's own keys and defaults. `font`/`fontSize` are
+	-- applied to the client's shared Font objects by `E:UpdateBlizzardFonts`
+	-- (Core/Fonts.lua). `fontStyle` is stored for profile compatibility only;
+	-- nothing reads it.
+	font = "PT Sans Narrow",
+	fontSize = 12,
+	fontStyle = "NONE",
 	autoRepair = "NONE",
 	autoRoll = false,
 	bottomPanel = true,
@@ -630,7 +638,8 @@ P.nameplates = {
 -- Real ElvUI's `P["tooltip"]` verbatim
 -- (source/ElvUI-vanilla/ElvUI/Settings/Profile.lua:631). Keys the module
 -- does not read yet are still declared, so an imported profile keeps them.
--- The font keys cannot take effect on UA, where SetFont is a no-op.
+-- The text font keys are applied by the Tooltip module's `SetTooltipFonts`,
+-- the `healthBar` font keys by its `ApplyHealthBarSettings`.
 P.tooltip = {
 	cursorAnchor = false,
 	targetInfo = true,

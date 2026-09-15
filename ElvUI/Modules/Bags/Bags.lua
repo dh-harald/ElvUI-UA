@@ -220,6 +220,7 @@ function B:ConstructContainerFrame(name, isBank)
 		-- Header strip, laid out right to left exactly as real ElvUI does:
 		-- money at the right edge, the buttons walking leftwards from it.
 		f.goldText = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		E:FontTemplate(f.goldText)
 		f.goldText:SetPoint("BOTTOMRIGHT", f.holderFrame, "TOPRIGHT", -10, 4)
 		f.goldText:SetJustifyH("RIGHT")
 		f.headerLeftmost = f.goldText
@@ -293,6 +294,7 @@ function B:ConstructContainerFrame(name, isBank)
 		-- top-right spot and anchors the header chain, exactly as real ElvUI
 		-- does it.
 		f.bagText = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		E:FontTemplate(f.bagText)
 		f.bagText:SetPoint("BOTTOMRIGHT", f.holderFrame, "TOPRIGHT", -10, 4)
 		f.bagText:SetJustifyH("RIGHT")
 		f.bagText:SetText(L["Bank"])
@@ -1732,6 +1734,7 @@ function B:CreateSellFrame()
 	sell:Hide()
 
 	sell.title = sell:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	E:FontTemplate(sell.title, nil, 12, "OUTLINE")
 	sell.title:SetPoint("TOP", sell, "TOP", 0, -4)
 	sell.title:SetText(L["Vendoring Grays"])
 
@@ -1751,6 +1754,7 @@ function B:CreateSellFrame()
 	end
 
 	sell.statusbar.ValueText = sell.statusbar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	E:FontTemplate(sell.statusbar.ValueText, nil, 12, "OUTLINE")
 	sell.statusbar.ValueText:SetPoint("CENTER", sell.statusbar, "CENTER", 0, 0)
 
 	sell.driver = CreateFrame("Frame", nil, UIParent)

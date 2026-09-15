@@ -219,13 +219,17 @@ local function createSlot(id)
 	icon:SetPoint("BOTTOMRIGHT", iconFrame, "BOTTOMRIGHT", -1, 1)
 	frame.icon = icon
 
+	-- Font arguments of real ElvUI's loot frame: count, name and title all at
+	-- the UI font's default size, outlined.
 	local count = iconFrame:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+	E:FontTemplate(count, nil, nil, "OUTLINE")
 	count:SetJustifyH("RIGHT")
 	count:SetPoint("BOTTOMRIGHT", iconFrame, "BOTTOMRIGHT", -2, 2)
 	count:SetText("1")
 	frame.count = count
 
 	local name = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	E:FontTemplate(name, nil, nil, "OUTLINE")
 	name:SetJustifyH("LEFT")
 	name:SetPoint("LEFT", frame, "LEFT", 0, 0)
 	name:SetPoint("RIGHT", icon, "LEFT", 0, 0)
@@ -397,6 +401,7 @@ function M:LoadLoot()
 	lootFrame:SetToplevel(true)
 
 	local title = lootFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	E:FontTemplate(title, nil, nil, "OUTLINE")
 	title:SetPoint("BOTTOMLEFT", lootFrame, "TOPLEFT", 0, 1)
 	lootFrame.title = title
 	lootFrame.slots = {}

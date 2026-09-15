@@ -32,6 +32,13 @@ local E, L, V, P, G = unpack(ElvUI)
 V.general = {
 	normTex = "ElvUI Norm",
 	glossTex = "ElvUI Norm",
+
+	-- Floating combat text font, name-above-head font, and the switch for the
+	-- Font-object replacement pass. Real ElvUI's own keys and defaults; all
+	-- three are consumed by `E:UpdateBlizzardFonts` (Core/Fonts.lua).
+	dmgfont = "Homespun",
+	namefont = "PT Sans Narrow",
+	replaceBlizzFonts = true,
 	loot = true,
 	lootRoll = true,
 	lootUnderMouse = false,

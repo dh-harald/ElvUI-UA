@@ -9,13 +9,10 @@
 -- Ported from real ElvUI's own Core/Cooldowns.lua (145 lines), but NOT a
 -- line-for-line copy of its architecture: that version drives one
 -- OnUpdate script PER active cooldown frame, throttled by GetTimeInfo's
--- own returned nextUpdate value, plus icon-size-based font scaling
--- (E:FontTemplate/E:Point, a whole scaling system this project doesn't
--- have). This project already established elsewhere that a child-frame
--- OnUpdate is unreliable on UA, so this instead drives ALL active
--- cooldowns off a single shared E:ScheduleRepeatingTimer(0.1s) and a
--- plain fixed-size FontString -- simpler, and avoids the OnUpdate
--- concern entirely. What IS ported faithfully is the actual TEXT
+-- own returned nextUpdate value. A child-frame OnUpdate is unreliable on
+-- UA, so this instead drives ALL active cooldowns off a single shared
+-- E:ScheduleRepeatingTimer(0.1s). Its icon-size-based font sizing IS
+-- ported (`ApplyCooldownFont`). What IS ported faithfully is the actual TEXT
 -- FORMATTING: E:GetTimeInfo/E.TimeFormats (Core/Util.lua, ported
 -- verbatim from real ElvUI's Core/math.lua) decide the bracket
 -- (days/hours/minutes/seconds/expiring) and the exact format string,
@@ -162,6 +159,40 @@ local function UpdateAllTimers()
 	end
 end
 
+-- Real ElvUI's `E:Cooldown_OnSizeChanged`: the text is 20 at a 36px icon and
+-- scales with the cooldown frame's width, outlined; below half that scale no
+-- text is shown. The width comes from the frame's edges, because the legacy
+-- client reports GetWidth of an anchor-sized frame multiplied by the UI scale.
+local ICON_SIZE = 36
+local FONT_SIZE = 20
+local MIN_SCALE = 0.5
+
+local function CooldownWidth(cd)
+	local okLeft, left = pcall(cd.GetLeft, cd)
+	local okRight, right = pcall(cd.GetRight, cd)
+	if okLeft and okRight and tonumber(left) and tonumber(right) then
+		return right - left
+	end
+	local ok, width = pcall(cd.GetWidth, cd)
+	return (ok and tonumber(width)) or nil
+end
+
+-- Returns false when the icon is too small to carry text.
+local function ApplyCooldownFont(cd, text)
+	local width = CooldownWidth(cd)
+	local scale = 1
+	if width and width > 0 then
+		scale = math.floor(width + 0.5) / ICON_SIZE
+	end
+	if scale < MIN_SCALE then return false end
+
+	if text.elvFontScale ~= scale then
+		text.elvFontScale = scale
+		E:FontTemplate(text, nil, scale * FONT_SIZE, "OUTLINE")
+	end
+	return true
+end
+
 local function GetOrCreateText(cd)
 	if cd.elvCooldownText then return cd.elvCooldownText end
 	local ok, text = pcall(cd.CreateFontString, cd, nil, "OVERLAY", "GameFontNormal")
@@ -187,7 +218,7 @@ local function InstallCooldownHook()
 
 		if start and start > 0 and duration and duration > MIN_DURATION and enable and enable > 0 then
 			local text = GetOrCreateText(cd)
-			if text then
+			if text and ApplyCooldownFont(cd, text) then
 				activeTimers[cd] = { start = start, duration = duration, text = text }
 				if not timerHandle then
 					timerHandle = E:ScheduleRepeatingTimer(UpdateAllTimers, 0.1)

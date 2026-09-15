@@ -148,9 +148,14 @@ local function ResolveOutline(outline)
 	return outline
 end
 
+-- Real ElvUI's `UF:Update_FontString`: `unitframe.font` through LSM.
+local function UnitFrameFont(name)
+	return (LSM and LSM:Fetch("font", name or E.db.unitframe.font)) or "Fonts\\FRIZQT__.TTF"
+end
+
 local function ApplyFont(fontString)
 	local db = E.db.unitframe
-	pcall(fontString.SetFont, fontString, "Fonts\\FRIZQT__.TTF", db.fontSize, ResolveOutline(db.fontOutline))
+	pcall(fontString.SetFont, fontString, UnitFrameFont(), db.fontSize, ResolveOutline(db.fontOutline))
 end
 
 -- frame.Health -- a Util.CreateStatusBar bar, inset from the panel's own
@@ -1190,7 +1195,7 @@ function UF:UpdateCustomTexts(frame, tags)
 		end
 
 		if objectDB.enable ~= false then
-			pcall(fontString.SetFont, fontString, "Fonts\\FRIZQT__.TTF", objectDB.size or E.db.unitframe.fontSize, ResolveOutline(objectDB.fontOutline or E.db.unitframe.fontOutline))
+			pcall(fontString.SetFont, fontString, UnitFrameFont(objectDB.font), objectDB.size or E.db.unitframe.fontSize, ResolveOutline(objectDB.fontOutline or E.db.unitframe.fontOutline))
 			pcall(fontString.SetJustifyH, fontString, objectDB.justifyH or "CENTER")
 
 			local anchor = GetCustomTextAnchor(frame, objectDB.attachTextTo or "Health")

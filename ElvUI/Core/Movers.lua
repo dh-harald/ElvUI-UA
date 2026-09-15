@@ -770,6 +770,8 @@ local function CreateHandle(entry)
 
 	local okLabel, label = pcall(handle.CreateFontString, handle, nil, "OVERLAY", "GameFontNormal")
 	if okLabel and label then
+		-- Real ElvUI's mover label: the UI font at its defaults.
+		E:FontTemplate(label)
 		pcall(label.SetPoint, label, "CENTER", handle, "CENTER", 0, 0)
 		pcall(label.SetJustifyH, label, "CENTER")
 		pcall(label.SetText, label, entry.label)

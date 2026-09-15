@@ -167,6 +167,11 @@ function AddOn:OnInitialize()
 	self.media.glossTex = (LSM and LSM:Fetch("statusbar", self.private.general.glossTex))
 		or "Interface\\AddOns\\ElvUI\\Media\\Textures\\normTex2"
 
+	-- Font objects and `E.media.normFont`/`combatFont` (Core/Fonts.lua). Called
+	-- at the same point as real ElvUI's own `E:UpdateMedia`: once the saved
+	-- settings exist, before any module builds its frames.
+	self:UpdateBlizzardFonts()
+
 	-- Runs here, not in a module: every consumer registers its own update
 	-- function at FILE LOAD time, and the client has loaded every `.toc`
 	-- entry before `ADDON_LOADED` (which is what drives `OnInitialize`), so

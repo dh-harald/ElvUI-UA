@@ -492,6 +492,9 @@ function M:Initialize()
 	-- Zone text -- header strip ABOVE the map, not overlaid on it (see the
 	-- UA note at the top of this file for why).
 	local zoneText = holder:CreateFontString("ElvUIMinimapZoneText", "OVERLAY", "GameFontNormal")
+	-- Real ElvUI's minimap location text: the UI font at its default size,
+	-- outlined.
+	E:FontTemplate(zoneText, nil, nil, "OUTLINE")
 	zoneText:SetPoint("TOP", holder, "TOP", 0, -4)
 	zoneText:SetWidth(size - 32)
 	zoneText:SetJustifyH("CENTER")

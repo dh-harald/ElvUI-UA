@@ -109,7 +109,10 @@ local function CreateRollButton(bar, normal, pushed, rollType, tipText)
 	end)
 	button:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
+	-- Real ElvUI's roll counts, bind text and item name: the UI font at its
+	-- default size, outlined.
 	local count = button:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+	E:FontTemplate(count, nil, nil, "OUTLINE")
 	local nudge = 0
 	if rollType == 2 then nudge = 1 elseif rollType == 0 then nudge = -1 end
 	count:SetPoint("CENTER", button, "CENTER", 0, nudge)
@@ -200,10 +203,12 @@ local function CreateRollBar()
 	bar.passButton = pass
 
 	local bind = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	E:FontTemplate(bind, nil, nil, "OUTLINE")
 	bind:SetPoint("LEFT", pass, "RIGHT", 3, 1)
 	bar.bind = bind
 
 	local name = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	E:FontTemplate(name, nil, nil, "OUTLINE")
 	name:SetPoint("LEFT", bind, "RIGHT", 0, 0)
 	name:SetPoint("RIGHT", bar, "RIGHT", -5, 0)
 	name:SetHeight(10)

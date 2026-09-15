@@ -61,6 +61,10 @@ Two addons ship together:
   shown beside an item tooltip while Shift is held, visibility rules
   (modifier key / hide in combat) for unit frames, bags and action bars,
   and an options page for all of these
+- Fonts: the General → Media default font and size, combat text and name
+  fonts, and "Apply Font To All" — applied to the native Blizzard text,
+  ElvUI's own text and the tooltip text (legacy client; Unreal Azeroth
+  ignores font changes)
 - Install Wizard
 - Lua error window: collects script errors (repeats merged with a count),
   pages through them, the text can be selected and copied, stays closed in
@@ -73,8 +77,8 @@ Two addons ship together:
   and more)
 
 **Missing / not yet started:**
-- Tooltip item level, inspect info, spell IDs and the tooltip text font
-  settings; the health bar font is applied on the legacy client only
+- Tooltip item level, inspect info and spell IDs; the tooltip text and
+  health bar fonts are applied on the legacy client only
   (Unreal Azeroth ignores font changes), and on Unreal Azeroth the item
   lines are not yet
   shown on action buttons (the client offers no way to read the item of an

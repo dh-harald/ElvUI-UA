@@ -125,7 +125,8 @@ local function StyleMirrorTimer(i)
 	pcall(statusBar.SetBackdropBorderColor, statusBar, 0, 0, 0, 1)
 
 	local timerText = frame:CreateFontString(nil, "OVERLAY")
-	pcall(timerText.SetFont, timerText, "Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+	-- Real ElvUI's MirrorTimers skin: the UI font at its default size.
+	E:FontTemplate(timerText)
 	timerText:SetPoint("CENTER", statusBar, "CENTER", 0, 0)
 	frame.elvTimerText = timerText
 

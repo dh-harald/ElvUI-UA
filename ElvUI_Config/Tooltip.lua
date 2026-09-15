@@ -3,8 +3,8 @@ local getn = ElvUI.Compat.getn
 
 -- Real ElvUI's `tooltip` options group (ElvUI_Config/Tooltip.lua): same keys,
 -- same tree paths, same orders. Only controls whose profile field the Tooltip
--- module actually reads are exposed; real ElvUI's itemLevel, inspectInfo and
--- the tooltip font group are left out until the module reads them.
+-- module actually reads are exposed; real ElvUI's itemLevel and inspectInfo
+-- are left out until the module reads them.
 
 -- GlobalStrings entries, English fallback where the client lacks them.
 local FALLBACK_STANDING_LABELS = {
@@ -176,6 +176,64 @@ E.Options.args.tooltip = {
 					min = 0,
 					max = 1,
 					step = 0.01,
+				},
+				-- Real ElvUI's own inline group, keys and orders. Inherits the
+				-- tab's `disabled` and the top-level get; its set re-applies
+				-- the fonts live.
+				fontGroup = {
+					order = 13,
+					type = "group",
+					name = L["Tooltip Font Settings"],
+					guiInline = true,
+					set = function(info, value)
+						E.db.tooltip[ info[getn(info)] ] = value
+						if E.Tooltip then E.Tooltip:SetTooltipFonts() end
+					end,
+					args = {
+						font = {
+							order = 1,
+							type = "select",
+							dialogControl = "LSM30_Font",
+							name = L["Font"],
+							values = FontValues,
+						},
+						fontOutline = {
+							order = 2,
+							type = "select",
+							name = L["Font Outline"],
+							values = OUTLINE_VALUES,
+						},
+						spacer = {
+							order = 3,
+							type = "description",
+							name = "",
+						},
+						headerFontSize = {
+							order = 4,
+							type = "range",
+							name = L["Header Font Size"],
+							min = 4,
+							max = 33,
+							step = 1,
+						},
+						textFontSize = {
+							order = 5,
+							type = "range",
+							name = L["Text Font Size"],
+							min = 4,
+							max = 33,
+							step = 1,
+						},
+						smallTextFontSize = {
+							order = 6,
+							type = "range",
+							name = L["Comparison Font Size"],
+							desc = L["This setting controls the size of text in item comparison tooltips."],
+							min = 4,
+							max = 33,
+							step = 1,
+						},
+					},
 				},
 				factionColors = {
 					order = 13,

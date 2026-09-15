@@ -1635,6 +1635,43 @@ function TT:HookItemSources()
 end
 
 -- ---------------------------------------------------------------------------
+-- Fonts
+-- ---------------------------------------------------------------------------
+
+-- Tooltip text fonts from E.db.tooltip, real ElvUI's `TT:SetTooltipFonts`: set
+-- on the three shared Font objects the tooltip lines inherit (line 1 the
+-- header font, the other lines the text font, the comparison tooltips' lower
+-- lines the small text font). Called again by the options page so a change
+-- applies without a reload.
+--
+-- Real ElvUI also sets a font per FontString on ShoppingTooltip1/2 lines 1-4
+-- and on the money frame texts. Not ported: `ShowCompare` swaps the Font
+-- object of comparison lines 1-2 (`SetLineFont`), which would compete with a
+-- per-string font, and the money texts stay on their native font.
+function TT:SetTooltipFonts()
+	local db = self.db
+	local LSM = LibStub("LibSharedMedia-3.0", true)
+	local path = LSM and LSM:Fetch("font", db.font)
+	if not path then return end
+
+	local outline = db.fontOutline
+	if outline == "NONE" then outline = "" end
+
+	local objects = {
+		{ _G.GameTooltipHeaderText, db.headerFontSize },
+		{ _G.GameTooltipText, db.textFontSize },
+		{ _G.GameTooltipTextSmall, db.smallTextFontSize },
+	}
+	local i
+	for i = 1, table.getn(objects) do
+		local obj, size = objects[i][1], objects[i][2]
+		if obj and obj.SetFont then
+			pcall(obj.SetFont, obj, path, size, outline)
+		end
+	end
+end
+
+-- ---------------------------------------------------------------------------
 -- Initialize
 -- ---------------------------------------------------------------------------
 
@@ -1679,6 +1716,7 @@ function TT:Initialize()
 	end
 
 	self:SetupHealthBar()
+	self:SetTooltipFonts()
 	self:HookRefill()
 end
 
