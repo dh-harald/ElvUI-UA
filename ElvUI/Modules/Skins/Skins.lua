@@ -4386,6 +4386,14 @@ function S:ApplyDropDownMenuChrome()
 			if button then
 				pcall(button.SetFrameLevel, button, buttonLevel)
 				StyleDropDownCheck(button, check, buttonLevel)
+				-- The colour swatch is a child Button of the row. On UA it
+				-- keeps its own level when the row is raised, so the row
+				-- would cover it and take its clicks (the row pushes, the
+				-- colour picker never opens). Above the check holder too.
+				local swatch = _G["DropDownList"..i.."Button"..j.."ColorSwatch"]
+				if swatch then
+					pcall(swatch.SetFrameLevel, swatch, buttonLevel + 2)
+				end
 			end
 			-- Flat white-alpha fill, matching real ElvUI's own exact
 			-- trick here (and already reused this same session for

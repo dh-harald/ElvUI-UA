@@ -564,7 +564,7 @@ local function SetupChat()
 
 	pcall(ChatFrame_ActivateCombatMessages, ChatFrame2)
 
-	pcall(ChangeChatColor, "CHANNEL1", 195 / 255, 230 / 255, 232 / 255)
+	ElvUI.Util.ChangeChatColor("CHANNEL1", 195 / 255, 230 / 255, 232 / 255)
 
 	ShowStepComplete(L["Chat Set"])
 end

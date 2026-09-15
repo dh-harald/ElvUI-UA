@@ -3,4 +3,5 @@
 	<Script file="Loot.lua"/>
 	<Script file="RaidMarker.lua"/>
 	<Script file="LootRoll.lua"/>
+	<Script file="ColorPicker.lua"/>
 </Ui>

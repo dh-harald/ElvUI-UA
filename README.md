@@ -51,6 +51,10 @@ Two addons ship together:
   merged, quest items first, quivers/ammo pouches/soul bags filled with
   their own items)
 - Automatic repair at a merchant
+- Colour picker: an ElvUI-styled replacement for the native one, used by
+  the chat window menu's colour swatches (channel and message colours,
+  window background and opacity); works on Unreal Azeroth, where the
+  native picker cannot select a colour
 - Solo loot and group loot rolls (Need/Greed/Pass bars, optional auto greed)
 - Raid marker ring (a key binding opens the eight raid target icons at the
   cursor; legacy client)

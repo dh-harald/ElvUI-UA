@@ -878,6 +878,43 @@ function Util.SetStatusBarBackgroundColor(bar, r, g, b, a)
 	bar.barBgTexture:SetVertexColor(r, g, b, a or 1)
 end
 
+-- ChangeChatColor taking 0-1 channels on both clients, applied at once.
+-- Unreal Azeroth stores the channels as 0-255 integers (0-1 values truncate
+-- to black) and fires no UPDATE_CHAT_COLOR, so there the values are scaled
+-- and the update that event would bring is done here: ChatTypeInfo plus
+-- UpdateColorByID on every chat window, WHISPER also recolouring REPLY. The
+-- saved colour is delivered as 0-1 on the next login on both clients.
+function Util.ChangeChatColor(chatType, r, g, b)
+	if type(ChangeChatColor) ~= "function" or type(chatType) ~= "string" then return end
+	r, g, b = tonumber(r) or 0, tonumber(g) or 0, tonumber(b) or 0
+
+	if not (ElvUI.Compat and ElvUI.Compat.isUA) then
+		pcall(ChangeChatColor, chatType, r, g, b)
+		return
+	end
+
+	pcall(ChangeChatColor, chatType,
+		math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
+
+	local function Recolor(key)
+		local info = type(ChatTypeInfo) == "table" and ChatTypeInfo[key]
+		if not info then return end
+		info.r, info.g, info.b = r, g, b
+		if not info.id then return end
+		local i
+		for i = 1, (NUM_CHAT_WINDOWS or 7) do
+			local frame = getglobal("ChatFrame"..i)
+			if frame then
+				pcall(frame.UpdateColorByID, frame, info.id, r, g, b)
+			end
+		end
+	end
+
+	local key = string.upper(chatType)
+	Recolor(key)
+	if key == "WHISPER" then Recolor("REPLY") end
+end
+
 -- Ported verbatim from real ElvUI's own E:TableToLuaString
 -- (source/ElvUI-vanilla/ElvUI/Core/core.lua) -- a plain, readable
 -- Lua table LITERAL string, NOT the compressed/AceSerializer+LibCompress+
