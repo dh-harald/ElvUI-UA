@@ -1,3 +1,17 @@
+## [0.4.1](https://github.com/dh-harald/ElvUI-UA/compare/v0.4.0...v0.4.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* added own ColorPicker ([bd38f6f](https://github.com/dh-harald/ElvUI-UA/commit/bd38f6fb6dce8b87e3c1f80c6dd4b03c3401fccd))
+* **chat:** suppress some addon messages ([3a1141e](https://github.com/dh-harald/ElvUI-UA/commit/3a1141ece15af3d4c8ac7119c35541b9c25d8c0a))
+* Font settings and quest log fixes ([9e904c7](https://github.com/dh-harald/ElvUI-UA/commit/9e904c7c6b5bc35b00896865134de74a538cca3c))
+* setup chat resets the text colors to default value ([230935a](https://github.com/dh-harald/ElvUI-UA/commit/230935a6e636ec223c9ff5304af8be17c86704bc))
+* **skin:** active tab coloring ([20c20c6](https://github.com/dh-harald/ElvUI-UA/commit/20c20c66163f97b34ac6149f68380616a31a119e))
+* **skin:** guild: more fixes ([5692fbb](https://github.com/dh-harald/ElvUI-UA/commit/5692fbba3c82491adb8a4a0f223c431f9d761878))
+* **skin:** macro: legacy hooks and minor text reposition ([113ee87](https://github.com/dh-harald/ElvUI-UA/commit/113ee8737002321da695800ca60ec90f3278a22c))
+* **skin:** minor graphical changes in social/guild ([2eb10ef](https://github.com/dh-harald/ElvUI-UA/commit/2eb10ef5de9f739fdd29fa279d36c122e5765275))
+
 # [0.4.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.3.0...v0.4.0) (2026-09-14)
 
 
