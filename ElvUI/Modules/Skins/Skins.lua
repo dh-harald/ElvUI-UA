@@ -1023,6 +1023,55 @@ local function ButtonLabel(button)
 	return nil
 end
 
+-- A panel button's label colour: `S.ACCENT_COLOR`, or
+-- `S.ACCENT_COLOR_DISABLED` while the button is disabled. `IsEnabled()` is
+-- 1/0 on legacy, hence `Compat.bool`.
+--
+-- On the legacy client an addon-set FontString colour survives
+-- Enable()/Disable() (see `ColorTab`), so a label coloured once keeps reading
+-- as usable after native code disables the button -- e.g. the Guild tab's
+-- Add Member / Guild Control, which `GuildStatus_Update` disables without
+-- invite / leader rights. `WrapPanelButtonState` therefore recolours after
+-- every state change, whoever makes it.
+--
+-- Not on UA, which keeps the accent colour only: recolouring after a native
+-- state change fights the client's own state font (measured on tabs, see
+-- `InstallTabStateHooks`).
+function S:ColorPanelButtonText(button)
+	if not button then return end
+	local text = ButtonLabel(button)
+	if not text then return end
+	local color = S.ACCENT_COLOR
+	if not Compat.isUA then
+		local okEnabled, enabled = pcall(button.IsEnabled, button)
+		if okEnabled and not Compat.bool(enabled) then
+			color = S.ACCENT_COLOR_DISABLED
+		end
+	end
+	pcall(text.SetTextColor, text, color[1], color[2], color[3])
+end
+
+-- Per-instance Enable/Disable overrides that recolour the label afterwards.
+-- A field on the widget shadows the metatable method, so native FrameXML
+-- calls (`GuildFrameAddMemberButton:Disable()`) go through it too.
+local function WrapPanelButtonState(button)
+	if Compat.isUA or button.elvStateWrapped then return end
+	button.elvStateWrapped = true
+	local enable, disable = button.Enable, button.Disable
+	if type(enable) == "function" then
+		button.Enable = function(self)
+			enable(self)
+			S:ColorPanelButtonText(self)
+		end
+	end
+	if type(disable) == "function" then
+		button.Disable = function(self)
+			disable(self)
+			S:ColorPanelButtonText(self)
+		end
+	end
+end
+
 function S:StyleUIPanelButton(button)
 	if not button then return end
 	if button.elvStyled then
@@ -1039,13 +1088,11 @@ function S:StyleUIPanelButton(button)
 		-- color re-applies on EVERY call now, not gated by `elvStyled` --
 		-- the strip/border work below still only runs once (cheap to skip
 		-- on repeat calls, no flicker risk since nothing there changes).
-		local text = ButtonLabel(button)
-		if text then
-			pcall(text.SetTextColor, text, S.ACCENT_COLOR[1], S.ACCENT_COLOR[2], S.ACCENT_COLOR[3])
-		end
+		S:ColorPanelButtonText(button)
 		return
 	end
 	button.elvStyled = true
+	WrapPanelButtonState(button)
 
 	local okNormal, normalTexture = pcall(button.GetNormalTexture, button)
 	if okNormal and normalTexture then
@@ -1123,10 +1170,7 @@ function S:StyleUIPanelButton(button)
 
 	ElvUI.Util.CreateButtonBorder(button)
 
-	local text = ButtonLabel(button)
-	if text then
-		pcall(text.SetTextColor, text, S.ACCENT_COLOR[1], S.ACCENT_COLOR[2], S.ACCENT_COLOR[3])
-	end
+	S:ColorPanelButtonText(button)
 end
 
 -- Shared square-icon-button recipe, ported from real ElvUI's own

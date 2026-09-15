@@ -371,13 +371,9 @@ end
 -- ~30 sub-widgets: dropdown, +/- rank buttons, 13 checkboxes) is NOT
 -- implemented here -- same reasoning, a rarely-used admin feature,
 -- meaningfully riskier to guess at blind. `GuildMemberDetailFrame` (side
--- panel for a selected member) and `GuildInfoFrame` (MOTD editor) are
--- ALSO deferred this round -- unlike Who, Guild has no equivalent
--- side-panel/editor in this file yet, so there's nothing to mirror
--- confidence from; picking them up needs their own dedicated look, not a
--- rushed extension here. This file's own core roster tab (headers, rows,
--- scrollbar, 3 main buttons) IS the part that's genuinely "99% like Who"
--- -- implemented in full.
+-- panel for a selected member) is not skinned either. The roster tab itself
+-- (headers, rows, scrollbar, 3 main buttons) and the Guild Information popup
+-- (`ApplyGuildInfoChrome`) are.
 -- ---------------------------------------------------------------------
 
 local GUILDMEMBERS_TO_DISPLAY = _G.GUILDMEMBERS_TO_DISPLAY or 13
@@ -386,6 +382,185 @@ local GUILDMEMBERS_TO_DISPLAY = _G.GUILDMEMBERS_TO_DISPLAY or 13
 -- row keeps its native order, as in real ElvUI. Level at real ElvUI's x=10.
 local function LayoutGuildRows()
 	LayoutClassRows("GuildFrameButton", GUILDMEMBERS_TO_DISPLAY, 10)
+end
+
+-- Guild Information popup (`GuildInfoFrame`, opened by the Guild tab's
+-- "Guild Information" button): a FriendsFrame child anchored beside the
+-- window through `GuildControlPopupFrame` (GuildFrame TOPRIGHT -35,-65, so
+-- the panel's left edge meets the FriendsFrame panel's right edge). Native
+-- chrome: a dialog `<Backdrop>`, a corner and a bottom patch texture on the
+-- frame, and a tooltip `<Backdrop>` on `GuildInfoTextBackground` behind the
+-- multi-line edit box. Panel inset and button layout are real ElvUI's. Save
+-- is enabled or disabled on every open by the text background's native
+-- OnShow (`CanEditGuildInfo()`); its label colour follows through
+-- `S:StyleUIPanelButton`'s state wrapping.
+local guildInfoFrameHooked = false
+local function ApplyGuildInfoChrome()
+	if not GuildInfoFrame then return end
+
+	S:StripTextures(GuildInfoFrame, false)
+	S:CreatePanel(GuildInfoFrame, 3, -6, -2, 3)
+
+	if GuildInfoTextBackground then
+		S:StripTextures(GuildInfoTextBackground, false)
+		S:CreateField(GuildInfoTextBackground)
+	end
+
+	if GuildInfoFrameScrollFrame then
+		S:StripTextures(GuildInfoFrameScrollFrame, false)
+		S:HandleScrollBar(GuildInfoFrameScrollFrameScrollBar)
+	end
+
+	-- Native anchor (TOPRIGHT -3,-3) is laid out for the 32x32 art and would
+	-- sit outside the inset panel at 20x20.
+	S:StyleCloseButton(GuildInfoCloseButton)
+	if GuildInfoCloseButton and GuildInfoFrame.elvBackground then
+		pcall(GuildInfoCloseButton.ClearAllPoints, GuildInfoCloseButton)
+		pcall(GuildInfoCloseButton.SetPoint, GuildInfoCloseButton, "TOPRIGHT", GuildInfoFrame.elvBackground, "TOPRIGHT", -4, -4)
+	end
+
+	S:StyleUIPanelButton(GuildInfoSaveButton)
+	S:StyleUIPanelButton(GuildInfoCancelButton)
+	if GuildInfoSaveButton then
+		pcall(GuildInfoSaveButton.ClearAllPoints, GuildInfoSaveButton)
+		pcall(GuildInfoSaveButton.SetPoint, GuildInfoSaveButton, "BOTTOMLEFT", GuildInfoFrame, "BOTTOMLEFT", 8, 11)
+	end
+	if GuildInfoCancelButton and GuildInfoSaveButton then
+		pcall(GuildInfoCancelButton.ClearAllPoints, GuildInfoCancelButton)
+		pcall(GuildInfoCancelButton.SetPoint, GuildInfoCancelButton, "LEFT", GuildInfoSaveButton, "RIGHT", 3, 0)
+	end
+
+	if not guildInfoFrameHooked then
+		if S:TryHookScript(GuildInfoFrame, "OnShow", ApplyGuildInfoChrome) then
+			guildInfoFrameHooked = true
+		end
+	end
+end
+
+-- Guild Control popup (`GuildControlPopupFrame`, the rank / permission editor
+-- behind the guild leader's "Guild Control" button). A separate toplevel
+-- frame (parent UIParent), so neither the outer recursive strip nor the outer
+-- sweep reaches it. Anchored at the same point as `GuildInfoFrame`, so both
+-- popups share the same left panel edge. Layout from real ElvUI: panel inset
+-- 3,0 / 1,-1 (its `CreateBackdrop` default outset on the bottom right), +/-
+-- rank buttons beside the dropdown, edit box field 5px inside the 32px box
+-- top and bottom.
+--
+-- Styled by name, without an `S:SkinChildren` pass: the two headings and the
+-- edit box's "Rank Label" are FontStrings on BACKGROUND layers, and
+-- `S:StyleEditBox` -- which the sweep applies to every edit box -- disables
+-- the BACKGROUND draw layer, which hides every region on it, FontStrings
+-- included. The frame and the edit box carry no native `<Backdrop>`, so
+-- `S:StripTextures` does not disable any draw layer on them either.
+local GUILD_CONTROL_CHECKBOXES = 13
+local PLUS_TEXCOORD = { 0.040, 0.465, 0.085, 0.920 }
+local MINUS_TEXCOORD = { 0.540, 0.965, 0.085, 0.920 }
+
+-- `S:StyleSquareIconButton` builds the border and blanks all four native
+-- slots; its own icon is then pointed at the plus or minus half of
+-- `S.PLUS_MINUS_TEXTURE` (real ElvUI's crop). Re-pointed on every call, since
+-- the helper re-assigns its arrow sheet each time it runs.
+local function StyleRankButton(button, coords)
+	if not button then return end
+	S:StyleSquareIconButton(button, nil, 0.75)
+	local icon = button.elvIcon
+	if icon then
+		pcall(icon.SetTexture, icon, S.PLUS_MINUS_TEXTURE)
+		pcall(icon.SetTexCoord, icon, coords[1], coords[2], coords[3], coords[4])
+	end
+end
+
+-- Field surface under the rank-name edit box. Level handling as in
+-- `S:StyleEditBox`: the box gets headroom so the surface sits one level below
+-- it and never over its text.
+local function StyleRankEditBox(box)
+	if not box then return end
+	S:StripTextures(box, false)
+	if box.elvBackground then return end
+
+	local okLevel, level = pcall(box.GetFrameLevel, box)
+	local boxLevel = (okLevel and tonumber(level)) or 1
+	if boxLevel < 4 then
+		pcall(box.SetFrameLevel, box, 4)
+		boxLevel = 4
+	end
+	local bg = S:CreateSurface(box, S.WIDGET_COLOR, 0, -5, 0, 5, true)
+	if bg then pcall(bg.SetFrameLevel, bg, boxLevel - 1) end
+	pcall(box.SetTextInsets, box, 4, 4, 0, 0)
+end
+
+-- Project Legacy's guild bank adds three panel buttons to the Guild Control
+-- popup (`PLGBGuildPageButton` / `PLGBBankPageButton`, labelled "Guild
+-- Permissions" / "Bank Permissions", and `PLGBBankSaveButton`) plus a
+-- `PLGuildBankPermissionsFrame` page; none of them exist in the 1.12.1
+-- FrameXML, so they are nil on every other client.
+local function StyleGuildBankButtons()
+	S:StyleUIPanelButton(_G.PLGBGuildPageButton)
+	S:StyleUIPanelButton(_G.PLGBBankPageButton)
+	S:StyleUIPanelButton(_G.PLGBBankSaveButton)
+end
+
+-- The "Bank Permissions" page (rank and tab dropdowns, checkboxes, daily item
+-- and money limit edit boxes) has no reference layout anywhere, so it gets a
+-- group surface in place of its native tooltip-style border and the generic
+-- `S:SkinChildren` pass for its controls. Re-applied from its own OnShow: a
+-- page switch inside the open popup does not fire the popup's OnShow.
+local guildBankPermissionsHooked = false
+local function ApplyGuildBankPermissionsChrome()
+	local frame = _G.PLGuildBankPermissionsFrame
+	if not frame then return end
+
+	S:StripTextures(frame, false)
+	S:CreateSurface(frame, S.GROUP_COLOR)
+	StyleGuildBankButtons()
+	S:SkinChildren(frame)
+
+	if not guildBankPermissionsHooked then
+		if S:TryHookScript(frame, "OnShow", ApplyGuildBankPermissionsChrome) then
+			guildBankPermissionsHooked = true
+		end
+	end
+end
+
+local guildControlFrameHooked = false
+local function ApplyGuildControlChrome()
+	local frame = GuildControlPopupFrame
+	if not frame then return end
+
+	S:StripTextures(frame, false)
+	S:CreatePanel(frame, 3, 0, 1, -1)
+
+	S:StyleDropDownBox(GuildControlPopupFrameDropDown)
+
+	StyleRankButton(GuildControlPopupFrameAddRankButton, PLUS_TEXCOORD)
+	StyleRankButton(GuildControlPopupFrameRemoveRankButton, MINUS_TEXCOORD)
+	if GuildControlPopupFrameAddRankButton and GuildControlPopupFrameDropDown then
+		pcall(GuildControlPopupFrameAddRankButton.ClearAllPoints, GuildControlPopupFrameAddRankButton)
+		pcall(GuildControlPopupFrameAddRankButton.SetPoint, GuildControlPopupFrameAddRankButton, "LEFT", GuildControlPopupFrameDropDown, "RIGHT", -8, 3)
+	end
+	if GuildControlPopupFrameRemoveRankButton and GuildControlPopupFrameAddRankButton then
+		pcall(GuildControlPopupFrameRemoveRankButton.ClearAllPoints, GuildControlPopupFrameRemoveRankButton)
+		pcall(GuildControlPopupFrameRemoveRankButton.SetPoint, GuildControlPopupFrameRemoveRankButton, "LEFT", GuildControlPopupFrameAddRankButton, "RIGHT", 4, 0)
+	end
+
+	StyleRankEditBox(GuildControlPopupFrameEditBox)
+
+	local i
+	for i = 1, GUILD_CONTROL_CHECKBOXES do
+		S:StyleCheckBox(_G["GuildControlPopupFrameCheckbox"..i])
+	end
+
+	S:StyleUIPanelButton(GuildControlPopupAcceptButton)
+	S:StyleUIPanelButton(GuildControlPopupFrameCancelButton)
+
+	StyleGuildBankButtons()
+	ApplyGuildBankPermissionsChrome()
+
+	if not guildControlFrameHooked then
+		if S:TryHookScript(frame, "OnShow", ApplyGuildControlChrome) then
+			guildControlFrameHooked = true
+		end
+	end
 end
 
 local guildStatusUpdateHooked = false
@@ -444,6 +619,12 @@ local function ApplyGuildChrome()
 	-- of the arrow, and is left untouched; `GuildStatus_Update` re-anchors
 	-- the button itself, which the child-frame icon follows.
 	S:StyleSquareIconButton(GuildFrameGuildListToggleButton, "RIGHT", 0.5)
+
+	-- Both popups are shown by their own buttons independently of GuildFrame's
+	-- OnShow, so they are styled on entry to the tab as well as from their own
+	-- OnShow hooks.
+	ApplyGuildInfoChrome()
+	ApplyGuildControlChrome()
 
 	-- Live class-color (name + the still-visible native Class text) +
 	-- level-difficulty color + zone green-highlight -- same recipe as
