@@ -436,6 +436,15 @@ local function ApplyGuildChrome()
 		S:HandleScrollBar(GuildListScrollFrameScrollBar)
 	end
 
+	-- "Show Player Status" / "Show Guild Status" view toggle: a bare 32x32
+	-- Button with only the four native slots (`UI-SpellbookIcon-NextPage-*`),
+	-- no extra background region -- the same shape as Merchant's page
+	-- arrows, so the same recipe (real ElvUI: `S:HandleNextPrevButton`). The
+	-- label is the button's own ButtonText, anchored natively to the left
+	-- of the arrow, and is left untouched; `GuildStatus_Update` re-anchors
+	-- the button itself, which the child-frame icon follows.
+	S:StyleSquareIconButton(GuildFrameGuildListToggleButton, "RIGHT", 0.5)
+
 	-- Live class-color (name + the still-visible native Class text) +
 	-- level-difficulty color + zone green-highlight -- same recipe as
 	-- Who's own `WhoList_Update` hook, ported to Guild's dual-mode update
@@ -579,6 +588,59 @@ local function ApplyRaidChrome()
 	ApplyRaidInfoChrome()
 end
 
+-- The four outer tabs' border + text colour.
+--
+-- Tab 3 (Guild) gets an EXPLICIT disabled state instead of letting
+-- `S:StyleTab` infer one: it intermittently came back gold while not
+-- in a guild, reliably reproduced by (open Social, close, open
+-- SpellBook, close, open Social). Root cause is in `S:StyleTab`'s own note: the
+-- widget's enabled bit is OVERLOADED by `PanelTemplates_SelectTab`/
+-- `_DeselectTab` to also mean "selected", so it churns on unrelated
+-- native updates and can be read mid-flight.
+--
+-- `IsInGuild()` is the authoritative test, and not a guess: it is the
+-- exact one Blizzard's own `ToggleFriendsFrame` uses to make this tab a
+-- no-op ("If not in a guild don't do anything when they try to toggle
+-- the guild tab" -- source/wow-ui-source/FrameXML/FriendsFrame.lua:750),
+-- and the one `InGuildCheck()` drives `PanelTemplates_DisableTab` from.
+-- pcall'd like every native call in this project; if it ever failed we
+-- fall back to `S:StyleTab`'s own inference rather than forcing a state.
+local function StyleOuterTabs()
+	local okGuild, inGuild = pcall(IsInGuild)
+	local guildTabDisabled = okGuild and not inGuild
+
+	local i
+	for i = 1, 4 do
+		S:StyleTab(_G["FriendsFrameTab"..i], nil, nil, nil, (i == 3) and guildTabDisabled or nil)
+	end
+end
+
+-- Re-colours the tabs whenever the native code re-evaluates guild
+-- membership. `IsInGuild()` returns false for a while after login even for a
+-- guild member (measured on the legacy 1.12.1 client), so the first Social
+-- window opened after login greys the Guild tab; the native
+-- `PLAYER_GUILD_UPDATE` handler then calls `InGuildCheck()` again, which
+-- re-enables the tab, while the colour set on OnShow would stay grey until
+-- the window is reopened. `InGuildCheck` is also what native OnShow and
+-- `PLAYER_GUILD_UPDATE` (only while the window is visible) run, so every
+-- native state change of this tab passes through it.
+local inGuildCheckHooked = false
+local function HookInGuildCheck()
+	if inGuildCheckHooked then return end
+	-- A client whose FrameXML has no such global keeps the OnShow-only
+	-- colouring instead of reporting a skin problem on every open.
+	if type(_G.InGuildCheck) ~= "function" then
+		inGuildCheckHooked = true
+		return
+	end
+	local ok = pcall(function() S:SecureHook("InGuildCheck", StyleOuterTabs) end)
+	if ok then
+		inGuildCheckHooked = true
+	else
+		S:ReportSkinProblem()
+	end
+end
+
 local raidFrameHooked = false
 local guildFrameHooked = false
 local whoFrameHooked = false
@@ -615,34 +677,8 @@ local function ApplyOuterChrome(frame)
 		pcall(FriendsFrameCloseButton.SetPoint, FriendsFrameCloseButton, "TOPRIGHT", frame.elvBackground, "TOPRIGHT", -4, -4)
 	end
 
-	-- Tab 3 (Guild) gets an EXPLICIT disabled state instead of letting
-	-- `S:StyleTab` infer one: it intermittently came back gold while not
-	-- in a guild, reliably reproduced by (open Social, close, open
-	-- SpellBook, close, open Social). Root cause is in `S:StyleTab`'s own note: the
-	-- widget's enabled bit is OVERLOADED by `PanelTemplates_SelectTab`/
-	-- `_DeselectTab` to also mean "selected", so it churns on unrelated
-	-- native updates and can be read mid-flight.
-	--
-	-- `IsInGuild()` is the authoritative test, and not a guess: it is the
-	-- exact one Blizzard's own `ToggleFriendsFrame` uses to make this tab a
-	-- no-op ("If not in a guild don't do anything when they try to toggle
-	-- the guild tab" -- source/wow-ui-source/FrameXML/FriendsFrame.lua:750),
-	-- and the one `InGuildCheck()` drives `PanelTemplates_DisableTab` from.
-	-- pcall'd like every native call in this project; if it ever failed we
-	-- fall back to `S:StyleTab`'s own inference rather than forcing a state.
-	--
-	-- Re-evaluated on EVERY re-apply (every FriendsFrame OnShow), so joining
-	-- a guild makes the tab gold again the next time Social is opened. It
-	-- will NOT recolor while the window is already open at the moment you
-	-- join -- that was true before this change too, and would need a
-	-- separate live hook, not a different predicate.
-	local okGuild, inGuild = pcall(IsInGuild)
-	local guildTabDisabled = okGuild and not inGuild
-
-	local i
-	for i = 1, 4 do
-		S:StyleTab(_G["FriendsFrameTab"..i], nil, nil, nil, (i == 3) and guildTabDisabled or nil)
-	end
+	StyleOuterTabs()
+	HookInGuildCheck()
 
 	ApplyFriendsListChrome()
 	ApplyWhoChrome()
