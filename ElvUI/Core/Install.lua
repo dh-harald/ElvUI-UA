@@ -540,6 +540,75 @@ end
 -- Individually pcall'd (not one shared pcall around the whole batch) --
 -- one missing/renamed group constant on either client must not abort
 -- every call after it.
+-- The 1.12.1 client's default chat type colours, as 0-255 channels grouped
+-- by colour (the COLORS section of an untouched WTF chat-cache.txt).
+-- SetupChat writes all of them back before applying its own overrides, so it
+-- also repairs colours saved at the wrong scale on Unreal Azeroth.
+local DEFAULT_CHAT_COLORS = {
+	{ 255, 255, 255, {
+		"SAY", "SPELL_FAILED_LOCALPLAYER",
+		"COMBAT_SELF_HITS", "COMBAT_SELF_MISSES", "COMBAT_PET_HITS", "COMBAT_PET_MISSES",
+		"COMBAT_PARTY_HITS", "COMBAT_PARTY_MISSES",
+		"COMBAT_FRIENDLYPLAYER_HITS", "COMBAT_FRIENDLYPLAYER_MISSES",
+		"COMBAT_HOSTILEPLAYER_HITS", "COMBAT_HOSTILEPLAYER_MISSES",
+		"COMBAT_CREATURE_VS_PARTY_HITS", "COMBAT_CREATURE_VS_PARTY_MISSES",
+		"COMBAT_CREATURE_VS_CREATURE_HITS", "COMBAT_CREATURE_VS_CREATURE_MISSES",
+		"COMBAT_FRIENDLY_DEATH", "COMBAT_HOSTILE_DEATH",
+		"SPELL_PET_DAMAGE", "SPELL_PET_BUFF", "SPELL_PARTY_DAMAGE", "SPELL_PARTY_BUFF",
+		"SPELL_FRIENDLYPLAYER_DAMAGE", "SPELL_FRIENDLYPLAYER_BUFF",
+		"SPELL_HOSTILEPLAYER_DAMAGE", "SPELL_HOSTILEPLAYER_BUFF",
+		"SPELL_CREATURE_VS_SELF_BUFF", "SPELL_CREATURE_VS_PARTY_DAMAGE",
+		"SPELL_CREATURE_VS_PARTY_BUFF", "SPELL_CREATURE_VS_CREATURE_DAMAGE",
+		"SPELL_CREATURE_VS_CREATURE_BUFF", "SPELL_TRADESKILLS",
+		"SPELL_DAMAGESHIELDS_ON_SELF", "SPELL_DAMAGESHIELDS_ON_OTHERS",
+		"SPELL_AURA_GONE_SELF", "SPELL_AURA_GONE_PARTY", "SPELL_AURA_GONE_OTHER",
+		"SPELL_ITEM_ENCHANTMENTS", "SPELL_BREAK_AURA",
+		"SPELL_PERIODIC_SELF_DAMAGE", "SPELL_PERIODIC_SELF_BUFFS",
+		"SPELL_PERIODIC_PARTY_DAMAGE", "SPELL_PERIODIC_PARTY_BUFFS",
+		"SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE", "SPELL_PERIODIC_FRIENDLYPLAYER_BUFFS",
+		"SPELL_PERIODIC_HOSTILEPLAYER_DAMAGE", "SPELL_PERIODIC_HOSTILEPLAYER_BUFFS",
+		"SPELL_PERIODIC_CREATURE_DAMAGE", "SPELL_PERIODIC_CREATURE_BUFFS",
+	} },
+	{ 170, 170, 255, { "PARTY" } },
+	{ 255, 127, 0, { "RAID", "BATTLEGROUND" } },
+	{ 255, 219, 183, { "RAID_LEADER", "RAID_WARNING", "RAID_BOSS_EMOTE", "BATTLEGROUND_LEADER" } },
+	{ 64, 255, 64, { "GUILD" } },
+	{ 64, 192, 64, { "OFFICER" } },
+	{ 255, 64, 64, { "YELL", "MONSTER_YELL" } },
+	{ 255, 128, 255, { "WHISPER", "WHISPER_INFORM", "AFK", "DND", "FOREIGN_TELL" } },
+	{ 255, 128, 64, { "EMOTE", "TEXT_EMOTE", "MONSTER_EMOTE" } },
+	{ 255, 255, 0, { "SYSTEM", "MONEY", "SPELL_SELF_DAMAGE", "SPELL_SELF_BUFF" } },
+	{ 255, 255, 159, { "MONSTER_SAY" } },
+	{ 179, 179, 179, { "MONSTER_WHISPER" } },
+	{ 255, 192, 192, {
+		"CHANNEL", "CHANNEL1", "CHANNEL2", "CHANNEL3", "CHANNEL4", "CHANNEL5",
+		"CHANNEL6", "CHANNEL7", "CHANNEL8", "CHANNEL9", "CHANNEL10",
+	} },
+	{ 192, 128, 128, { "CHANNEL_JOIN", "CHANNEL_LEAVE", "CHANNEL_LIST" } },
+	{ 192, 192, 192, { "CHANNEL_NOTICE", "CHANNEL_NOTICE_USER" } },
+	{ 255, 0, 0, { "IGNORED", "FILTERED", "BG_SYSTEM_HORDE" } },
+	{ 255, 120, 10, { "BG_SYSTEM_NEUTRAL" } },
+	{ 0, 174, 239, { "BG_SYSTEM_ALLIANCE" } },
+	{ 85, 85, 255, { "SKILL" } },
+	{ 0, 170, 0, { "LOOT" } },
+	{ 128, 128, 255, { "COMBAT_MISC_INFO", "COMBAT_FACTION_CHANGE" } },
+	{ 255, 47, 47, { "COMBAT_CREATURE_VS_SELF_HITS", "COMBAT_CREATURE_VS_SELF_MISSES" } },
+	{ 111, 111, 255, { "COMBAT_XP_GAIN" } },
+	{ 202, 76, 217, { "SPELL_CREATURE_VS_SELF_DAMAGE" } },
+	{ 224, 202, 10, { "COMBAT_HONOR_GAIN" } },
+}
+
+local function ResetChatColors()
+	local i, j
+	for i = 1, table.getn(DEFAULT_CHAT_COLORS) do
+		local entry = DEFAULT_CHAT_COLORS[i]
+		local r, g, b, types = entry[1] / 255, entry[2] / 255, entry[3] / 255, entry[4]
+		for j = 1, table.getn(types) do
+			ElvUI.Util.ChangeChatColor(types[j], r, g, b)
+		end
+	end
+end
+
 local function SetupChat()
 	pcall(ChatFrame_RemoveAllMessageGroups, ChatFrame1)
 
@@ -564,6 +633,7 @@ local function SetupChat()
 
 	pcall(ChatFrame_ActivateCombatMessages, ChatFrame2)
 
+	ResetChatColors()
 	ElvUI.Util.ChangeChatColor("CHANNEL1", 195 / 255, 230 / 255, 232 / 255)
 
 	ShowStepComplete(L["Chat Set"])
