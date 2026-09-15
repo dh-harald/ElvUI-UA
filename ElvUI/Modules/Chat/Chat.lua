@@ -822,6 +822,9 @@ end
 --     SetHyperlink`'s URL click-to-INSERT below is unrelated to tooltips
 --     and IS ported, since it's what makes the `url` setting's linkified
 --     text actually usable).
+--   - CHAT_MSG_SYSTEM is first checked against the client's global
+--     `ChatFrame_OnEvent` (`SuppressedByClientHandler`), so messages a
+--     wrapped global hides stay hidden. The reference does not do this.
 --   - The `id ~= 2` gate (which chat windows get the custom OnEvent at
 --     all) is ported unchanged/unquestioned -- the reference doesn't
 --     state why Combat Log is excluded, and guessing at "fixing" that
@@ -1218,6 +1221,40 @@ function CH:ChatEdit_OnEnterPressed()
 	end
 end
 
+-- The client's global `ChatFrame_OnEvent` can be wrapped to hide messages
+-- that are really data, e.g. a server's own UI addon talking to itself over
+-- CHAT_MSG_SYSTEM ("PRESTIGEUI <name> <value>" on Project Legacy). The OnEvent
+-- replacement below never calls that global, so it would print those lines.
+-- This dry-runs the global handler with the frame's AddMessage stubbed out:
+-- if it prints nothing, the client suppressed the message.
+-- Limited to CHAT_MSG_SYSTEM: the stock SYSTEM branch does nothing besides
+-- AddMessage, while other branches play sounds, flash tabs or edit
+-- `channelList`, which a dry run would duplicate. Every failure path (a
+-- different handler signature, an instance field that does not shadow the
+-- method) answers "not suppressed", so a message is never lost by accident.
+local function SuppressedByClientHandler(frame, event)
+	local handler = ChatFrame_OnEvent
+	if type(handler) ~= "function" then return false end
+
+	local printed = false
+	local stub = function() printed = true end
+	local okRaw, prior = pcall(rawget, frame, "AddMessage")
+	if not okRaw then prior = nil end
+	if not pcall(function() frame.AddMessage = stub end) then return false end
+	if frame.AddMessage ~= stub then
+		pcall(function() frame.AddMessage = prior end)
+		return false
+	end
+
+	local savedThis = this
+	this = frame
+	local ok = pcall(handler, event)
+	this = savedThis
+	frame.AddMessage = prior
+
+	return ok and not printed
+end
+
 function CH:ChatFrame_OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 	if event == "UPDATE_CHAT_WINDOWS" then
 		local _, fontSize, _, _, _, _, shown = GetChatWindowInfo(self:GetID())
@@ -1322,6 +1359,9 @@ function CH:ChatFrame_OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, arg6, a
 		local msgType = string.sub(event, 10)
 		local info = ChatTypeInfo[msgType]
 		if not info then return end
+		if msgType == "SYSTEM" and SuppressedByClientHandler(self, event) then
+			return true
+		end
 
 		local filter, newarg1, newarg2, newarg3, newarg4, newarg5, newarg6, newarg7, newarg8, newarg9, newarg10 = false
 		if chatFilters[event] then
