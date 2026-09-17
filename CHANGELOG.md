@@ -1,3 +1,11 @@
+## [0.4.2](https://github.com/dh-harald/ElvUI-UA/compare/v0.4.1...v0.4.2) (2026-09-17)
+
+
+### Bug Fixes
+
+* **moveui:** removed hack for GetPoints/SetPoints bug (it's fixed) ([1be9091](https://github.com/dh-harald/ElvUI-UA/commit/1be90919c1ab0dcb16324bb0ebe0f231dc0e441d))
+* **skin:** Quest: skin quest item properly ([58da3cd](https://github.com/dh-harald/ElvUI-UA/commit/58da3cdda6861e903797e50516b95a8eceb1a497))
+
 ## [0.4.1](https://github.com/dh-harald/ElvUI-UA/compare/v0.4.0...v0.4.1) (2026-09-15)
 
 
