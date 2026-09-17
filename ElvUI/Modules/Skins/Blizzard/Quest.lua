@@ -56,22 +56,16 @@
 --   tracking which call site needs which subset.
 --
 -- SCOPE: `QuestFrame`'s own portrait/drag/close, each sub-panel's own
--- chrome, panel background, scrollbar, and text visibility (headings,
--- body, the Progress panel's afford/can't-afford required-money colour).
+-- chrome, panel background, scrollbar, text visibility (headings, body, the
+-- Progress panel's afford/can't-afford required-money colour), and the
+-- item slots (`QuestDetailItem1..10`/`QuestProgressItem1..6`/
+-- `QuestRewardItem1..10`) through the shared `S:StyleQuestItemSlot`.
 --
--- Deliberately NOT done here, its own future pass: the reward/choice/
--- required item buttons (`QuestDetailItem1..10`/`QuestProgressItem1..6`/
--- `QuestRewardItem1..10`) get their decorative `$parentNameFrame` texture
--- killed (pure removal, no functional loss -- it is not the icon), but no
--- bordered-card treatment or item-quality border colour yet -- same
--- backlog item as `QuestLogFrame`'s own `QuestLogItem1..10`
--- (`QuestLog.lua`'s header), since both button families share the exact
--- same `QuestItemTemplate`/`QuestRewardItemTemplate` shape and should get
--- ONE shared recipe rather than two independently-guessed ones. The
--- native icon (`$parentIconTexture`) and its own usability vertex-colour
--- tint (`SetItemButtonTextureVertexColor`, red when unusable) are left
--- completely untouched either way -- functional, client-fed, not
--- decoration.
+-- Deliberately left native: `QuestRewardItemHighlight`, the additive gold
+-- glow the client anchors on the clicked choice reward (`QuestRewardItem_
+-- OnClick`). It is a separate frame, not a region of the slot, so the slot
+-- styling does not affect it, and it is the only selection feedback there
+-- is. No item-quality border colour on any slot either.
 
 local E, L, V, P, G = unpack(ElvUI)
 local S = E:GetModule("Skins")
@@ -122,19 +116,18 @@ local function ReassertQuestFrameText()
 	ReassertProgressMoney()
 end
 
--- `$parentNameFrame` is a decorative parchment strip behind the reward
--- item's name text (`UI-QuestItemNameFrame`), a direct Texture region of
--- the item BUTTON itself -- `S:StripTextures` would take the button's own
--- `$parentIconTexture` down WITH it (same frame, same region loop, no
--- per-region exception mechanism), which is fed fresh textures by native
--- code on every update and must stay live. So this kills ONLY the named
--- decorative region, by name, leaving the icon (and the Name/Count
--- FontStrings, already light `GameFontHighlight`/`NumberFontNormal`,
--- untouched by any strip) alone.
-local function KillItemNameFrames(prefix, count)
+-- Item slots (`QuestItemTemplate`/`QuestRewardItemTemplate`): the merchant
+-- window's item-slot look through the shared `S:StyleQuestItemSlot`, same as
+-- `QuestLogItem1..10` and the trade skill reagents. The helper kills the
+-- decorative `$parentNameFrame` by name and leaves the icon texture itself
+-- live (the client feeds it and tints it red when unusable). The native
+-- 147x41 size is kept, since the client's own item layout positions the
+-- slots. `S:StyleQuestItemSlot` is idempotent, so the per-OnShow re-run is
+-- free.
+local function StyleItemSlots(prefix, count)
 	local i
 	for i = 1, count do
-		S:Kill(_G[prefix..i.."NameFrame"])
+		S:StyleQuestItemSlot(_G[prefix..i])
 	end
 end
 
@@ -142,7 +135,7 @@ local function ApplyPanelChrome(panel, scrollbarName, itemPrefix, itemCount)
 	S:StripTextures(panel, false)
 	S:CreatePanel(panel, PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM)
 	S:HandleScrollBar(_G[scrollbarName])
-	if itemPrefix then KillItemNameFrames(itemPrefix, itemCount) end
+	if itemPrefix then StyleItemSlots(itemPrefix, itemCount) end
 	ReassertQuestFrameText()
 
 	-- Catch-all -- picks up this panel's own Accept/Decline/Complete/
