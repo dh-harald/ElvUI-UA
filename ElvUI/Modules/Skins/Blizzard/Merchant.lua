@@ -171,14 +171,6 @@ local function StyleItemSlot(item, itemButton)
 	-- Placed symmetrically ±8 around the 37px icon's own vertical centre,
 	-- which leaves ~4px of clear air between the two lines and keeps the
 	-- price inside the field drawn below.
-	--
-	-- ⚠ If ever re-verifying this by reading it back with `GetPoint()`:
-	-- on this client `GetPoint()`'s reported Y offset has the OPPOSITE
-	-- sign from what `SetPoint()` expects for the same visual position --
-	-- confirmed live here, matching the already-documented `UA_Y_INVERTED`
-	-- quirk `Core/Movers.lua` works around for saved mover positions. A
-	-- `SetPoint(..., -2)` call reading back as `GetPoint() == 2` is this
-	-- quirk, not evidence the position was never applied or got reset.
 	local okName, itemName = pcall(item.GetName, item)
 	if okName and itemName then
 		local nameText = _G[itemName.."Name"]

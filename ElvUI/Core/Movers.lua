@@ -77,27 +77,21 @@ local function FireMoverStateCallbacks()
 end
 
 -- ===========================================================================
--- Anchor capture/apply, UA-quirk-safe, real-ElvUI-format
+-- Anchor capture/apply, real-ElvUI-format
 --
--- CONFIRMED via source/UnrealUI/core/compat.lua:367-392 (their own
--- "knowledge.json / frames.getpoint_relative_name_y_inverted", marked
--- BEHAVIOR_VERIFIED): on UA, frame:GetPoint() returns the relative frame
--- as a NAME STRING (not a frame object) and reports Y with the OPPOSITE
--- sign from what SetPoint expects for the same visual position.
--- UA_Y_INVERTED gates the sign-flip via ElvUI.Compat.isLua50 (true only
--- on the real 1.12.1 client, which runs Lua 5.0 -- UA runs 5.1) since
--- this specific bug was only ever confirmed on UA; blindly applying it on
--- real 1.12.1 too could introduce a NEW bug there if that client's
--- GetPoint is not actually broken this way. **Unverified on real
--- 1.12.1** -- confirm this assumption there before trusting saved
--- mover positions on that client.
+-- On UA, frame:GetPoint() returns the relative frame as a NAME STRING rather
+-- than a frame object, so the name is resolved defensively below and stored;
+-- ApplyPositionString looks it back up in _G.
 --
--- Per the same UnrealUI reference: never recapture a point and
--- immediately clear/re-apply it (a documented failed approach) -- a drop
--- is captured and stored, and the frame is left exactly where the user
--- released it.
+-- Y needs no sign correction on either client: GetPoint's offset can be
+-- handed straight back to SetPoint for the same visual position. UA reports a
+-- different sign here than the real 1.12.1 client does, but it is
+-- self-consistent, which is all a save/restore round-trip needs.
+--
+-- Never recapture a point and immediately clear/re-apply it (UnrealUI's own
+-- documented failed approach) -- a drop is captured and stored, and the frame
+-- is left exactly where the user released it.
 -- ===========================================================================
-local UA_Y_INVERTED = not Compat.isLua50
 
 local function CaptureFramePositionParts(frame)
 	if not frame or not frame.GetPoint then return nil end
@@ -114,7 +108,6 @@ local function CaptureFramePositionParts(frame)
 
 	x = tonumber(x) or 0
 	y = tonumber(y) or 0
-	if UA_Y_INVERTED then y = -y end
 
 	return point, relativeName, relativePoint or point, E:Round(x), E:Round(y)
 end
@@ -138,11 +131,10 @@ local function ParsePositionString(str)
 	return point, relativeName, relativePoint or point, tonumber(parts[4]) or 0, tonumber(parts[5]) or 0
 end
 
--- Applies a real-ElvUI-format position string via SetPoint. Takes x/y in
--- SetPoint's OWN convention (not GetPoint's UA-inverted one) -- callers
--- always get x/y from CaptureFramePositionParts/ParsePositionString
--- above, which already normalize away the UA quirk, so no further sign
--- flip happens here. `relativeName` falls back to UIParent if it doesn't
+-- Applies a real-ElvUI-format position string via SetPoint. x/y are already in
+-- SetPoint's own convention, whether they came from
+-- CaptureFramePositionParts or ParsePositionString, so nothing is adjusted
+-- here. `relativeName` falls back to UIParent if it doesn't
 -- resolve to a real frame (covers a real ElvUI profile's "ElvUIParent",
 -- which doesn't exist in this project -- see the file header).
 local function ApplyPositionString(frame, str)
@@ -172,12 +164,9 @@ end
 -- (source/ElvUI-vanilla/ElvUI/Core/movers.lua:244-306) -- same thirds/
 -- halves thresholds, same GetCenter/GetLeft/GetRight/GetTop/GetBottom
 -- reads. Deliberately NOT using GetPoint() here at all (unlike
--- CaptureFramePositionParts above) -- GetCenter/GetLeft/GetRight/GetTop/
--- GetBottom are a different API surface than GetPoint, and the UA
--- Y-inversion quirk this file works around elsewhere was specifically
--- confirmed for GetPoint's return values, not these -- **unverified
--- whether these are also affected on UA, watch for a sign issue here
--- specifically if positions still drift after this change**. Real
+-- CaptureFramePositionParts above): GetCenter/GetLeft/GetRight/GetTop/
+-- GetBottom are measured against UIParent, so the point they produce is
+-- independent of whatever anchor the frame currently carries. Real
 -- ElvUI's own version also carries `nudgeX`/`nudgeY` params and a
 -- `positionOverride` branch (their equivalent of a mover forcibly
 -- anchored to another frame, e.g. a bar's own container) -- neither
@@ -841,16 +830,14 @@ end
 -- position is captured as the reset target, rather than requiring a
 -- separately hand-authored default here.
 --
--- KNOWN BUG, unresolved -- see docs/modules/movers.md and docs/roadmap.md
--- ("`entry.default` hibás előjelű Y"): on the real 1.12.1 client, the
--- `default` captured here can have its Y sign flipped (same signature as
--- the already-known UA_Y_INVERTED quirk) for a mover created this early.
--- Two mitigations were tried and BOTH measured to fail live (a same-tick
--- `ScheduleTimer(fn, 0)` re-capture, and deferring the whole capture to
--- `PLAYER_ENTERING_WORLD`) -- neither changed the captured value at all,
--- so whatever causes this is not a settling-time issue this file can
--- wait out. Reverted to the simple, original form below rather than
--- carry that extra complexity for two fixes that measurably did nothing.
+-- KNOWN BUG, unresolved: on the real 1.12.1 client the `default` captured
+-- here can come back with its Y sign flipped -- X is correct and the
+-- magnitude is exact, only Y's sign is wrong -- for a mover created this
+-- early in load. The same frame queried later returns the correct sign, yet
+-- this is not a settling-time issue: re-capturing a tick later and deferring
+-- the whole capture to PLAYER_ENTERING_WORLD both produce the identical wrong
+-- value, so delaying cannot fix it and neither is done here. Resetting such a
+-- mover puts the frame at the mirrored Y.
 function E:CreateMover(frame, name, label)
 	if type(name) ~= "string" or not frame then return nil end
 	if self.movers[name] then return self.movers[name] end

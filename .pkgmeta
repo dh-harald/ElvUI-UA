@@ -12,9 +12,9 @@ externals:
   ElvUI/Libraries/AceHook-3.0: https://github.com/laytya/Ace3v/AceHook-3.0
   ElvUI/Libraries/AceDB-3.0: https://github.com/laytya/Ace3v/AceDB-3.0
   ElvUI/Libraries/AceLocale-3.0: https://github.com/laytya/Ace3v/AceLocale-3.0
-  ElvUI/Libraries/LibDataBroker-1.1: https://github.com/dh-harald/Ace3v/LibDataBroker-1.1
-  ElvUI/Libraries/LibModifierState-1.0: https://github.com/dh-harald/Ace3v/LibModifierState-1.0
-  ElvUI_Config/Libraries/LibConfig-1.0: https://github.com/dh-harald/Ace3v/LibConfig-1.0
+  ElvUI/Libraries/LibDataBroker-1.1: https://github.com/dh-harald/LibDataBroker-1.1
+  ElvUI/Libraries/LibModifierState-1.0: https://github.com/dh-harald/LibModifierState-1.0
+  ElvUI_Config/Libraries/LibConfig-1.0: https://github.com/dh-harald/LibConfig-1.0
 
 move-folders:
   ElvUI/ElvUI: ElvUI
