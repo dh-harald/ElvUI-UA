@@ -548,8 +548,27 @@ function UF:EnableUnitMouse(frame)
 		elseif type(b) == "string" then button = b
 		elseif type(arg1) == "string" then button = arg1 end
 
+		-- Same order as the native unit frames (PlayerFrame_OnClick,
+		-- TargetFrame_OnClick, PetFrame_OnClick, PartyMemberFrame_OnClick):
+		-- with a pending spell cursor the right button cancels it and the
+		-- left button casts on the unit; an item on the cursor is equipped
+		-- (player frame) or dropped on the unit; otherwise left targets and
+		-- right opens the menu.
+		local targeting = SpellIsTargeting and ElvUI.Compat.bool(SpellIsTargeting())
 		if button == "RightButton" then
-			UF:ShowUnitMenu(frame)
+			if targeting then
+				pcall(SpellStopTargeting)
+			else
+				UF:ShowUnitMenu(frame)
+			end
+		elseif targeting then
+			pcall(SpellTargetUnit, frame.unit)
+		elseif CursorHasItem and ElvUI.Compat.bool(CursorHasItem()) then
+			if frame.unit == "player" then
+				pcall(AutoEquipCursorItem)
+			else
+				pcall(DropItemOnUnit, frame.unit)
+			end
 		else
 			pcall(TargetUnit, frame.unit)
 		end
