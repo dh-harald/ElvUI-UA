@@ -391,6 +391,7 @@ local function StyleButton(button, showGrid)
 	-- ElvUI.Util.CreateButtonBorder (Core/Util.lua) for the full
 	-- construction and design history.
 	ElvUI.Util.CreateButtonBorder(button)
+	ElvUI.Util.RaiseCooldown(button)
 
 	-- Util.CreateButtonHoverTextures (hover/pushed/checked) is deliberately
 	-- NOT called here -- prime suspect for a gold/tan tint that appears

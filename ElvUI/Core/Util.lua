@@ -553,6 +553,25 @@ function Util.CreateButtonBorder(button, insetX, insetTop, insetBottom)
 	end
 end
 
+-- Keeps a native action/pet button's `$parentCooldown` frame drawn above the
+-- button's own icon. The native child sits one level above the button's
+-- ORIGINAL level; once CreateButtonBorder (or a reparent) raises the button,
+-- the cooldown ends up below it and the icon hides both the swipe and
+-- Core/Cooldowns.lua's text. Measured on UA: MultiBar button at level 4 with
+-- its cooldown at 3 showed nothing on an occupied slot; button level + 2
+-- fixed it. Idempotent, safe to call from a periodic restyle.
+function Util.RaiseCooldown(button)
+	if not button then return end
+	local okName, name = pcall(button.GetName, button)
+	local cooldown = okName and name and _G[name.."Cooldown"]
+	if not cooldown then return end
+	local okLevel, level = pcall(button.GetFrameLevel, button)
+	local okCd, cdLevel = pcall(cooldown.GetFrameLevel, cooldown)
+	if not okLevel or not tonumber(level) then return end
+	if okCd and tonumber(cdLevel) and cdLevel > level then return end
+	pcall(cooldown.SetFrameLevel, cooldown, level + 2)
+end
+
 -- TexCoords (left, right, top, bottom) of raid target marks 1-8 on a 4x4 icon
 -- sheet: the grid FrameXML's SetRaidTargetIconTexture computes
 -- (TargetFrame.lua), identical to the unit menu's tCoord values. Used for the

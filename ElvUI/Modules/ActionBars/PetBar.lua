@@ -101,6 +101,7 @@ local function StyleButton(button)
 	-- full reasoning (the pushed texture's color, {0.9, 0.8, 0.1, 0.3},
 	-- is a literal gold/yellow tone).
 	ElvUI.Util.CreateButtonBorder(button)
+	ElvUI.Util.RaiseCooldown(button)
 end
 
 function M:CreateBar()
@@ -310,10 +311,24 @@ function M:Initialize()
 	UpdateCheckedState()
 	HideSlidingBorder()
 
+	-- The pet cooldown swipes are driven by PetActionBarFrame's OnEvent
+	-- (PET_BAR_UPDATE_COOLDOWN -> PetActionBar_UpdateCooldowns), not by the
+	-- buttons themselves, and ActionBars.lua's HideChrome clears that
+	-- frame's OnEvent. The native function addresses the buttons by global
+	-- name, so it works on the reparented buttons unchanged. Also run on
+	-- every pet-bar event, which covers a pet summoned with abilities
+	-- already on cooldown.
+	local function UpdateCooldowns()
+		if type(_G.PetActionBar_UpdateCooldowns) == "function" then
+			pcall(PetActionBar_UpdateCooldowns)
+		end
+	end
+
 	local function OnPetBarEvent()
 		UpdateVisibility()
 		UpdateCheckedState()
 		HideSlidingBorder()
+		UpdateCooldowns()
 	end
 	self:RegisterEvent("UNIT_PET", OnPetBarEvent)
 	self:RegisterEvent("PET_BAR_UPDATE", OnPetBarEvent)
@@ -321,6 +336,7 @@ function M:Initialize()
 	self:RegisterEvent("PLAYER_CONTROL_LOST", OnPetBarEvent)
 	self:RegisterEvent("PLAYER_CONTROL_GAINED", OnPetBarEvent)
 	self:RegisterEvent("PLAYER_FARSIGHT_FOCUS_CHANGED", OnPetBarEvent)
+	self:RegisterEvent("PET_BAR_UPDATE_COOLDOWN", UpdateCooldowns)
 
 	-- Safety net alongside the event triggers above -- matches this
 	-- project's established preference (Cooldowns.lua, UnitFrames.lua)

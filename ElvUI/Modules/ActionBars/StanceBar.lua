@@ -66,6 +66,7 @@ local function StyleButton(button)
 	end
 
 	ElvUI.Util.CreateButtonBorder(button)
+	ElvUI.Util.RaiseCooldown(button)
 end
 
 function M:CreateBar()
