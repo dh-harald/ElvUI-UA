@@ -6,6 +6,7 @@
 	<Include file="AceEvent-3.0\AceEvent-3.0.xml"/>
 	<Include file="AceConsole-3.0\AceConsole-3.0.xml"/>
 	<Include file="AceTimer-3.0\AceTimer-3.0.xml"/>
+	<Include file="AceBucket-3.0\AceBucket-3.0.xml"/>
 	<Include file="AceHook-3.0\AceHook-3.0.xml"/>
 	<Include file="AceDB-3.0\AceDB-3.0.xml"/>
 	<Include file="AceLocale-3.0\AceLocale-3.0.xml"/>
@@ -14,4 +15,9 @@
 	<Include file="LibItemPrice-1.1\LibItemPrice-1.1.xml"/>
 	<Include file="QuestItemStarterDB\QuestItemStarterDB.xml"/>
 	<Include file="LibModifierState-1.0\LibModifierState-1.0.xml"/>
+	<Include file="LibDeformat-2.0\LibDeformat-2.0.xml"/>
+	<Include file="LibGratuity-2.0\LibGratuity-2.0.xml"/>
+	<Include file="LibItemBonusLib-1.0\LibItemBonusLib-1.0.xml"/>
+	<Include file="LibRosterLib-2.0\LibRosterLib-2.0.xml"/>
+	<Include file="LibHealComm-1.0\LibHealComm-1.0.xml"/>
 </Ui>

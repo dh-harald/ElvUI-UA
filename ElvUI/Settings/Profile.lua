@@ -729,8 +729,8 @@ P.unitframe.colors = {
 		NEUTRAL = {r = 218/255, g = 197/255, b = 92/255},
 		GOOD = {r = 75/255, g = 175/255, b = 76/255},
 	},
-	-- Read by Modules/UnitFrames/HealPrediction.lua. `others` is carried for
-	-- the real schema; only the player's own heals are predicted.
+	-- Read by Modules/UnitFrames/HealPrediction.lua: `personal` colours the
+	-- player's own incoming heals, `others` everyone else's (LibHealComm-1.0).
 	-- `maxOverflow` 1 (real ElvUI: 0) lets the overheal show up to one bar
 	-- width past the bar's end, so a heal on a unit at full health is visible.
 	healPrediction = {

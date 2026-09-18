@@ -5,6 +5,10 @@
 ## SavedVariables: ElvDB, ElvPrivateDB, GAME_LOCALE
 ## SavedVariablesPerCharacter: ElvCharacterDB
 
+# Libraries\Load_Libraries.xml also loads LibDeformat-2.0, LibGratuity-2.0,
+# LibItemBonusLib-1.0, LibRosterLib-2.0 and LibHealComm-1.0, in that order
+# after the rest. These have no .pkgmeta external yet: the
+# build script copies them from a local working copy into Libraries\.
 Libraries\Load_Libraries.xml
 Locales\Load_Locales.xml
 Media\Load_Media.xml

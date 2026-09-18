@@ -9,6 +9,7 @@ externals:
   ElvUI/Libraries/AceEvent-3.0: https://github.com/laytya/Ace3v/AceEvent-3.0
   ElvUI/Libraries/AceConsole-3.0: https://github.com/laytya/Ace3v/AceConsole-3.0
   ElvUI/Libraries/AceTimer-3.0: https://github.com/laytya/Ace3v/AceTimer-3.0
+  ElvUI/Libraries/AceBucket-3.0: https://github.com/laytya/Ace3v/AceBucket-3.0
   ElvUI/Libraries/AceHook-3.0: https://github.com/laytya/Ace3v/AceHook-3.0
   ElvUI/Libraries/AceDB-3.0: https://github.com/laytya/Ace3v/AceDB-3.0
   ElvUI/Libraries/AceLocale-3.0: https://github.com/laytya/Ace3v/AceLocale-3.0

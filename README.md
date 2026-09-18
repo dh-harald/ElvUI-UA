@@ -37,11 +37,11 @@ Two addons ship together:
 - Layout (screen panels, minimap panels, mover system)
 - ActionBars, PetBar/StanceBar, Cooldown text
 - UnitFrames (player/target/pet/party/etc.), Auras
-- Heal prediction for your own heals: the healing still to come from the
-  heal you are casting and from your heal-over-time spells (Rejuvenation,
-  Renew, Regrowth) is shown on the target's health bar, extending past its
-  end for the overheal (the amount of each spell rank is learned from your
-  own heals)
+- Heal prediction through LibHealComm-1.0: the healing still to come on a
+  player — heals being cast (yours and, over the HealComm addon channel,
+  other players') and the rest of Rejuvenation, Renew and Regrowth — is shown
+  on the health bar in two colours (yours, others'), extending past its end
+  for the overheal
 - DataBars (XP/Reputation), DataTexts
 - Chat
 - Bags/Bank, with gray items sold automatically at a vendor (one at a
@@ -91,14 +91,10 @@ Two addons ship together:
   Trainer, Tabard, World Map polish, and a few more niche ones)
 - Nameplate customization — blocked by a client-side limitation on
   Unreal Azeroth, parked until that changes
-- Heal prediction covers only your own direct heals and your Rejuvenation,
-  Renew and Regrowth: other players' incoming heals, channelled heals
-  (Tranquility, Mend Pet, bandages) and heals on several targets (Prayer of
-  Healing, Chain Heal) are not predicted yet. A spell rank predicts nothing
-  until one of its heals has landed once (a heal-over-time's tick amount only
-  on a damaged target), a heal-over-time removed early still shows until its
-  normal duration ends, and set bonuses that lengthen one are not taken into
-  account
+- Heal prediction: channelled heals (Tranquility, Mend Pet, bandages) are not
+  predicted, Chain Heal only on its first target, and another player's
+  heal-over-time only by estimate until its first tick (the HealComm protocol
+  carries no amount for it). Pets and NPCs get no prediction.
 - A few smaller ElvUI features (auto-track reputation, chat-anchored
   data panels) are researched but not built yet
 
