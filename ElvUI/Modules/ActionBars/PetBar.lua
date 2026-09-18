@@ -58,6 +58,16 @@ local PREFIX = "PetActionButton"
 -- counter-based PetActionBar_ShowGrid()/PetActionBar_HideGrid() pair
 -- (source/wow-ui-source/FrameXML/PetActionBarFrame.lua), not the
 -- per-button ActionButton_ShowGrid() regular action buttons use.
+
+-- The pet button's grey, bevelled Blizzard frame (UI-Quickslot2, larger than
+-- the button, so it overlaps the neighbours) is the $parentNormalTexture2
+-- region of PetActionButtonTemplate, not $parentNormalTexture. SetAlpha(0)
+-- hides it on Unreal Azeroth. Also called after every PetActionBar_Update.
+local function HideQuickslotFrame(button)
+	local frame = button and _G[button:GetName().."NormalTexture2"]
+	if frame then pcall(frame.SetAlpha, frame, 0) end
+end
+
 local function StyleButton(button)
 	if not button then return end
 
@@ -79,6 +89,7 @@ local function StyleButton(button)
 		pcall(normalTexture.SetTexture, normalTexture, nil)
 		normalTexture.SetTexture = E.noop
 	end
+	HideQuickslotFrame(button)
 
 	if icon and not button.elvIconStyled then
 		pcall(icon.SetTexCoord, icon, 0.08, 0.92, 0.08, 0.92)
@@ -311,13 +322,26 @@ function M:Initialize()
 	UpdateCheckedState()
 	HideSlidingBorder()
 
-	-- The pet cooldown swipes are driven by PetActionBarFrame's OnEvent
-	-- (PET_BAR_UPDATE_COOLDOWN -> PetActionBar_UpdateCooldowns), not by the
-	-- buttons themselves, and ActionBars.lua's HideChrome clears that
-	-- frame's OnEvent. The native function addresses the buttons by global
-	-- name, so it works on the reparented buttons unchanged. Also run on
-	-- every pet-bar event, which covers a pet summoned with abilities
-	-- already on cooldown.
+	-- The pet buttons' content (icon, shown/hidden, autocast, cooldown) is
+	-- driven by PetActionBarFrame's OnEvent (PET_BAR_UPDATE/UNIT_PET ->
+	-- PetActionBar_Update, PET_BAR_UPDATE_COOLDOWN ->
+	-- PetActionBar_UpdateCooldowns), not by the buttons themselves, and
+	-- ActionBars.lua's HideChrome clears that frame's OnEvent. Without these
+	-- calls a pet summoned or revived after login gets no buttons. Both
+	-- native functions address the buttons by global name, so they work on
+	-- the reparented buttons unchanged. PetActionBar_UpdateCooldowns is
+	-- called explicitly as well, so the cooldowns do not depend on the
+	-- client's PetActionBar_Update including that call.
+	local function UpdateButtons()
+		if type(_G.PetActionBar_Update) == "function" then
+			pcall(PetActionBar_Update)
+		end
+		local i
+		for i = 1, NUM_PET_ACTION_SLOTS do
+			HideQuickslotFrame(_G["PetActionButton"..i])
+		end
+	end
+
 	local function UpdateCooldowns()
 		if type(_G.PetActionBar_UpdateCooldowns) == "function" then
 			pcall(PetActionBar_UpdateCooldowns)
@@ -325,6 +349,7 @@ function M:Initialize()
 	end
 
 	local function OnPetBarEvent()
+		UpdateButtons()
 		UpdateVisibility()
 		UpdateCheckedState()
 		HideSlidingBorder()
