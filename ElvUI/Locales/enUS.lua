@@ -115,6 +115,8 @@ L["Level"] = true
 L["Rare"] = true
 L["Dead"] = true
 L["Currently Equipped"] = true
+L["DPS"] = true
+L["If you replace this item:"] = true
 
 --Problem messages (shown to the player, so they name the effect, not the cause)
 L["The right-click menu is not available for this frame."] = true

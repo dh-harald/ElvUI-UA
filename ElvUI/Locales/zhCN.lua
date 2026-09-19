@@ -73,6 +73,8 @@ L["Level"] = "等级"
 L["Rare"] = "珍稀"
 L["Dead"] = "死亡"
 L["Currently Equipped"] = "当前已装备"
+L["DPS"] = "伤害输出"
+L["If you replace this item:"] = "如果替换此物品:"
 
 --Problem messages (shown to the player, so they name the effect, not the cause)
 L["The right-click menu is not available for this frame."] = "此窗口不支持右键菜单。"

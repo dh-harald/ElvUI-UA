@@ -73,6 +73,8 @@ L["Level"] = "Уровень"
 L["Rare"] = "Редкий"
 L["Dead"] = "Труп"
 L["Currently Equipped"] = "Текущая экипировка"
+L["DPS"] = "УВС"
+L["If you replace this item:"] = "Если заменить этот предмет:"
 
 --Problem messages (shown to the player, so they name the effect, not the cause)
 L["The right-click menu is not available for this frame."] = "Меню по правому клику недоступно для этого окна."

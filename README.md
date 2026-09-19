@@ -73,7 +73,9 @@ Two addons ship together:
   level/classification line, target and "targeted by" info, movable anchor
   or cursor anchor, flat ElvUI skin, health bar with health text, sell
   price / item count / item ID lines on item tooltips, the equipped item(s)
-  shown beside an item tooltip while Shift is held, visibility rules
+  shown beside an item tooltip while Shift is held, with the stat change
+  of swapping each one (bonuses via LibItemBonusLib-1.0, plus armor and
+  weapon DPS), visibility rules
   (modifier key / hide in combat) for unit frames, bags and action bars,
   and an options page for all of these
 - Fonts: the General → Media default font and size, combat text and name

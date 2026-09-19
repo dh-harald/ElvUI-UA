@@ -926,7 +926,8 @@ end
 -- trinkets show both slots. The 1.12 client has no such comparison for bag
 -- items (only the Auction House fills these frames natively), and real ElvUI
 -- relies on the retail client's own. This follows pfUI's eqcompare, with
--- UnrealUI's INVTYPE -> slot map. No stat difference is computed.
+-- UnrealUI's INVTYPE -> slot map. Each comparison frame closes with the stat
+-- change replacing that equipped piece would make (see "Stat difference").
 --
 -- The hovered item is the one GameTooltip's item lines were added for (see
 -- "Item hover sources"). It is remembered until GameTooltip hides, so pressing
@@ -1106,17 +1107,29 @@ end
 -- swapped fonts' line heights need not be known: the frame reaches from its top
 -- to the last line's bottom plus the inset line 1 natively has from the top.
 -- +HEADER_SHIFT only when no position can be read.
+-- On UA a shown comparison frame can report NumLines() == 0 one frame after
+-- its fill, so the line count taken at fill time (elvCompareLines) is used
+-- when it is larger.
+local function CompareLineCount(tip)
+	local count = tip:NumLines() or 0
+	local stored = tip.elvCompareLines or 0
+	if stored > count then count = stored end
+	return count
+end
+
 local function FitCompareTooltip(tip)
 	local name = tip:GetName()
 	if not name then return end
 
+	local lines = CompareLineCount(tip)
 	local top = tip:GetTop()
-	local last = _G[name .. "TextLeft" .. tip:NumLines()]
+	local last = _G[name .. "TextLeft" .. lines]
 	local bottom = last and last:GetBottom()
 	if top and bottom then
-		local needed = top - bottom + LINE_INSET
-		if needed > (tip:GetHeight() or 0) then tip:SetHeight(needed) end
-	else
+		tip:SetHeight(top - bottom + LINE_INSET)
+	elseif not tip.elvCompareFallback then
+		-- Once per fill: the fit repeats every frame.
+		tip.elvCompareFallback = true
 		tip:SetHeight((tip:GetHeight() or 0) + HEADER_SHIFT)
 	end
 
@@ -1125,7 +1138,7 @@ local function FitCompareTooltip(tip)
 	if widest > content then
 		tip:SetWidth(widest + LINE_INSET * 2)
 		local i
-		for i = 1, tip:NumLines() do
+		for i = 1, lines do
 			local right = _G[name .. "TextRight" .. i]
 			if DrawnWidth(right) > 0 then
 				AnchorRightLine(right, name .. "TextLeft" .. i, widest)
@@ -1134,31 +1147,42 @@ local function FitCompareTooltip(tip)
 	end
 end
 
--- Sizing runs one frame after the fill, reading the positions the lines have
--- once line 1 is re-anchored and the fonts are swapped.
+-- Sizing runs on every frame from the one after the fill until the comparison
+-- is hidden, reading the positions the lines have once line 1 is re-anchored
+-- and the fonts are swapped. Measured on UA: on a frame refilled after an
+-- earlier comparison the lines still report their pre-shift positions a frame
+-- after the fill and move later, so a single fit leaves the frame one heading
+-- short; a newly filled frame is settled by the next frame.
 local pendingFits = {}
 local fitFrame
+
+local function RunPendingFits()
+	local any = false
+	local pending
+	for pending in pairs(pendingFits) do
+		if pending.elvCompareHeaderShown and pending:IsShown() then
+			pcall(FitCompareTooltip, pending)
+			any = true
+		else
+			pendingFits[pending] = nil
+		end
+	end
+	if not any then fitFrame:Hide() end
+end
 
 local function ScheduleFit(tip)
 	pendingFits[tip] = true
 	if not fitFrame then
 		fitFrame = CreateFrame("Frame")
 		fitFrame:Hide()
-		fitFrame:SetScript("OnUpdate", function()
-			fitFrame:Hide()
-			local pending
-			for pending in pairs(pendingFits) do
-				pendingFits[pending] = nil
-				if pending.elvCompareHeaderShown and pending:IsShown() then
-					pcall(FitCompareTooltip, pending)
-				end
-			end
-		end)
+		fitFrame:SetScript("OnUpdate", RunPendingFits)
 	end
 	fitFrame:Show()
 end
 
-local function AddCompareHeader(tip, slot)
+-- `minWidest` is the widest line already re-measured by the caller (the stat
+-- difference rows), so the frame is widened for those too.
+local function AddCompareHeader(tip, slot, minWidest)
 	local name = tip:GetName()
 	if not name or tip.elvCompareHeaderShown then return end
 	-- Set first, so a failure part-way through is still undone on hide.
@@ -1172,6 +1196,7 @@ local function AddCompareHeader(tip, slot)
 		tip.elvCompareHeader = header
 	end
 	local widest = Remeasure(header, HEADER_TEXT)
+	if minWidest and minWidest > widest then widest = minWidest end
 	header:SetTextColor(0.5, 0.5, 0.5)
 	header:Show()
 
@@ -1193,6 +1218,8 @@ end
 local function RemoveCompareHeader(tip)
 	if not tip.elvCompareHeaderShown then return end
 	tip.elvCompareHeaderShown = nil
+	tip.elvCompareLines = nil
+	tip.elvCompareFallback = nil
 	if tip.elvCompareHeader then tip.elvCompareHeader:Hide() end
 	local name = tip:GetName()
 	if not name then return end
@@ -1200,6 +1227,200 @@ local function RemoveCompareHeader(tip)
 	local first, second = _G[name .. "TextLeft1"], _G[name .. "TextLeft2"]
 	if first then first:SetFontObject(GameFontNormalSmall) end
 	if second then second:SetFontObject(GameFontNormal) end
+end
+
+-- ---------------------------------------------------------------------------
+-- Stat difference
+--
+-- Below each equipped item's lines: the net change of replacing that piece
+-- with the hovered item, green for a gain and red for a loss, in the hovered
+-- item's line order, then what only the equipped piece carries. Each frame
+-- states its own swap, so two rings or trinkets stay unambiguous (UnrealUI's
+-- "If you replace this item" summary; pfUI eqcompare's basestats).
+--
+-- Both sides are parsed from the text their tooltips show, not from item
+-- links: UA's SetHyperlink drops the random-suffix field, so "... of the Owl"
+-- would lose its stats. Bonus lines ("+10 Stamina", "Equip: ...") go through
+-- LibItemBonusLib-1.0's line parser (AddBonusInfo), which recognises bonuses
+-- only. Base armour and weapon DPS are matched here, from the client's own
+-- ARMOR_TEMPLATE / DPS_TEMPLATE. Parsing stops at the set name line: set
+-- bonuses depend on the other pieces worn and are left out. A two-hander
+-- compared with a main hand ignores what the off hand gives.
+--
+-- Rows are added with AddLine before the frame's first Show, so the native
+-- layout already includes them; each is then re-measured like the heading's
+-- lines, and the frame sizing in FitCompareTooltip covers the rest.
+-- ---------------------------------------------------------------------------
+
+local LIB = LibStub("LibItemBonusLib-1.0", true)
+
+local DIFF_MAX_ROWS = 12
+local DIFF_GAIN = { 0.53, 1, 0.53 }
+local DIFF_LOSS = { 1, 0.53, 0.53 }
+local DIFF_TITLE = { 1, 0.82, 0 }
+
+-- Bonus keys whose value is a percentage.
+local PERCENT_KEYS = {
+	CRIT = true, RANGEDCRIT = true, SPELLCRIT = true, HOLYCRIT = true,
+	NATURECRIT = true, TOHIT = true, SPELLTOHIT = true, DODGE = true,
+	PARRY = true, BLOCK = true,
+}
+
+-- A GlobalStrings format ("%d Armor", "(%.1f damage per second)") as an
+-- anchored Lua pattern capturing its one number.
+local function FormatPattern(fmt)
+	if type(fmt) ~= "string" then return nil end
+	fmt = string.gsub(fmt, "%%%d*%$?%.?%d*[dfs]", "\001")
+	fmt = string.gsub(fmt, "([%(%)%.%+%-%*%?%[%]%^%$%%])", "%%%1")
+	fmt = string.gsub(fmt, "\001", "([%%d%%.,]+)")
+	return "^" .. fmt .. "$"
+end
+
+local basePatterns, setPattern
+
+local function BuildPatterns()
+	if basePatterns then return end
+	basePatterns = {
+		{ key = "BASEARMOR", pattern = FormatPattern(ARMOR_TEMPLATE or "%d Armor") },
+		{ key = "DPS", pattern = FormatPattern(DPS_TEMPLATE or "(%.1f damage per second)") },
+	}
+	setPattern = FormatPattern(ITEM_SET_NAME or "%s (%d/%d)")
+	-- The set line has three fields; only its shape matters here.
+	if setPattern then setPattern = string.gsub(setPattern, "%(%[%%d%%%.,%]%+%)", ".+") end
+end
+
+local function ToNumber(text)
+	return tonumber((string.gsub(text, ",", ".")))
+end
+
+local function AddStat(stats, order, key, value)
+	value = tonumber(value)
+	if not value or value == 0 then return end
+	if not stats[key] then table.insert(order, key) end
+	stats[key] = (stats[key] or 0) + value
+end
+
+local function MatchBaseStat(stats, order, text)
+	local i
+	for i = 1, getn(basePatterns) do
+		local p = basePatterns[i]
+		if p.pattern then
+			local _, _, value = find(text, p.pattern)
+			if value then
+				AddStat(stats, order, p.key, ToNumber(value))
+				return true
+			end
+		end
+	end
+	return false
+end
+
+-- Stats of the item a tooltip shows, from line 2 to the set name line;
+-- returns the value map and the keys in line order.
+local function ParseItemStats(tip)
+	BuildPatterns()
+	local stats, order = {}, {}
+	local name = tip:GetName()
+	if not name then return stats, order end
+	local i
+	for i = 2, tip:NumLines() do
+		local left = _G[name .. "TextLeft" .. i]
+		local text = left and left:IsShown() and left:GetText()
+		if text and text ~= "" and not IsExtraLine(text) then
+			text = StripEscapes(text)
+			if setPattern and find(text, setPattern) then break end
+			if not MatchBaseStat(stats, order, text) then
+				local found = {}
+				pcall(LIB.AddBonusInfo, LIB, found, text)
+				local key, value
+				for key, value in pairs(found) do
+					AddStat(stats, order, key, value)
+				end
+			end
+		end
+	end
+	return stats, order
+end
+
+local function DiffLabel(key)
+	if key == "BASEARMOR" then return L["Armor"] end
+	if key == "DPS" then return L["DPS"] end
+	return LIB:GetBonusFriendlyName(key)
+end
+
+-- "+12", "-3.5", "+1%"; DPS keeps one decimal, like its tooltip line.
+local function FormatDelta(key, delta)
+	local size = math.floor(math.abs(delta) * 10 + 0.5) / 10
+	local text
+	if size == math.floor(size) then
+		text = format("%d", size)
+	else
+		text = format("%.1f", size)
+	end
+	if PERCENT_KEYS[key] then text = text .. "%" end
+	return ((delta > 0) and "+" or "-") .. text
+end
+
+local function DiffRows(hovered, hoveredOrder, worn, wornOrder)
+	local rows, seen = {}, {}
+	local sources = { hoveredOrder, wornOrder }
+	local s, i
+	for s = 1, 2 do
+		local order = sources[s]
+		for i = 1, getn(order) do
+			local key = order[i]
+			if not seen[key] then
+				seen[key] = true
+				local delta = (hovered[key] or 0) - (worn[key] or 0)
+				if math.abs(delta) >= 0.05 and getn(rows) < DIFF_MAX_ROWS then
+					table.insert(rows, {
+						text = FormatDelta(key, delta) .. " " .. DiffLabel(key),
+						color = (delta > 0) and DIFF_GAIN or DIFF_LOSS,
+					})
+				end
+			end
+		end
+	end
+	return rows
+end
+
+-- Appends the rows (a blank separator and the title first) and returns the
+-- line indices that took them. A frame whose line count does not grow gets
+-- no further rows.
+local function AppendDiffRows(tip, rows)
+	local added = {}
+	if getn(rows) == 0 then return added end
+	table.insert(rows, 1, { text = L["If you replace this item:"], color = DIFF_TITLE })
+	table.insert(rows, 1, { text = " ", color = DIFF_TITLE })
+	local i
+	for i = 1, getn(rows) do
+		local before = tip:NumLines()
+		local row = rows[i]
+		local ok = pcall(tip.AddLine, tip, row.text, row.color[1], row.color[2], row.color[3])
+		if not ok or tip:NumLines() <= before then break end
+		table.insert(added, { line = tip:NumLines(), row = row })
+	end
+	return added
+end
+
+-- After the frame is shown: every added row is written again at full width,
+-- recoloured (SetText can reset the colour on UA) and trimmed; returns the
+-- widest row.
+local function RemeasureDiffRows(tip, added)
+	local name = tip:GetName()
+	local widest = 0
+	if not name then return widest end
+	local i
+	for i = 1, getn(added) do
+		local label = _G[name .. "TextLeft" .. added[i].line]
+		if label then
+			local row = added[i].row
+			local width = Remeasure(label, row.text)
+			label:SetTextColor(row.color[1], row.color[2], row.color[3])
+			if width > widest then widest = width end
+		end
+	end
+	return widest
 end
 
 -- Hides only what this module showed: the Auction House fills the same frames.
@@ -1232,6 +1453,12 @@ function TT:ShowCompare()
 	local slots = COMPARE_SLOTS[EquipLoc(tonumber(idText)) or ""]
 	if not slots then return end
 
+	local hovered, hoveredOrder
+	if LIB then
+		local okParse, stats, order = pcall(ParseItemStats, owner)
+		if okParse then hovered, hoveredOrder = stats, order end
+	end
+
 	local onLeft = CompareOnLeft(owner)
 	local vertical = "TOP"
 	local caller = this
@@ -1251,8 +1478,27 @@ function TT:ShowCompare()
 			end
 			local okFill, hasItem = pcall(tip.SetInventoryItem, tip, "player", slot)
 			if okFill and hasItem then
+				local added
+				if hovered then
+					local okParse, worn, wornOrder = pcall(ParseItemStats, tip)
+					local okRows, rows
+					if okParse then
+						okRows, rows = pcall(DiffRows, hovered, hoveredOrder, worn, wornOrder)
+					end
+					if okRows then
+						local okAdd, lines = pcall(AppendDiffRows, tip, rows)
+						if okAdd then added = lines end
+					end
+				end
+				local okCount, count = pcall(tip.NumLines, tip)
+				tip.elvCompareLines = okCount and count or nil
 				pcall(tip.Show, tip)
-				pcall(AddCompareHeader, tip, slot)
+				local widest = 0
+				if added then
+					local okWidth, width = pcall(RemeasureDiffRows, tip, added)
+					if okWidth then widest = width end
+				end
+				pcall(AddCompareHeader, tip, slot, widest)
 				self.compareShown = true
 				previous = tip
 				used = used + 1

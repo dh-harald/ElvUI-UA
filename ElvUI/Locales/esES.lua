@@ -73,6 +73,8 @@ L["Level"] = "Level"
 L["Rare"] = "Raro"
 L["Dead"] = "Dead"
 L["Currently Equipped"] = "Actualmente equipado"
+L["DPS"] = "DPS"
+L["If you replace this item:"] = "Si reemplazas este objeto:"
 
 --Problem messages (shown to the player, so they name the effect, not the cause)
 L["The right-click menu is not available for this frame."] = "El menú del clic derecho no está disponible para esta ventana."
