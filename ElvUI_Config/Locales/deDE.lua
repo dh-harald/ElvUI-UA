@@ -522,6 +522,12 @@ L["Default"] = "Standard"
 L["Custom"] = "Benutzer"
 L["Custom Texture"] = "Benutzerdefinierte Textur"
 L["A texture path, e.g. Interface\\Icons\\Spell_Nature_Sleep. Empty falls back to the default icon."] = "Ein Texturpfad, z. B. Interface\\Icons\\Spell_Nature_Sleep. Leer fällt auf das Standard-Icon zurück."
+L["Heal Prediction"] = "Eingehende Heilung"
+L["Personal"] = "Persönlich"
+L["Others"] = "Andere"
+L["Max Overflow"] = "Maximaler Overflow"
+L["Max amount of overflow allowed to extend past the end of the health bar."] = "Maximale Menge des erlaubten Overflows um das Ende der Gesundheitsleiste zu erweitern."
+L["Show an incoming heal prediction bar on the unitframe. Also display a slightly different colored bar for incoming overheals."] = "Zeige eingehende Heilung im Einheitenfenster. Zeigt eine etwas anders farbige Leiste für eingehende Überheilung."
 
 --DataBars
 L["DataBars"] = "Informationsleisten"

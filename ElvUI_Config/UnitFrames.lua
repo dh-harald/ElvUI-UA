@@ -1051,6 +1051,19 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 		}
 	end
 
+	-- Real ElvUI's key and order; only on the units whose profile table has
+	-- the field (player, target, pet, party).
+	if P.unitframe.units[dbKey] and P.unitframe.units[dbKey].healPrediction ~= nil then
+		args.generalGroup.args.healPrediction = {
+			type = "toggle",
+			name = L["Heal Prediction"],
+			desc = L["Show an incoming heal prediction bar on the unitframe. Also display a slightly different colored bar for incoming overheals."],
+			order = 9,
+			get = function() return unitTable().healPrediction end,
+			set = function(_, value) unitTable().healPrediction = value end,
+		}
+	end
+
 	return args
 end
 
@@ -1321,6 +1334,56 @@ E.Options.args.unitframe = {
 								local c = E.db.unitframe.colors.reaction.GOOD
 								c.r, c.g, c.b = r, g, b
 							end,
+						},
+						},
+					},
+					-- Real ElvUI's group, keys and order. The two colours share a
+					-- group-level get/set, so each entry's name is its DB key.
+					healPrediction = {
+						order = 6,
+						type = "group",
+						name = L["Heal Prediction"],
+						guiInline = true,
+						get = function(info)
+							local t = E.db.unitframe.colors.healPrediction[ info[getn(info)] ]
+							local d = P.unitframe.colors.healPrediction[ info[getn(info)] ]
+							return t.r, t.g, t.b, t.a, d.r, d.g, d.b, d.a
+						end,
+						set = function(info, r, g, b, a)
+							local t = E.db.unitframe.colors.healPrediction[ info[getn(info)] ]
+							t.r, t.g, t.b, t.a = r, g, b, a
+						end,
+						args = {
+						-- Real ElvUI's header, kept for the tree path but hidden:
+						-- here the group is an inline box that already shows
+						-- the same title.
+						header = {
+							order = 1,
+							type = "header",
+							name = L["Heal Prediction"],
+							hidden = true,
+						},
+						personal = {
+							order = 2,
+							type = "color",
+							name = L["Personal"],
+							hasAlpha = true,
+						},
+						others = {
+							order = 3,
+							type = "color",
+							name = L["Others"],
+							hasAlpha = true,
+						},
+						maxOverflow = {
+							order = 4,
+							type = "range",
+							name = L["Max Overflow"],
+							desc = L["Max amount of overflow allowed to extend past the end of the health bar."],
+							isPercent = true,
+							min = 0, max = 1, step = 0.01,
+							get = function() return E.db.unitframe.colors.healPrediction.maxOverflow end,
+							set = function(_, value) E.db.unitframe.colors.healPrediction.maxOverflow = value end,
 						},
 						},
 					},

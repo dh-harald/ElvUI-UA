@@ -1952,10 +1952,10 @@ function UF:UpdateFrame(frame)
 		frame.Power:SetHeight(settings.power.height)
 	end
 
-	local okHealth, health = pcall(UnitHealth, unit)
-	local okHealthMax, healthMax = pcall(UnitHealthMax, unit)
+	-- Estimated absolute values for hostile units (LibMobHealth-4.0).
+	local okHealth, health, healthMax = pcall(ElvUI.Util.UnitHealth, unit)
 	health = (okHealth and tonumber(health)) or 0
-	healthMax = (okHealthMax and tonumber(healthMax)) or 0
+	healthMax = (okHealth and tonumber(healthMax)) or 0
 	local healthPercent = (healthMax > 0) and (health / healthMax) or 0
 
 	frame.Health:SetMinMaxValues(0, healthMax > 0 and healthMax or 1)

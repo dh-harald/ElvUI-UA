@@ -422,7 +422,8 @@ function TT:AnchorHealthBar()
 	end
 end
 
--- The text is read from UnitHealth/UnitHealthMax of the unit last rewritten,
+-- The text is read from ElvUI.Util.UnitHealth (UnitHealth/UnitHealthMax, or
+-- the LibMobHealth-4.0 estimate for hostile units) of the unit last rewritten,
 -- not from the bar: on UA the bar's own GetValue/GetMinMaxValues report a
 -- fixed 0-100 range (source/UnrealUI/modules/tooltip.lua). It is anchored by a
 -- single CENTER point, because FontString:SetJustifyV does nothing on UA.
@@ -473,8 +474,8 @@ function TT:UpdateHealthText()
 	local unit = self.currentUnit
 	local value = ""
 	if unit and self.db.healthBar.text and UnitExists(unit) then
-		local cur = UnitHealth(unit) or 0
-		local max = UnitHealthMax(unit) or 0
+		local cur, max = ElvUI.Util.UnitHealth(unit)
+		cur, max = cur or 0, max or 0
 		if cur <= 0 then
 			value = DEAD_TEXT
 		elseif max > 0 then

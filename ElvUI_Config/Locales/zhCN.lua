@@ -522,6 +522,12 @@ L["Default"] = "默认"
 L["Custom"] = "自定义"
 L["Custom Texture"] = "自定义贴图"
 L["A texture path, e.g. Interface\\Icons\\Spell_Nature_Sleep. Empty falls back to the default icon."] = "贴图路径,例如 Interface\\Icons\\Spell_Nature_Sleep。留空则使用默认图标。"
+L["Heal Prediction"] = "治疗量预估"
+L["Personal"] = "个人的"
+L["Others"] = "他人的"
+L["Max Overflow"] = "最大治疗吸收盾"
+L["Max amount of overflow allowed to extend past the end of the health bar."] = "显示在生命值条末端的治疗吸收盾的最大量"
+L["Show an incoming heal prediction bar on the unitframe. Also display a slightly different colored bar for incoming overheals."] = "在单位框架中显示即将回复的的预估治疗量, 过量治疗则以不同颜色显示"
 
 --DataBars
 L["DataBars"] = "数据条"

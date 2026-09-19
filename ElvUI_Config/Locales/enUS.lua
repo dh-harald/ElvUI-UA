@@ -545,6 +545,12 @@ L["Default"] = true
 L["Custom"] = true
 L["Custom Texture"] = true
 L["A texture path, e.g. Interface\\Icons\\Spell_Nature_Sleep. Empty falls back to the default icon."] = true
+L["Heal Prediction"] = true
+L["Personal"] = true
+L["Others"] = true
+L["Max Overflow"] = true
+L["Max amount of overflow allowed to extend past the end of the health bar."] = true
+L["Show an incoming heal prediction bar on the unitframe. Also display a slightly different colored bar for incoming overheals."] = true
 
 --DataBars
 L["DataBars"] = true

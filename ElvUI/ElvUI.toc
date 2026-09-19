@@ -2,13 +2,16 @@
 ## Title: |cff175581E|r|cffC4C4C4lvUI|r
 ## Notes: ElvUI rewrite targeting WoW 1.12.1 and Unreal Azeroth.
 ## Version: @project-version@
-## SavedVariables: ElvDB, ElvPrivateDB, GAME_LOCALE
+## SavedVariables: ElvDB, ElvPrivateDB, GAME_LOCALE, LibMobHealth40DB, LibMobHealth40Opt
 ## SavedVariablesPerCharacter: ElvCharacterDB
 
 # Libraries\Load_Libraries.xml also loads LibDeformat-2.0, LibGratuity-2.0,
-# LibItemBonusLib-1.0, LibRosterLib-2.0 and LibHealComm-1.0, in that order
-# after the rest. These have no .pkgmeta external yet: the
-# build script copies them from a local working copy into Libraries\.
+# LibItemBonusLib-1.0, LibRosterLib-2.0, LibHealComm-1.0 and
+# LibMobHealth-4.0, in that order after the rest. These have no .pkgmeta
+# external yet: the build script copies them from a local working copy into
+# Libraries\. LibMobHealth40DB/LibMobHealth40Opt are LibMobHealth-4.0's
+# account-wide mob health database and settings; the library adopts them at
+# PLAYER_LOGIN.
 Libraries\Load_Libraries.xml
 Locales\Load_Locales.xml
 Media\Load_Media.xml

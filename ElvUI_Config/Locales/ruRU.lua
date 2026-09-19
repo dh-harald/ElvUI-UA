@@ -522,6 +522,12 @@ L["Default"] = "По умолчанию"
 L["Custom"] = "Вручную"
 L["Custom Texture"] = "Своя текстура"
 L["A texture path, e.g. Interface\\Icons\\Spell_Nature_Sleep. Empty falls back to the default icon."] = "Путь к текстуре, например Interface\\Icons\\Spell_Nature_Sleep. Пусто -- возврат к иконке по умолчанию."
+L["Heal Prediction"] = "Входящее исцеление"
+L["Personal"] = "Свое"
+L["Others"] = "Чужое"
+L["Max Overflow"] = "Макс. переполнение"
+L["Max amount of overflow allowed to extend past the end of the health bar."] = "Максимальное значение переполнения, которое может отображаться за пределами полосы здоровья."
+L["Show an incoming heal prediction bar on the unitframe. Also display a slightly different colored bar for incoming overheals."] = "Отображать объем входящего исцеления на рамках. Также отображает немного иначе окрашенную полосу для избыточного исцеления."
 
 --DataBars
 L["DataBars"] = "Инфо-полосы"

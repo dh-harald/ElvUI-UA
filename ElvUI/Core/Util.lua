@@ -168,6 +168,19 @@ function E:ShortValue(v)
 	return string.format("%.0f", v)
 end
 
+-- Current and maximum health of `unit`. The client reports hostile units only
+-- in percent (UnitHealthMax == 100); LibMobHealth-4.0 replaces that with an
+-- estimate learned from the damage dealt to the target, and passes every
+-- other unit's native values through unchanged.
+local LMH = LibStub("LibMobHealth-4.0", true)
+function Util.UnitHealth(unit)
+	if LMH then
+		local cur, max = LMH:GetUnitHealth(unit)
+		return cur, max
+	end
+	return UnitHealth(unit), UnitHealthMax(unit)
+end
+
 -- Matches real ElvUI's own E:FormatMoney exactly (source/ElvUI-vanilla/
 -- ElvUI/Core/math.lua:383-450), except the copper/silver/gold abbreviation
 -- strings are hardcoded here instead of read from AceLocale (the MODULES

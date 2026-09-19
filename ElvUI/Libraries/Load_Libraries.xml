@@ -20,4 +20,5 @@
 	<Include file="LibItemBonusLib-1.0\LibItemBonusLib-1.0.xml"/>
 	<Include file="LibRosterLib-2.0\LibRosterLib-2.0.xml"/>
 	<Include file="LibHealComm-1.0\LibHealComm-1.0.xml"/>
+	<Include file="LibMobHealth-4.0\LibMobHealth-4.0.xml"/>
 </Ui>

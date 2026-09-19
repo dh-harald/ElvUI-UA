@@ -37,6 +37,10 @@ Two addons ship together:
 - Layout (screen panels, minimap panels, mover system)
 - ActionBars, PetBar/StanceBar, Cooldown text
 - UnitFrames (player/target/pet/party/etc.), Auras
+- Estimated health of hostile mobs and players (LibMobHealth-4.0): the
+  client only reports them in percent, so their real health is learned from
+  the damage dealt to your target and saved account-wide; shown on the unit
+  frames and the tooltip
 - Heal prediction through LibHealComm-1.0: the healing still to come on a
   player — heals being cast (yours and, over the HealComm addon channel,
   other players') and the rest of Rejuvenation, Renew and Regrowth — is shown
