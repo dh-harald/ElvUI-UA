@@ -15,6 +15,12 @@ externals:
   ElvUI/Libraries/AceLocale-3.0: https://github.com/laytya/Ace3v/AceLocale-3.0
   ElvUI/Libraries/LibDataBroker-1.1: https://github.com/dh-harald/Ace3v/LibDataBroker-1.1
   ElvUI/Libraries/LibModifierState-1.0: https://github.com/dh-harald/Ace3v/LibModifierState-1.0
+  ElvUI/Libraries/LibDeformat-2.0: https://github.com/dh-harald/Ace3v/LibDeformat-2.0
+  ElvUI/Libraries/LibGratuity-2.0: https://github.com/dh-harald/Ace3v/LibGratuity-2.0
+  ElvUI/Libraries/LibItemBonusLib-1.0: https://github.com/dh-harald/Ace3v/LibItemBonusLib-1.0
+  ElvUI/Libraries/LibRosterLib-2.0: https://github.com/dh-harald/Ace3v/LibRosterLib-2.0
+  ElvUI/Libraries/LibHealComm-1.0: https://github.com/dh-harald/Ace3v/LibHealComm-1.0
+  ElvUI/Libraries/LibMobHealth-4.0: https://github.com/dh-harald/Ace3v/LibMobHealth-4.0
   ElvUI_Config/Libraries/LibConfig-1.0: https://github.com/dh-harald/Ace3v/LibConfig-1.0
 
 move-folders:
