@@ -96,6 +96,8 @@ P.general = {
 	fontSize = 12,
 	fontStyle = "NONE",
 	autoRepair = "NONE",
+	-- Read by Modules/Misc/InterruptAnnounce.lua.
+	interruptAnnounce = "NONE",
 	autoRoll = false,
 	bottomPanel = true,
 
@@ -992,6 +994,18 @@ P.unitframe.units.target = {
 		transparent = false,
 	},
 	customTexts = {},
+	-- Same read subset as the player's castbar (UnitFrames.lua's Castbar
+	-- section), values from real ElvUI's target castbar. The casts come
+	-- from the combat log (CastTracker.lua). Not declared: the
+	-- icon-attachment and strata keys, as for the player.
+	castbar = {
+		enable = true,
+		width = 270,
+		height = 18,
+		icon = true,
+		format = "REMAINING",
+		spark = true,
+	},
 }
 
 P.unitframe.units.targettarget = {

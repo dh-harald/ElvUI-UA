@@ -46,6 +46,11 @@ Two addons ship together:
   other players') and the rest of Rejuvenation, Renew and Regrowth — is shown
   on the health bar in two colours (yours, others'), extending past its end
   for the overheal
+- Target castbar: the 1.12 client reports no casts of other units, so the
+  bar is rebuilt from the combat log ("… begins to cast …") with cast times
+  and icons from pfUI's spell database; kicks, stuns and other interrupts
+  end it with "Interrupted". Mobs that share a name cannot be told apart,
+  and channelled spells of others are not shown
 - DataBars (XP/Reputation), DataTexts
 - Chat
 - Bags/Bank, with gray items sold automatically at a vendor (one at a
@@ -55,6 +60,8 @@ Two addons ship together:
   merged, quest items first, quivers/ammo pouches/soul bags filled with
   their own items)
 - Automatic repair at a merchant
+- Interrupt announce: your interrupts (Kick, Pummel, Counterspell, ...)
+  posted to say, emote, party or raid chat while in a group
 - Colour picker: an ElvUI-styled replacement for the native one, used by
   the chat window menu's colour swatches (channel and message colours,
   window background and opacity); works on Unreal Azeroth, where the
@@ -107,6 +114,10 @@ Two addons ship together:
 - Raid marker (Unreal Azeroth): the "Raid Marker" key binding does not show
   up in the Key Bindings window, because the client does not register key
   bindings declared by addons yet. It works on the legacy client.
+- Interrupts (Unreal Azeroth): the target castbar does not switch to
+  "Interrupted" when its cast is kicked, and Announce Interrupts sends
+  nothing, because the client does not write interrupts to the combat log.
+  The bar still ends when the cast's time is up or the target dies.
 - Tooltip (Unreal Azeroth): with an ActionBars visibility modifier set, on
   pet command buttons (Attack, Follow, Stay, Aggressive, Defensive,
   Passive) pressing the modifier while already hovering does not bring the

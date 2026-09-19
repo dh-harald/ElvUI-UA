@@ -4,10 +4,12 @@
 	<Script file="PortraitUA.lua"/>
 	<Script file="PortraitLegacy.lua"/>
 	<Script file="DebuffDurations.lua"/>
+	<Script file="CastTracker.lua"/>
 	<!-- Real 1.12.1 cannot load a <Script> from a subdirectory (silent
 	     "Error loading Units\Player.lua" in Logs\FrameXML.log). <Include>
 	     of a subdirectory XML does work, so every subdirectory gets its
 	     own loader XML whose <Script> paths are all directory-local. -->
 	<Include file="Units\Load_Units.xml"/>
 	<Include file="Groups\Load_Groups.xml"/>
+	<Include file="CastSpells\Load_CastSpells.xml"/>
 </Ui>

@@ -554,10 +554,9 @@ end
 -- reasoning as hasRestIcon -- `HasPetUI()`'s own isHunterPet return only
 -- ever means anything for the "pet" unit specifically (see UnitFrames.lua's
 -- own Construct_Happiness comment).
--- `hasCastbar`: Player-only -- the classic vanilla SPELLCAST_* events
--- only ever describe the player's own cast (see UnitFrames.lua's own
--- Castbar section for why a Target castbar isn't feasible on this
--- client generation at all).
+-- `hasCastbar`: player and target, the units with a bar
+-- (UnitFrames.lua's Castbar section: the player's from SPELLCAST_*, the
+-- target's rebuilt from the combat log).
 -- `hasRaidIcon`: the units real ElvUI declares `raidicon` settings for among
 -- the ones this project builds -- player, target, targettarget and party; pet
 -- and pettarget have none upstream.
@@ -990,7 +989,9 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 				intro = {
 					type = "description",
 					order = 1,
-					name = L["Requires /reload to take effect (enable only). Player-only -- the classic vanilla cast events only ever describe your own cast."],
+					name = dbKey == "target"
+						and L["Requires /reload to take effect (enable only). Built from the combat log: only spells with a known cast time are shown, and units sharing a name cannot be told apart."]
+						or L["Requires /reload to take effect (enable only). Player-only -- the classic vanilla cast events only ever describe your own cast."],
 				},
 				enable = {
 					type = "toggle",
@@ -1007,7 +1008,7 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 					get = function() return unitTable().castbar.width end,
 					set = function(_, value)
 						unitTable().castbar.width = value
-						if E.UnitFrames then E.UnitFrames:ResizeCastbar(unitTable().castbar.width, unitTable().castbar.height) end
+						if E.UnitFrames then E.UnitFrames:ResizeCastbar(unitTable().castbar.width, unitTable().castbar.height, dbKey) end
 					end,
 				},
 				height = {
@@ -1018,7 +1019,7 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 					get = function() return unitTable().castbar.height end,
 					set = function(_, value)
 						unitTable().castbar.height = value
-						if E.UnitFrames then E.UnitFrames:ResizeCastbar(unitTable().castbar.width, unitTable().castbar.height) end
+						if E.UnitFrames then E.UnitFrames:ResizeCastbar(unitTable().castbar.width, unitTable().castbar.height, dbKey) end
 					end,
 				},
 				icon = {
@@ -1403,7 +1404,7 @@ E.Options.args.unitframe = {
 			name = L["Target"],
 			order = 3,
 			childGroups = "tab",
-			args = UnitFrameArgs("target", nil, true, true, nil, nil, true),
+			args = UnitFrameArgs("target", nil, true, true, nil, true, true),
 		},
 		pet = {
 			type = "group",

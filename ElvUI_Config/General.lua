@@ -174,6 +174,21 @@ E.Options.args.general = {
 			type = "group",
 			name = L["General"],
 			args = {
+				-- Read by Modules/Misc/InterruptAnnounce.lua.
+				interruptAnnounce = {
+					order = 3,
+					type = "select",
+					name = L["Announce Interrupts"],
+					desc = L["Announce when you interrupt a spell to the specified chat channel."],
+					values = {
+						NONE = L["None"],
+						SAY = L["Say"],
+						PARTY = L["Party Only"],
+						RAID = L["Party / Raid"],
+						RAID_ONLY = L["Raid Only"],
+						EMOTE = L["Emote"],
+					},
+				},
 				-- Real ElvUI also offers "GUILD"; guild bank repair does not
 				-- exist on this client version, so only the two meaningful
 				-- values are listed. Modules/Misc/Misc.lua treats an imported

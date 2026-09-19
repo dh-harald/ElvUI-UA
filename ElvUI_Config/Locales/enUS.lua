@@ -136,6 +136,13 @@ L["Open the Lua error window by itself when a new error occurs. Errors are recor
 L["Addon Language"] = true
 L["Overrides which language this addon's own text uses, independent of the game client's language. Automatic uses the game client's own language, falling back to English if unsupported. Requires /reload to take effect."] = true
 L["Automatic (Game Client Language)"] = true
+L["Announce Interrupts"] = true
+L["Announce when you interrupt a spell to the specified chat channel."] = true
+L["Say"] = true
+L["Party Only"] = true
+L["Party / Raid"] = true
+L["Raid Only"] = true
+L["Emote"] = true
 L["Auto Repair"] = true
 L["Automatically repair using the following method when visiting a merchant."] = true
 
@@ -514,6 +521,7 @@ L["Raid Icon"] = true
 L["Happiness"] = true
 L["Hunter-pet-only loyalty indicator (HasPetUI()'s own isHunterPet flag) -- stays hidden for any other pet, e.g. a Warlock's. A narrow bar stuck out past Health's own left edge -- see UnitFrames.lua's own Construct_Happiness comment for why this doesn't reflow Health/Power's width the way real ElvUI does."] = true
 L["Auto Hide When Happy"] = true
+L["Requires /reload to take effect (enable only). Built from the combat log: only spells with a known cast time are shown, and units sharing a name cannot be told apart."] = true
 L["Requires /reload to take effect (enable only). Player-only -- the classic vanilla cast events only ever describe your own cast."] = true
 L["Show Icon"] = true
 L["Show Spark"] = true

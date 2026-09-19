@@ -700,7 +700,7 @@ function UF:UpdateHappiness(frame)
 end
 
 -- ---------------------------------------------------------------------
--- Castbar -- PLAYER-ONLY. Real ElvUI's own
+-- Castbar -- player and target. Real ElvUI's own
 -- Elements/Castbar.lua is just the STYLING layer on top of oUF's own
 -- `elements/castbar.lua`, which does the actual event-driven tracking --
 -- this project has no oUF (see this file's own header comment on why),
@@ -709,13 +709,12 @@ end
 -- oUF's own metatable/element machinery" approach already used
 -- throughout this project.
 --
--- oUF's own element only ever registers these events for `unit ==
--- "player"` (Libraries/oUF/elements/castbar.lua:395) -- these are the
--- classic vanilla 1.12.1 SPELLCAST_* events (predate the modern
--- per-unit UNIT_SPELLCAST_* events entirely), which only ever describe
--- the PLAYER's own cast -- there is no vanilla API for watching another
--- unit's cast progress, so a Target castbar isn't feasible here either,
--- matching the reference's own scope exactly, not a shortcut.
+-- The player bar runs on the classic vanilla 1.12.1 SPELLCAST_* events,
+-- which only ever describe the PLAYER's own cast (oUF's element registers
+-- them for `unit == "player"` only). The target bar has no such event: it
+-- polls UF:GetUnitCast (CastTracker.lua), which rebuilds other units' casts
+-- from the combat log. Both bars share the styling and time-text helpers
+-- below; `bar.unit` selects the settings table.
 --
 -- IMPORTANT: this project's own AceEvent-3.0 copy does NOT forward
 -- event payloads as function arguments (confirmed by reading
@@ -825,12 +824,17 @@ function UF:Construct_Castbar(frame)
 	time:SetJustifyH("RIGHT")
 	bar.Time = time
 
-	self.PlayerCastbar = bar
+	bar.unit = frame.unit
+	if frame.unit == "target" then
+		self.TargetCastbar = bar
+	else
+		self.PlayerCastbar = bar
+	end
 	return bar
 end
 
 local function FormatCastbarTime(bar, duration)
-	local settings = E.db.unitframe.units.player.castbar
+	local settings = E.db.unitframe.units[bar.unit].castbar
 	local format = settings and settings.format or "REMAINING"
 
 	local text
@@ -859,12 +863,14 @@ local function FormatCastbarTime(bar, duration)
 	pcall(bar.Time.SetText, bar.Time, text)
 end
 
-function UF:ApplyCastbarStyle(bar, name)
-	local settings = E.db.unitframe.units.player.castbar
+-- `icon`: the spell's texture when the caller knows it (target casts);
+-- the player bar passes nil and uses the texture captured by the hooks.
+function UF:ApplyCastbarStyle(bar, name, icon)
+	local settings = E.db.unitframe.units[bar.unit].castbar
 	pcall(bar.Text.SetText, bar.Text, name)
 
 	if settings.icon then
-		pcall(bar.Icon.SetTexture, bar.Icon, castbarIconTexture or "Interface\\Icons\\INV_Misc_QuestionMark")
+		pcall(bar.Icon.SetTexture, bar.Icon, icon or castbarIconTexture or "Interface\\Icons\\INV_Misc_QuestionMark")
 		bar.Icon:Show()
 		bar.Icon:ClearAllPoints()
 		bar.Icon:SetPoint("RIGHT", bar, "LEFT", -4, 0)
@@ -873,11 +879,11 @@ function UF:ApplyCastbarStyle(bar, name)
 	else
 		bar.Icon:Hide()
 	end
-	castbarIconTexture = nil
+	if bar.unit == "player" then castbarIconTexture = nil end
 
 	local r, g, b = 1, 0.7, 0
-	if E.db.unitframe.colors.castClassColor then
-		local _, class = UnitClass("player")
+	if E.db.unitframe.colors.castClassColor and UnitIsPlayer(bar.unit) then
+		local _, class = UnitClass(bar.unit)
 		local classColor = RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]
 		if classColor then r, g, b = classColor.r, classColor.g, classColor.b end
 	end
@@ -1007,8 +1013,7 @@ end
 -- at all -- the same bug class already root-caused and fixed twice in
 -- this project (Reputation bar, PetTarget frame; see Core/Movers.lua's
 -- own `RegisterMoverStateCallback` comment).
-local function ApplyCastbarMoverPreview()
-	local bar = UF.PlayerCastbar
+local function PreviewCastbar(bar)
 	if not bar then return end
 
 	if E.moversUnlocked then
@@ -1023,6 +1028,11 @@ local function ApplyCastbarMoverPreview()
 	elseif not bar.casting and not bar.channeling then
 		pcall(bar.Hide, bar)
 	end
+end
+
+local function ApplyCastbarMoverPreview()
+	PreviewCastbar(UF.PlayerCastbar)
+	PreviewCastbar(UF.TargetCastbar)
 end
 
 local function UpdateCastbarTick(elapsed)
@@ -1101,7 +1111,97 @@ function UF:InitializeCastbar()
 	-- immediately rather than on some later tick. Registered here (not in
 	-- Construct_Castbar) because the whole castbar is optional -- when
 	-- `castbar.enable` is false there is no bar and nothing to preview.
-	if E.RegisterMoverStateCallback then
+	if E.RegisterMoverStateCallback and not UF.castbarPreviewRegistered then
+		UF.castbarPreviewRegistered = true
+		E:RegisterMoverStateCallback(ApplyCastbarMoverPreview)
+	end
+end
+
+-- Target bar. It has no start/stop events of its own: every state change
+-- (new cast, cast over, target switched or dead) is read back from
+-- UF:GetUnitCast -- on PLAYER_TARGET_CHANGED, on a new combat-log cast under
+-- the target's name, and on every frame while the bar is shown.
+function UF:UpdateTargetCastbar()
+	local bar = self.TargetCastbar
+	if not bar then return end
+
+	local spell, startTime, endTime, icon = self:GetUnitCast("target")
+	if not spell then
+		if bar.casting then
+			bar.casting = nil
+			bar.spell = nil
+			-- Hides the bar, or puts the /moveui preview back.
+			PreviewCastbar(bar)
+		elseif bar.holdTime and bar.holdTime > 0 and UnitName("target") ~= bar.caster then
+			-- The "Interrupted" hold belongs to the previous target.
+			bar.holdTime = 0
+			PreviewCastbar(bar)
+		end
+		return
+	end
+
+	if bar.spell ~= spell or bar.startTime ~= startTime then
+		bar.caster = UnitName("target")
+		bar.holdTime = 0
+		bar.spell = spell
+		bar.startTime = startTime
+		bar.max = endTime - startTime
+		bar.delay = 0
+		bar.casting = true
+		bar.channeling = nil
+		bar:SetMinMaxValues(0, bar.max)
+		bar:SetValue(0)
+		self:ApplyCastbarStyle(bar, spell, icon)
+		pcall(bar.Time.SetText, bar.Time, "")
+		bar:Show()
+	end
+end
+
+-- Called by CastTracker.lua when the target's cast is broken off. Keeps the
+-- bar up with "Interrupted" for the same 1 s hold as the player bar.
+function UF:InterruptTargetCastbar()
+	local bar = self.TargetCastbar
+	if not bar or not bar.casting then return end
+
+	pcall(bar.Text.SetText, bar.Text, _G.INTERRUPTED or L["Interrupted"])
+	pcall(bar.Time.SetText, bar.Time, "")
+	bar.Spark:Hide()
+	bar.casting = nil
+	bar.spell = nil
+	bar.holdTime = 1
+end
+
+local function UpdateTargetCastbarTick()
+	local bar = UF.TargetCastbar
+	local elapsed = tonumber(arg1) or 0
+	UF:UpdateTargetCastbar()
+
+	if bar.holdTime and bar.holdTime > 0 then
+		bar.holdTime = bar.holdTime - elapsed
+		if bar.holdTime <= 0 then PreviewCastbar(bar) end
+		return
+	end
+	if not bar.casting then return end
+
+	local duration = GetTime() - bar.startTime
+	if duration > bar.max then duration = bar.max end
+	bar:SetValue(duration)
+	FormatCastbarTime(bar, duration)
+	if bar.Spark:IsShown() then
+		pcall(bar.Spark.SetPoint, bar.Spark, "CENTER", bar, "LEFT", duration / bar.max * bar:GetWidth(), 0)
+	end
+end
+
+-- Called once from Units/Target.lua's Construct_TargetFrame.
+function UF:InitializeTargetCastbar()
+	local bar = self.TargetCastbar
+	if not bar then return end
+
+	self:InitializeCastTracker()
+	bar:SetScript("OnUpdate", UpdateTargetCastbarTick)
+
+	if E.RegisterMoverStateCallback and not UF.castbarPreviewRegistered then
+		UF.castbarPreviewRegistered = true
 		E:RegisterMoverStateCallback(ApplyCastbarMoverPreview)
 	end
 end
@@ -2228,8 +2328,10 @@ end
 -- widths, so they already follow a resize with no extra work. Only the
 -- bar's own SetWidth/SetHeight (set once in Units/Player.lua at
 -- construction) was ever missing a live call.
-function UF:ResizeCastbar(width, height)
+-- `unit`: "target" for the target bar, anything else the player bar.
+function UF:ResizeCastbar(width, height, unit)
 	local bar = self.PlayerCastbar
+	if unit == "target" then bar = self.TargetCastbar end
 	if not bar then return end
 	pcall(bar.SetWidth, bar, width)
 	pcall(bar.SetHeight, bar, height)

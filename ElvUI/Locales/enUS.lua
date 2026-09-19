@@ -136,6 +136,7 @@ L["Lock Movers"] = true
 L["Reset All"] = true
 L["Player Frame"] = true
 L["Player Castbar"] = true
+L["Target Castbar"] = true
 L["Target Frame"] = true
 L["Target of Target Frame"] = true
 L["Pet Frame"] = true

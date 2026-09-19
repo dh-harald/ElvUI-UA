@@ -60,6 +60,19 @@ local function Construct_TargetFrame()
 	frame.InfoPanel = UF:Construct_InfoPanel(frame)
 	UF:Construct_CustomTexts(frame)
 
+	-- Same construction as the player bar (Units/Player.lua); the casts
+	-- come from the combat log (CastTracker.lua), not SPELLCAST_*. Starts
+	-- under the Target Frame's default position; the mover owns it after.
+	local castSettings = settings.castbar
+	if castSettings and castSettings.enable then
+		local castbar = UF:Construct_Castbar(frame)
+		castbar:SetWidth(castSettings.width)
+		castbar:SetHeight(castSettings.height)
+		castbar:SetPoint("CENTER", UIParent, "CENTER", 300, -190)
+		E:CreateMover(castbar, "ElvUF_TargetCastbar", L["Target Castbar"])
+		UF:InitializeTargetCastbar()
+	end
+
 	HideNativeTargetFrame()
 	UF:EnableUnitMouse(frame)
 	E:CreateMover(frame, "ElvUF_Target", L["Target Frame"])
