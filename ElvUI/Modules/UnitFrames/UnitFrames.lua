@@ -495,6 +495,13 @@ function UF:ShowUnitTooltip(frame)
 	end
 
 	if pcall(GameTooltip.SetUnit, GameTooltip, unit) then
+		-- An offline party member fills no line (the native frame shows no
+		-- tooltip for it either); showing anyway would draw an empty box.
+		local okLines, lines = pcall(GameTooltip.NumLines, GameTooltip)
+		if okLines and (tonumber(lines) or 0) == 0 then
+			pcall(GameTooltip.Hide, GameTooltip)
+			return
+		end
 		pcall(GameTooltip.Show, GameTooltip)
 		-- The Tooltip module restyles world units from UPDATE_MOUSEOVER_UNIT,
 		-- which does not cover a SetUnit on a frame's own unit token, and the
