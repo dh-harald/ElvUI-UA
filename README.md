@@ -46,6 +46,8 @@ Two addons ship together:
   other players') and the rest of Rejuvenation, Renew and Regrowth — is shown
   on the health bar in two colours (yours, others'), extending past its end
   for the overheal
+- Resurrection icon on the party, target and your own player frame while
+  someone running HealComm is resurrecting that player
 - Target castbar: the 1.12 client reports no casts of other units, so the
   bar is rebuilt from the combat log ("… begins to cast …") with cast times
   and icons from pfUI's spell database; kicks, stuns and other interrupts

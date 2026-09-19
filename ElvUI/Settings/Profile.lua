@@ -847,6 +847,16 @@ P.unitframe.units.player = {
 		xOffset = 0,
 		yOffset = 8,
 	},
+	-- Not a real ElvUI key on the player: shows the dead player that a
+	-- resurrection is being cast on them. Same fields as party.resurrectIcon.
+	resurrectIcon = {
+		enable = true,
+		size = 30,
+		attachTo = "CENTER",
+		attachToObject = "Frame",
+		xOffset = 0,
+		yOffset = 0,
+	},
 	-- Player's own buffs/debuffs are the only ones with REAL duration --
 	-- the native GetPlayerBuff* family takes no unit argument.
 	buffs = {
@@ -955,6 +965,16 @@ P.unitframe.units.target = {
 		attachToObject = "Frame",
 		xOffset = 0,
 		yOffset = 8,
+	},
+	-- Not a real ElvUI key on the target: shows that a resurrection is being
+	-- cast on the targeted player. Same fields as party.resurrectIcon.
+	resurrectIcon = {
+		enable = true,
+		size = 30,
+		attachTo = "CENTER",
+		attachToObject = "Frame",
+		xOffset = 0,
+		yOffset = 0,
 	},
 	-- Duration source here is tier 3 (icon + stack count only, no timer) --
 	-- there is no per-unit equivalent of GetPlayerBuff.
@@ -1321,6 +1341,14 @@ P.unitframe.units.party = {
 		attachToObject = "Frame",
 		xOffset = 0,
 		yOffset = 8,
+	},
+	resurrectIcon = {
+		enable = true,
+		size = 30,
+		attachTo = "CENTER",
+		attachToObject = "Frame",
+		xOffset = 0,
+		yOffset = 0,
 	},
 	buffs = {
 		enable = false,

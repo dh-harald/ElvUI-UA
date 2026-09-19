@@ -1973,6 +1973,31 @@ local function UpdateRaidIcon(frame, unit, settings)
 	icon:Show()
 end
 
+-- Incoming resurrection: real ElvUI's ResurrectIndicator element,
+-- `resurrectIcon` settings, placed like the raid icon. The client has no
+-- UnitHasIncomingResurrection, so the source is LibHealComm-1.0: a resurrection
+-- cast by anyone running HealComm (the player's own included) is recorded by
+-- target name until it is cancelled, the target's health changes, or 70 s pass.
+-- A method rather than a file local, so UF:UpdateFrame gains no upvalue.
+local HealComm = LibStub("LibHealComm-1.0", true)
+local RESURRECT_TEXTURE = "Interface\\AddOns\\ElvUI\\Media\\Textures\\Raid-Icon-Rez"
+
+function UF:UpdateResurrectIcon(frame, unit, settings)
+	local icon = frame.ResurrectIndicator
+	local name = UnitName(unit)
+	if not settings.enable or not HealComm or not name or not HealComm:UnitisResurrecting(name) then
+		icon:Hide()
+		return
+	end
+
+	icon:SetTexture(RESURRECT_TEXTURE)
+	icon:SetWidth(settings.size)
+	icon:SetHeight(settings.size)
+	icon:ClearAllPoints()
+	icon:SetPoint(settings.attachTo, GetCustomTextAnchor(frame, settings.attachToObject), settings.attachTo, settings.xOffset, settings.yOffset)
+	icon:Show()
+end
+
 function UF:UpdateFrame(frame)
 	local unit = frame.unit
 	if not unit then return end
@@ -2236,6 +2261,9 @@ function UF:UpdateFrame(frame)
 	end
 	if frame.RaidTargetIndicator and settings.raidicon then
 		UpdateRaidIcon(frame, unit, settings.raidicon)
+	end
+	if frame.ResurrectIndicator and settings.resurrectIcon then
+		pcall(self.UpdateResurrectIcon, self, frame, unit, settings.resurrectIcon)
 	end
 
 	self:UpdateAuras(frame, "buff")

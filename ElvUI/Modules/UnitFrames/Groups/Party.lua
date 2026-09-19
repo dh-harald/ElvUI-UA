@@ -71,6 +71,7 @@ local function Construct_PartyMemberFrame(index)
 
 		frame.CombatIndicator = UF:Construct_StateIcon(frame.Health.textLayer)
 		frame.RaidTargetIndicator = UF:Construct_StateIcon(frame.Health.textLayer)
+		frame.ResurrectIndicator = UF:Construct_StateIcon(frame.Health.textLayer)
 		UF:Construct_Auras(frame, "buff")
 		UF:Construct_Auras(frame, "debuff")
 
