@@ -91,7 +91,7 @@ Two addons ship together:
   place (Character, Friends, SpellBook, Macro, Key Bindings, Main Menu,
   Interface/Video/Sound Options, Gossip/Greeting/Quest/QuestLog,
   Merchant, Trade, Taxi, Pet Stable, Talents, Trade Skills, Enchanting,
-  and more)
+  Trainer, and more)
 
 **Missing / not yet started:**
 - Tooltip item level, inspect info and spell IDs; the tooltip text and

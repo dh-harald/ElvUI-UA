@@ -419,6 +419,7 @@ L["Inspect"] = "Inspecter"
 L["Stable"] = "Écurie"
 L["Talents"] = "Talents"
 L["Tradeskills"] = "Artisanat"
+L["Trainer Frame"] = "Entraîneur"
 L["Debug Tools"] = "Outils de débogage"
 
 --UnitFrames

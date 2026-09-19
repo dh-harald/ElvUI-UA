@@ -419,6 +419,7 @@ L["Inspect"] = "Осмотреть"
 L["Stable"] = "Стойла"
 L["Talents"] = "Таланты"
 L["Tradeskills"] = "Ремесла"
+L["Trainer Frame"] = "Тренер"
 L["Debug Tools"] = "Инструменты отладки"
 
 --UnitFrames

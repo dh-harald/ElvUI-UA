@@ -84,6 +84,7 @@ E.Options.args.skins = {
 				stable = { type = "toggle", name = L["Stable"], desc = SKIN_DESC },
 				talent = { type = "toggle", name = L["Talents"], desc = SKIN_DESC },
 				tradeskill = { type = "toggle", name = L["Tradeskills"], desc = SKIN_DESC },
+				trainer = { type = "toggle", name = L["Trainer Frame"], desc = SKIN_DESC },
 				tooltip = { type = "toggle", name = L["Tooltip"], desc = SKIN_DESC },
 				-- Gates the ElvUI Lua error window (Core/DebugTools.lua); off
 				-- leaves the client's own error display in place.

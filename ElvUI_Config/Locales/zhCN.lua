@@ -419,6 +419,7 @@ L["Inspect"] = "观察"
 L["Stable"] = "兽栏"
 L["Talents"] = "天赋"
 L["Tradeskills"] = "商业技能"
+L["Trainer Frame"] = "训练师"
 L["Debug Tools"] = "除错工具"
 
 --UnitFrames

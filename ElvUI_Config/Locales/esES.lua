@@ -419,6 +419,7 @@ L["Inspect"] = "Inspeccionar"
 L["Stable"] = "Establo"
 L["Talents"] = "Talentos"
 L["Tradeskills"] = "Hab. comerciales"
+L["Trainer Frame"] = "Entrenador"
 L["Debug Tools"] = "Herramientas de Depuración"
 
 --UnitFrames

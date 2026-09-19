@@ -82,12 +82,7 @@ end
 local function ApplySelectionChrome()
 	local icon = _G.CraftIcon
 	if icon then
-		if not icon.elvBordered then
-			if ElvUI.Util and ElvUI.Util.CreateButtonBorder then
-				ElvUI.Util.CreateButtonBorder(icon)
-			end
-			icon.elvBordered = true
-		end
+		S:CreateIconEdges(icon)
 		local okNormal, normalTexture = pcall(icon.GetNormalTexture, icon)
 		if okNormal and normalTexture then
 			pcall(icon.SetAlpha, icon, 1)

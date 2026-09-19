@@ -180,12 +180,7 @@ local function ApplySelectionChrome(id)
 
 	local icon = _G.TradeSkillSkillIcon
 	if icon then
-		if not icon.elvBordered then
-			if ElvUI.Util and ElvUI.Util.CreateButtonBorder then
-				ElvUI.Util.CreateButtonBorder(icon)
-			end
-			icon.elvBordered = true
-		end
+		S:CreateIconEdges(icon)
 		local okNormal, normalTexture = pcall(icon.GetNormalTexture, icon)
 		if okNormal and normalTexture then
 			pcall(icon.SetAlpha, icon, 1)
@@ -197,7 +192,6 @@ local function ApplySelectionChrome(id)
 			pcall(icon.SetAlpha, icon, 0)
 		end
 
-		local border = icon.elvBackdrop
 		local okLink, skillLink = pcall(GetTradeSkillItemLink, id)
 		local quality
 		if okLink and skillLink then
@@ -207,13 +201,12 @@ local function ApplySelectionChrome(id)
 				if okInfo then quality = q end
 			end
 		end
-		if border then
-			if quality then
-				local okColor, r, g, b = pcall(GetItemQualityColor, quality)
-				if okColor then pcall(border.SetBackdropBorderColor, border, r, g, b) end
-			else
-				pcall(border.SetBackdropBorderColor, border, S.BORDER_COLOR[1], S.BORDER_COLOR[2], S.BORDER_COLOR[3], S.BORDER_COLOR[4])
-			end
+		local okColor, r, g, b = false
+		if quality then okColor, r, g, b = pcall(GetItemQualityColor, quality) end
+		if okColor then
+			S:SetIconEdgeColor(icon, r, g, b)
+		else
+			S:SetIconEdgeColor(icon)
 		end
 	end
 

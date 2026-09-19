@@ -419,6 +419,7 @@ L["Inspect"] = "Betrachten"
 L["Stable"] = "Stall"
 L["Talents"] = "Talente"
 L["Tradeskills"] = "Berufsfertigkeit"
+L["Trainer Frame"] = "Lehrerfenster"
 L["Debug Tools"] = "Debug Tools"
 
 --UnitFrames

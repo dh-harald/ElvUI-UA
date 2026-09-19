@@ -441,6 +441,49 @@ function S:StyleQuestItemSlot(slot, width, height)
 	end
 end
 
+-- 1px edge around an icon button whose NormalTexture is its icon (the selected
+-- recipe/spell icon of TradeSkill, Craft and Trainer), built from four OVERLAY
+-- strips on the button itself. Not `Util.CreateButtonBorder`: these buttons
+-- sit inside a scroll child, where on the legacy client that border's frame
+-- draws over the button's own regions (same rule as `S:StyleQuestItemSlot`
+-- above), and its fill hid the icon. The strips have no fill, so they cannot
+-- cover the icon whatever layer the NormalTexture is on. Crop the icon 1px in
+-- from the button's edges to sit inside them.
+local ICON_EDGES = {
+	{ "TOPLEFT", "TOPRIGHT", 0, 1 },
+	{ "BOTTOMLEFT", "BOTTOMRIGHT", 0, 1 },
+	{ "TOPLEFT", "BOTTOMLEFT", 1, 0 },
+	{ "TOPRIGHT", "BOTTOMRIGHT", 1, 0 },
+}
+function S:CreateIconEdges(button)
+	if not button or button.elvIconEdges then return end
+	local edges = {}
+	local i
+	for i = 1, table.getn(ICON_EDGES) do
+		local spec = ICON_EDGES[i]
+		local tex = SolidRegion(button, "OVERLAY", S.BORDER_COLOR)
+		if tex then
+			pcall(tex.SetPoint, tex, spec[1], button, spec[1], 0, 0)
+			pcall(tex.SetPoint, tex, spec[2], button, spec[2], 0, 0)
+			if spec[3] > 0 then pcall(tex.SetWidth, tex, spec[3]) end
+			if spec[4] > 0 then pcall(tex.SetHeight, tex, spec[4]) end
+			table.insert(edges, tex)
+		end
+	end
+	button.elvIconEdges = edges
+end
+
+-- Recolours the edges from `S:CreateIconEdges`; no colour = the default black.
+function S:SetIconEdgeColor(button, r, g, b)
+	local edges = button and button.elvIconEdges
+	if not edges then return end
+	if not r then r, g, b = S.BORDER_COLOR[1], S.BORDER_COLOR[2], S.BORDER_COLOR[3] end
+	local i
+	for i = 1, table.getn(edges) do
+		pcall(edges[i].SetVertexColor, edges[i], r, g, b, 1)
+	end
+end
+
 -- Doublewide panels (UIPanelWindows area "doublewide") do not replace each
 -- other: FrameXML's SetDoublewideFrame hides the open left and center panels
 -- but not a doublewide panel that is already open -- it only takes over the
@@ -4675,9 +4718,46 @@ function S:StyleDropDownBox(dd)
 	-- 64px tall (mostly transparent padding) while the frame's height is the
 	-- control's real height, and the current vertical extent is already
 	-- live-accepted on every other skinned dropdown.
+	--
+	-- EXCEPTION, the legacy client with a UI scale below 1: there the art
+	-- itself is drawn off its frame (measured at scale 0.64 on a repositioned
+	-- dropdown: frame 475..655, art reported 304..484 = 475 * 0.64, drawn
+	-- wider and to the right, dragging the window did not settle it), and the
+	-- text and arrow button, anchored to `$parentRight`, go with it. When the
+	-- frame is sized to the art (`UIDropDownMenu_SetWidth` has run: frame =
+	-- Middle + 50), the frame IS the art's intended rectangle, so the box, the
+	-- text and the button are anchored to the frame instead, with the
+	-- template's own offsets carried over from `$parentRight` (Right's RIGHT
+	-- point sits at the frame's RIGHT +1; text RIGHT -43,+2 from it; button
+	-- TOPRIGHT -16,-18 from Right's TOPRIGHT, which is the frame's top +17).
+	-- Wherever frame and art coincide this is the same geometry as before.
+	-- A dropdown whose frame was never sized keeps the art anchoring below.
+	local ddMiddleArt = name and _G[name .. "Middle"]
+	local sizedToArt = false
+	if ddMiddleArt then
+		local okFrameW, frameW = pcall(dd.GetWidth, dd)
+		local okMidW, midW = pcall(ddMiddleArt.GetWidth, ddMiddleArt)
+		frameW, midW = okFrameW and tonumber(frameW), okMidW and tonumber(midW)
+		sizedToArt = frameW and midW and math.abs(frameW - (midW + 50)) < 1 and true or false
+	end
+	if ddBg and sizedToArt then
+		pcall(ddBg.ClearAllPoints, ddBg)
+		pcall(ddBg.SetAllPoints, ddBg, dd)
+		local ddText = _G[name .. "Text"]
+		if ddText then
+			pcall(ddText.ClearAllPoints, ddText)
+			pcall(ddText.SetPoint, ddText, "RIGHT", dd, "RIGHT", -43, 3)
+		end
+		local ddButton = _G[name .. "Button"]
+		if ddButton then
+			pcall(ddButton.ClearAllPoints, ddButton)
+			pcall(ddButton.SetPoint, ddButton, "TOPRIGHT", dd, "TOPRIGHT", -16, -1)
+		end
+	end
+
 	local ddLeftArt = name and _G[name .. "Left"]
 	local ddRightArt = name and _G[name .. "Right"]
-	if ddBg and ddLeftArt and ddRightArt then
+	if ddBg and ddLeftArt and ddRightArt and not sizedToArt then
 		-- Hidden regions still report geometry on this client (that is how
 		-- the numbers above were read AFTER the strip), so anchoring to art
 		-- this module has already hidden is safe.

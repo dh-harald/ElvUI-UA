@@ -442,6 +442,7 @@ L["Inspect"] = true
 L["Stable"] = true
 L["Talents"] = true
 L["Tradeskills"] = true
+L["Trainer Frame"] = true
 L["Debug Tools"] = true
 
 --UnitFrames
