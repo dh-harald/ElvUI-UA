@@ -1252,6 +1252,19 @@ E.Options.args.unitframe = {
 								c.r, c.g, c.b = r, g, b
 							end,
 						},
+						disconnected = {
+							type = "color",
+							name = L["Disconnected"],
+							order = 13,
+							get = function()
+								local c = E.db.unitframe.colors.disconnected
+								return c.r, c.g, c.b
+							end,
+							set = function(_, r, g, b)
+								local c = E.db.unitframe.colors.disconnected
+								c.r, c.g, c.b = r, g, b
+							end,
+						},
 						health_backdrop_dead = {
 							type = "color",
 							name = L["Dead Backdrop Color"],

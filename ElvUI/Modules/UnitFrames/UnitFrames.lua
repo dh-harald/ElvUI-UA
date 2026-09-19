@@ -1832,7 +1832,7 @@ end
 -- reading it). Simplified: class/reaction color is now ALWAYS flat,
 -- never gradient-dimmed -- `colorhealthbyvalue`'s gradient only applies
 -- in the non-class branch now.
-local function ResolveHealthColor(unit, percent, isDead, dbKey)
+local function ResolveHealthColor(unit, percent, isDead, dbKey, isOffline)
 	local colors = E.db.unitframe.colors
 	local settings = E.db.unitframe.units[dbKey or unit]
 	local override = settings.colorOverride
@@ -1861,7 +1861,10 @@ local function ResolveHealthColor(unit, percent, isDead, dbKey)
 		r, g, b = c.r, c.g, c.b
 	end
 
-	if isDead then
+	if isOffline then
+		local c = colors.disconnected
+		r, g, b = c.r, c.g, c.b
+	elseif isDead then
 		r, g, b = DEAD_COLOR[1], DEAD_COLOR[2], DEAD_COLOR[3]
 	end
 
@@ -2081,6 +2084,16 @@ function UF:UpdateFrame(frame)
 	local okHealth, health, healthMax = pcall(ElvUI.Util.UnitHealth, unit)
 	health = (okHealth and tonumber(health)) or 0
 	healthMax = (okHealth and tonumber(healthMax)) or 0
+	-- A player who logged off: real ElvUI (oUF's colorDisconnected) draws a
+	-- full bar in colors.disconnected and "Offline" as the health text. Asked
+	-- for players only, so an NPC can never read as offline.
+	local offline = false
+	if UnitIsConnected and ElvUI.Compat.bool(UnitIsPlayer(unit)) then
+		local okConnected, connected = pcall(UnitIsConnected, unit)
+		offline = okConnected and not ElvUI.Compat.bool(connected)
+	end
+	if offline then health = healthMax end
+
 	local healthPercent = (healthMax > 0) and (health / healthMax) or 0
 
 	frame.Health:SetMinMaxValues(0, healthMax > 0 and healthMax or 1)
@@ -2091,7 +2104,7 @@ function UF:UpdateFrame(frame)
 	local dead = (okDead and isDead) or (okGhost and isGhost)
 
 	local healthAlpha = E.db.unitframe.colors.transparentHealth and TRANSPARENT_ALPHA or 1
-	local r, g, b, bgR, bgG, bgB = ResolveHealthColor(unit, healthPercent, dead, dbKey)
+	local r, g, b, bgR, bgG, bgB = ResolveHealthColor(unit, healthPercent, dead, dbKey, offline)
 	ElvUI.Util.SetStatusBarColor(frame.Health, r, g, b, healthAlpha)
 	-- Live-reapplied every tick, same as color above -- cheap (one
 	-- SetTexture call) and lets the config dropdown take effect
@@ -2105,7 +2118,7 @@ function UF:UpdateFrame(frame)
 	end
 	-- Incoming-heal segment ahead of the health fill (HealPrediction.lua).
 	if self.UpdateHealPrediction then
-		pcall(self.UpdateHealPrediction, self, frame, unit, dbKey, health, healthMax, dead, GetBarTexture())
+		pcall(self.UpdateHealPrediction, self, frame, unit, dbKey, health, healthMax, dead or offline, GetBarTexture())
 	end
 	-- The overlay portrait mirrors this bar's state above the portrait
 	-- (PortraitUA.lua / PortraitLegacy.lua).
@@ -2142,7 +2155,11 @@ function UF:UpdateFrame(frame)
 	-- ElvUI's own tag DSL. See this file's header comment for the exact
 	-- list.
 	local tags = {}
-	if dead then
+	if offline then
+		tags["health:current"] = L["Offline"]
+		tags["health:current-percent"] = L["Offline"]
+		tags["health:percent"] = L["Offline"]
+	elseif dead then
 		local statusText = (okGhost and isGhost) and L["Ghost"] or L["Dead"]
 		tags["health:current"] = statusText
 		tags["health:current-percent"] = statusText

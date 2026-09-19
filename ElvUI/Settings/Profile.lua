@@ -725,6 +725,8 @@ P.unitframe.colors = {
 	health = {r = 0.31, g = 0.31, b = 0.31},
 	health_backdrop = {r = 0.8, g = 0.01, b = 0.01},
 	health_backdrop_dead = {r = 0.8, g = 0.01, b = 0.01},
+	-- Health bar of a player who is offline (UnitFrames.lua ResolveHealthColor).
+	disconnected = {r = 0.84, g = 0.75, b = 0.65},
 	-- Unused by Player (always UnitIsPlayer, reaction never applies there).
 	reaction = {
 		BAD = {r = 0.78, g = 0.25, b = 0.25},

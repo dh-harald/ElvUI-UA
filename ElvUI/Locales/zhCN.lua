@@ -83,6 +83,7 @@ L["Some windows could not be restyled and keep their default look."] = "部分�
 
 --UnitFrames
 L["Ghost"] = "鬼魂"
+L["Offline"] = "离线"
 L["Failed"] = "失败"
 L["Interrupted"] = "被打断"
 L["Castbar"] = "施法条"

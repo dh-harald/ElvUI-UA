@@ -83,6 +83,7 @@ L["Some windows could not be restyled and keep their default look."] = "Неко
 
 --UnitFrames
 L["Ghost"] = "Призрак"
+L["Offline"] = "Не в сети"
 L["Failed"] = "Неудача"
 L["Interrupted"] = "Прервано"
 L["Castbar"] = "Полоса заклинаний"

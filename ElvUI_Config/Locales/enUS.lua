@@ -541,6 +541,7 @@ L["Base Health Color"] = true
 L["Used when Color Health By Class and Color Health By Value are both off."] = true
 L["Health Backdrop Color"] = true
 L["Dead Backdrop Color"] = true
+L["Disconnected"] = true
 L["Color Power By Class"] = true
 L["Transparent Power"] = true
 L["Same as Transparent Health, for the power bar."] = true

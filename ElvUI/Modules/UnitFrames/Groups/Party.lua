@@ -26,11 +26,14 @@ local UF = E.UnitFrames
 -- Vertical spacing between stacked party member frames.
 local PARTY_GAP = 6
 
+local nativeHidden = {}
+
 -- Same technique as Units/Player.lua's own HideNativePlayerFrame, for
 -- one native PartyMemberFrame<index>.
 local function HideNativePartyFrame(index)
 	local frame = _G["PartyMemberFrame"..index]
 	if not frame then return end
+	nativeHidden[index] = true
 	pcall(frame.UnregisterAllEvents, frame)
 	pcall(frame.SetScript, frame, "OnEvent", nil)
 	pcall(frame.SetScript, frame, "OnUpdate", nil)
@@ -38,6 +41,25 @@ local function HideNativePartyFrame(index)
 	pcall(frame.SetAlpha, frame, 0)
 	frame.Show = E.noop
 end
+
+-- Unreal Azeroth shows the native party frames again from outside Lua (a
+-- member going offline does it, with no event left registered on the frame
+-- and Show replaced), and its SetAlpha(0) does not carry over to the children:
+-- the name, portrait, leader icon and bar borders reappear. Hide() on the root
+-- does take the children along, so a watcher re-hides any of the ones this
+-- module replaced that is shown.
+local nativeWatcher = CreateFrame("Frame")
+local nativeElapsed = 0
+nativeWatcher:SetScript("OnUpdate", function()
+	nativeElapsed = nativeElapsed + arg1
+	if nativeElapsed < 0.2 then return end
+	nativeElapsed = 0
+	local i
+	for i = 1, 4 do
+		local native = nativeHidden[i] and _G["PartyMemberFrame"..i]
+		if native and native:IsShown() then native:Hide() end
+	end
+end)
 
 -- Returns a Construct function bound to one party slot (1-4) -- each
 -- slot's own frame is fully independent (own health/power/name/
