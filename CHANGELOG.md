@@ -1,3 +1,24 @@
+# [0.5.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.4.2...v0.5.0) (2026-09-19)
+
+
+### Bug Fixes
+
+* **actionbars:** set proper level for cooldowns ([1077d06](https://github.com/dh-harald/ElvUI-UA/commit/1077d06f38a024935d8b110de93dd24827972cd0))
+* **petbars:** update buttons while pet summoned, revived, etc ([de1abc3](https://github.com/dh-harald/ElvUI-UA/commit/de1abc3f22b91e28d307c9fad80c8b6843cc06e9))
+* **tooltip:** hide empty tooltips ([a0121bc](https://github.com/dh-harald/ElvUI-UA/commit/a0121bcc55687c13da2742245e473c61bc000849))
+* **unitframes:** offline party member ([0e8fb00](https://github.com/dh-harald/ElvUI-UA/commit/0e8fb0029dc2f6fdd0ed8469ee9e61d57f385c39))
+* **unitframes:** proper handling of mouse clicks on unitframes ([7e7e8b2](https://github.com/dh-harald/ElvUI-UA/commit/7e7e8b283b3e8f7dac77c75186e97e303a2b01d1))
+
+
+### Features
+
+* **healpredict:** replaced to backported LibHealComm-1.0 ([1cf60c7](https://github.com/dh-harald/ElvUI-UA/commit/1cf60c728ec8ba015726a9e8154c27de6138ddd7))
+* **skins:** add trainer frame ([7f5c8d8](https://github.com/dh-harald/ElvUI-UA/commit/7f5c8d82e2b86e34ff13099ced93cf6dd881147c))
+* **tooltips:** add stats diff to itemcompare tooltips ([21adf93](https://github.com/dh-harald/ElvUI-UA/commit/21adf9368a90153a43ce475f9d4b658a251a380d))
+* **unitframes:** add resurrection icon to unitframes ([855bf11](https://github.com/dh-harald/ElvUI-UA/commit/855bf11533ef8fb36d5d039166dcf8678d0c9d30))
+* **unitframes:** add support for LibMobHealth-4.0 ([4f9bf72](https://github.com/dh-harald/ElvUI-UA/commit/4f9bf726d8a17e87c97d81fa619d93ede233bbd0))
+* **unitframes:** add target castbar ([d5634f2](https://github.com/dh-harald/ElvUI-UA/commit/d5634f28b038ef0c15bc93b179073a5c3e68a1a8))
+
 ## [0.4.2](https://github.com/dh-harald/ElvUI-UA/compare/v0.4.1...v0.4.2) (2026-09-17)
 
 
