@@ -81,8 +81,10 @@ function E:RGBToHex(r, g, b)
 end
 
 -- Matches real ElvUI's own E:ColorGradient exactly (source/ElvUI-vanilla/
--- ElvUI/Core/math.lua:79-92) -- Modules/DataTexts/Durability.lua uses this
--- to color its tooltip lines by durability percent (red -> yellow -> green).
+-- ElvUI/Core/math.lua:79-92), except for going through Compat.modf --
+-- math.modf does not exist on the real 1.12.1 client. Callers:
+-- Modules/DataTexts/Durability.lua (tooltip lines by durability percent)
+-- and UnitFrames' health coloring (red -> yellow -> green).
 function E:ColorGradient(perc, r1, g1, b1, r2, g2, b2, r3, g3, b3)
 	if perc >= 1 then
 		return r3, g3, b3
@@ -90,7 +92,7 @@ function E:ColorGradient(perc, r1, g1, b1, r2, g2, b2, r3, g3, b3)
 		return r1, g1, b1
 	end
 
-	local segment, relperc = math.modf(perc)
+	local segment, relperc = ElvUI.Compat.modf(perc)
 	if segment > 0 then
 		r1, g1, b1, r2, g2, b2 = r2, g2, b2, r3, g3, b3
 	end

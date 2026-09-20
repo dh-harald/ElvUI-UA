@@ -125,6 +125,24 @@ Compat.mod = math.mod or function(a, b)
 	return a - math.floor(a / b) * b
 end
 
+-- math.modf: present on UA (5.1), MISSING on the real 1.12.1 client -- its
+-- Lua 5.0 build ships a trimmed math library (no modf/fmod/huge/cosh/sinh/
+-- tanh). ElvUI-vanilla only works there because its !Compatibility addon
+-- installs a global polyfill; we ship no such addon, so route every call
+-- through here. Truncates toward zero, like the real function: returns the
+-- integer part and the signed fractional remainder. Infinities are not
+-- special-cased (math.huge does not exist on 1.12.1 either).
+Compat.modf = math.modf or function(value)
+	value = tonumber(value)
+	if type(value) ~= "number" then
+		error("bad argument #1 to 'modf' (number expected)", 2)
+	end
+
+	local int = value >= 0 and math.floor(value) or math.ceil(value)
+
+	return int, value - int
+end
+
 -- Boolean-flag API returns, normalized to a real boolean by VALUE, not by
 -- client: nil, false and 0 -> false; anything else -> true.
 --
