@@ -68,6 +68,7 @@
 -- is. No item-quality border colour on any slot either.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- Identical geometry to Gossip's/Greeting's own panel insets

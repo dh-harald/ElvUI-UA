@@ -37,6 +37,7 @@
 -- not chrome).
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- Real ElvUI's own numbers for this window (`Blizzard/Taxi.lua`,

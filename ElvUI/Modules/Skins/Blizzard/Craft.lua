@@ -39,6 +39,7 @@
 -- collapse-all + per-row expand glyphs, recipe icon, all 8 reagent slots.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 local FRAME_WIDTH, FRAME_HEIGHT = 720, 508

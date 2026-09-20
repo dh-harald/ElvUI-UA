@@ -16,6 +16,13 @@
 
 ElvUI = ElvUI or {}
 
+-- The globals table is not exposed as `_G` on every client this addon runs
+-- on: the 1.12.1 client only has it when its API shim is injected, and
+-- without that every file that indexes `_G` dies on its first use. Declared
+-- at the top of each file that needs it, the fallback being the chunk's own
+-- environment, which IS the globals table.
+local _G = _G or getfenv()
+
 local AddOnName = "ElvUI"
 local Engine = ElvUI
 

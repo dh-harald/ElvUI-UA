@@ -19,3 +19,4 @@ Tooltip.lua
 UnitFrames.lua
 DataBars.lua
 Maps.lua
+Mail.lua

@@ -36,6 +36,7 @@
 -- listed there.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local M = E.DataBars
 
 -- The "hide once, then permanently neuter Show()" recipe lives in

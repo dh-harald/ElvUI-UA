@@ -1,4 +1,5 @@
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local getn = ElvUI.Compat.getn
 
 local function UpdateActionBar(id)

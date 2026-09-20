@@ -38,6 +38,7 @@
 -- (TT:SetupHealthBar), as in real ElvUI.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 local TOOLTIPS = { "GameTooltip", "ItemRefTooltip", "ShoppingTooltip1", "ShoppingTooltip2", "WorldMapTooltip" }

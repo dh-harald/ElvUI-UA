@@ -296,6 +296,33 @@ L["Realm Time:"] = true
 --Misc
 L["Loot / Alert Frames"] = true
 
+--Mail
+L["Open All"] = true
+L["Open Selected"] = true
+L["Stop"] = true
+L["No mail selected."] = true
+L["The mailbox is empty."] = true
+L["Received %s (x%d)."] = true
+L["Received %s."] = true
+L["Your bags are full -- stopped opening mail."] = true
+L["Stopped opening mail."] = true
+L["Could not take everything from one mail -- skipped it."] = true
+L["Skipped %d C.O.D. mail(s)."] = true
+L["Collected %s."] = true
+L["Return Selected"] = true
+L["Returned mail to %s."] = true
+L["Could not return one mail -- skipped it."] = true
+L["Skipped %d mail(s) that cannot be returned."] = true
+L["Stopped returning mail."] = true
+L["The attachment list is full."] = true
+L["No recipient."] = true
+L["Could not attach one item -- skipped it."] = true
+L["%s (%d of %d)"] = true
+L["Sent %s."] = true
+L["One mail was not accepted -- stopped sending."] = true
+L["Sent %d mails."] = true
+L["Removed %d emptied mail(s)."] = true
+
 --Lua error window
 L["|cFFE30000Lua error recieved. You can view the error message when you exit combat."] = true
 L["Lua Error"] = true

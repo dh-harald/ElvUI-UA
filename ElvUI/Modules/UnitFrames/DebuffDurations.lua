@@ -31,6 +31,7 @@
 -- turns out not to be accurate enough in practice.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local UF = E.UnitFrames
 
 local Durations = {

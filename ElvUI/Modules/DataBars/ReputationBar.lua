@@ -48,6 +48,7 @@
 -- hides itself.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local M = E.DataBars
 
 -- Real 1.12.1's own FACTION_BAR_COLORS (FrameXML/ReputationFrame.lua) as

@@ -12,6 +12,7 @@
 -- BATTLEGROUND.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local M = E:GetModule("Misc")
 
 local Deformat = LibStub("LibDeformat-2.0", true)

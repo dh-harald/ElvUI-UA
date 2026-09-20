@@ -2,6 +2,7 @@
 -- (source/ElvUI-vanilla/ElvUI/Modules/DataTexts/Durability.lua).
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local DT = E.DataTexts
 local Compat = ElvUI.Compat
 

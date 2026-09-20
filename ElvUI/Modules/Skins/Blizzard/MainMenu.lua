@@ -64,6 +64,7 @@
 -- alone too).
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 local function ApplyGameMenuChrome(frame)

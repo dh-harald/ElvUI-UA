@@ -42,6 +42,7 @@
 -- LibSimpleSticky sticky-edge snapping.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local Compat = ElvUI.Compat
 
 E.movers = E.movers or {}

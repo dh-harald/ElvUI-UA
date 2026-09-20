@@ -95,6 +95,7 @@
 -- removal, tabs, scroll frame + scrollbar, all talent buttons.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- Fixed by the XML (20 `TalentButtonTemplate` buttons declared once,

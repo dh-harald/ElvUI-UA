@@ -59,6 +59,7 @@
 -- profile compatibility only.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local TT = E:NewModule("Tooltip", "AceHook-3.0", "AceEvent-3.0")
 
 local getn = ElvUI.Compat.getn

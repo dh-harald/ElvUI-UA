@@ -18,6 +18,7 @@
 -- fully populated table at its own file-load time.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 
 P.gridSize = 64
 

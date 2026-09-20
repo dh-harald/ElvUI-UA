@@ -31,6 +31,7 @@
 -- locals instead.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local M = E:GetModule("Misc")
 local Compat = ElvUI.Compat
 local isUA = Compat and Compat.isUA

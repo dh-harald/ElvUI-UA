@@ -123,6 +123,7 @@
 -- recipe icon + item-quality border colouring, all 8 reagent slots.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 local Compat = ElvUI.Compat
 

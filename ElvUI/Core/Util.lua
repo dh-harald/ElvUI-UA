@@ -6,6 +6,7 @@ ElvUI = ElvUI or {}
 ElvUI.Util = ElvUI.Util or {}
 
 local Util = ElvUI.Util
+local _G = _G or getfenv()
 
 local function DeepCopy(src)
 	local copy = {}

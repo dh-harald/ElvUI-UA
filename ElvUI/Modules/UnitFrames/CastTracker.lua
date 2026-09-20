@@ -25,6 +25,7 @@
 --   * The player's own casts use SPELLCAST_* (the player castbar), not this.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local UF = E.UnitFrames
 
 local Deformat = LibStub("LibDeformat-2.0", true)

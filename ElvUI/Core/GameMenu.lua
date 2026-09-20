@@ -23,6 +23,7 @@
 -- reposition from that fixed, captured value -- never from a fresh query.
 
 local E = ElvUI[1]
+local _G = _G or getfenv()
 
 local button
 local originalRelTo

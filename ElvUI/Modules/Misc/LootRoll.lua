@@ -35,6 +35,7 @@
 --     pixels higher than the label.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local M = E:GetModule("Misc")
 
 local find = string.find

@@ -72,6 +72,7 @@
 -- UNTESTED -- first pass on a brand-new, and first LoadOnDemand, window.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 local MAX_MACROS_COUNT = tonumber(_G.MAX_MACROS) or 18

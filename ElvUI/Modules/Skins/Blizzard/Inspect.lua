@@ -71,6 +71,7 @@
 --   `S:StyleStatusBar` pass on `InspectHonorFrameProgressBar`.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- See this file's own header note on the Honor-tab scope cut.

@@ -96,6 +96,7 @@
 -- skin fix -- functional addition, out of scope for a visual pass).
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- Native `HitRectInsets` (right=35, bottom=61) already sit almost exactly

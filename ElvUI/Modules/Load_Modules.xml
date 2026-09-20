@@ -8,6 +8,7 @@
 	<Include file="Auras\Load_Auras.xml"/>
 	<Include file="NamePlates\Load_NamePlates.xml"/>
 	<Include file="Misc\Load_Misc.xml"/>
+	<Include file="Mail\Load_Mail.xml"/>
 	<Include file="Bags\Load_Bags.xml"/>
 	<Include file="Tooltip\Load_Tooltip.xml"/>
 	<Include file="Skins\Load_Skins.xml"/>

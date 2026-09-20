@@ -36,6 +36,7 @@
 -- ElvUI-vanilla reads its `isUsable` return as quality).
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- Native `HitRectInsets` are right=35/bottom=72, which would leave the

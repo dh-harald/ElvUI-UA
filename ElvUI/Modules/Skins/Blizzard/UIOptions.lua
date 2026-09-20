@@ -50,6 +50,7 @@
 -- untouched.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- Frees the window from its four `setAllPoints` anchors so it can be

@@ -21,6 +21,7 @@
 -- Settings: `P.actionbar.barShapeShift` (Settings/Profile.lua).
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local Compat = ElvUI.Compat
 local M = E:NewModule("StanceBar", "AceEvent-3.0")
 E.StanceBar = M

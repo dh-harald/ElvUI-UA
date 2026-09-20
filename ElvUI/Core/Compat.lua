@@ -29,6 +29,7 @@ ElvUI = ElvUI or {}
 ElvUI.Compat = ElvUI.Compat or {}
 
 local Compat = ElvUI.Compat
+local _G = _G or getfenv()
 
 -- Diagnostic only -- don't branch feature code on this, feature-detect the
 -- specific function you need instead.

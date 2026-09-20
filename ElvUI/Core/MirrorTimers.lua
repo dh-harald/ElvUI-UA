@@ -22,6 +22,7 @@
 -- updated, freely readable without hooking anything.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 
 local NUM_MIRROR_TIMERS = _G.MIRRORTIMER_NUMTIMERS or 3
 

@@ -45,6 +45,7 @@
 -- and a second unit (Target) added.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 -- "AceHook-3.0" is needed for the Castbar's own icon-capture
 -- hooks (see that section's own comment) -- bare `hooksecurefunc` alone
 -- was silently not firing for the icon capture, matching this project's

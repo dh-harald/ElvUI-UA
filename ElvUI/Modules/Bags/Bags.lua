@@ -48,6 +48,7 @@
 -- path that closes our window.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local B = E:NewModule("Bags", "AceEvent-3.0", "AceTimer-3.0")
 local Util = ElvUI.Util
 

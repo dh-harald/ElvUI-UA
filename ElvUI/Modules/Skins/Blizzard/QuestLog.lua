@@ -73,6 +73,7 @@
 -- replacement Track button).
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- `QuestLogFrame` is 384x512 with `HitRectInsets right=35 bottom=75`, and

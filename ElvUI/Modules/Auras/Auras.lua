@@ -58,6 +58,7 @@
 -- duration FORMAT thresholds shared with the Cooldown Text module.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local A = E:NewModule("Auras", "AceEvent-3.0")
 local UF = E.UnitFrames
 

@@ -59,6 +59,7 @@
 --    `S.stripSkipNames["WhoFrameEditBox"] = true`.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 local ACCENT_COLOR = S.ACCENT_COLOR

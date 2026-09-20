@@ -54,6 +54,7 @@
 -- window needs no per-widget code of its own for any of them.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- Is the window the whole screen, or a bounded dialog?

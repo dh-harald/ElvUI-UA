@@ -54,6 +54,7 @@
 -- didn't exist yet the first time.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local Compat = ElvUI.Compat
 local M = E:NewModule("ActionBars", "AceEvent-3.0")
 E.ActionBars = M

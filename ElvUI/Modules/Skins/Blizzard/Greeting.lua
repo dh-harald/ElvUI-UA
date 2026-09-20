@@ -58,6 +58,7 @@
 -- what real ElvUI itself would show in the same partial-flag state.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- Identical geometry to `GossipFrame`'s own panel insets

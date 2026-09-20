@@ -12,6 +12,7 @@
 	<Script file="Quest.lua"/>
 	<Script file="Gossip.lua"/>
 	<Script file="Greeting.lua"/>
+	<Script file="Mail.lua"/>
 	<Script file="Merchant.lua"/>
 	<Script file="Trade.lua"/>
 	<Script file="Taxi.lua"/>

@@ -77,6 +77,20 @@ E.Options.args.skins = {
 				quest = { type = "toggle", name = L["Quest Frames"], desc = SKIN_DESC },
 				gossip = { type = "toggle", name = L["Gossip Frame"], desc = SKIN_DESC },
 				greeting = { type = "toggle", name = L["Greeting Frame"], desc = SKIN_DESC },
+				-- The only per-window toggle with its own `disabled`: while the
+				-- Mail module runs it skins this window itself, whatever this
+				-- says, so the control would be a lie. An entry-level member
+				-- wins over the group's, so this also keeps the master
+				-- switch's own disabling.
+				mail = {
+					type = "toggle",
+					name = L["Mail"],
+					desc = L["The Mail module already skins this window while it is enabled. Requires /reload to take effect."],
+					disabled = function()
+						return not E.private.skins.blizzard.enable
+							or (E.global.mail and E.global.mail.enable)
+					end,
+				},
 				merchant = { type = "toggle", name = L["Merchant"], desc = SKIN_DESC },
 				trade = { type = "toggle", name = L["Trade"], desc = SKIN_DESC },
 				taxi = { type = "toggle", name = L["Taxi Frame"], desc = SKIN_DESC },

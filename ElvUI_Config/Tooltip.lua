@@ -1,4 +1,5 @@
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local getn = ElvUI.Compat.getn
 
 -- Real ElvUI's `tooltip` options group (ElvUI_Config/Tooltip.lua): same keys,

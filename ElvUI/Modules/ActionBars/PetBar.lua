@@ -38,6 +38,7 @@
 -- autocast glow renders correctly with no extra code needed.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local Compat = ElvUI.Compat
 local M = E:NewModule("PetBar", "AceEvent-3.0")
 E.PetBar = M

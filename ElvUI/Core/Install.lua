@@ -11,6 +11,7 @@
 -- MAX_PAGE when inserting a page.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 
 local MAX_PAGE = 8
 

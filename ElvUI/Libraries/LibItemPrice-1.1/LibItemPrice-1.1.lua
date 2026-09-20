@@ -18,7 +18,7 @@ copy wins LibStub's version check over an unmodified one.
 local Lib = LibStub:NewLibrary("ItemPrice-1.1", "$Revision: 79225 $")
 if not Lib then return end
 
-local _G = _G
+local _G = _G or getfenv()
 local type, tonumber = type, tonumber
 local find = string.find
 

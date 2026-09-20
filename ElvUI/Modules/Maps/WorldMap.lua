@@ -33,6 +33,7 @@
 -- ApplySmallerWorldMap has NOT been tested in-game yet.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local M = E:NewModule("WorldMap")
 E.WorldMap = M
 

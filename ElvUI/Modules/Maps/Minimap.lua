@@ -53,6 +53,7 @@
 -- as LibConfig-1.0's own scrollable widgets.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local M = E:NewModule("Minimap", "AceEvent-3.0")
 E.Minimap = M
 

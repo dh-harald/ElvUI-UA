@@ -63,6 +63,7 @@
 -- `E.db.chat`.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 -- "AceHook-3.0" mixin: AceHook-3.0's `SecureHook` on an object+method
 -- routes through `hooksecurefunc(obj, method, uid)` -- a different,
 -- unreliable-on-UA overload from the bare-global-name one already proven
@@ -217,7 +218,9 @@ local function CreateToggleButton(name, label, onClick)
 	-- Real ElvUI's chat toggle button text (Layout `lchattb.text`): the UI
 	-- font at its defaults.
 	E:FontTemplate(button.text)
-	button.text:SetPoint("CENTER")
+	-- Spelled out rather than the one-argument `SetPoint("CENTER")` shorthand:
+	-- the stock 1.12.1 client rejects that form with a usage error.
+	button.text:SetPoint("CENTER", button, "CENTER", 0, 0)
 	-- Upstream leaves this arrow the font's own colour and never recolours
 	-- the button border on hover -- both are this project's own additions.
 	-- Kept, but driven from the accent rather than a hardcoded yellow, so

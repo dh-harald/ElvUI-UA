@@ -53,6 +53,7 @@
 -- SkillFrame's own list/scrollframes, HonorFrame's HK/DK/rank buttons.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- CharacterResistanceFrame is deliberately NEVER stripped, not even via

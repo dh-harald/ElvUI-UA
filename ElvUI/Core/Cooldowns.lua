@@ -24,6 +24,7 @@
 -- not just frames this addon knows about directly.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 
 -- Settings: `V.cooldown` / `P.cooldown` (Settings/Private.lua,
 -- Settings/Profile.lua). This module reads `E.db.cooldown.threshold`, the

@@ -28,6 +28,7 @@
 -- them neither; they are full screen width and purely decorative.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 
 local LO = E:NewModule("Layout", "AceEvent-3.0")
 E.Layout = LO

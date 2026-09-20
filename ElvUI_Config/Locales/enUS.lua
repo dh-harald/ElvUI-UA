@@ -596,3 +596,18 @@ L["Minimap Buttons"] = true
 L["Time Info"] = true
 L["Mail"] = true
 L["PvP Queue"] = true
+
+--Mail
+L["Adds bulk handling to the native mailbox: open several mails at once, pick which ones with a checkbox, and send more than one item at a time."] = true
+L["With this off the mailbox is left to the Blizzard window skin instead. Requires /reload to take effect."] = true
+L["The Mail module already skins this window while it is enabled. Requires /reload to take effect."] = true
+L["Warn About Deleted Mail"] = true
+L["Colours the expiry time of mail that will be DELETED when it runs out, instead of returned to its sender. The client only colours it by time left, so the two look alike until the last day."] = true
+L["Summarize Collected Money"] = true
+L["Prints one total at the end of a bulk run, when money came from more than one mail."] = true
+L["Remove Emptied Mail"] = true
+L["After a bulk run, removes the mail it emptied, so the mailbox is not left full of empty rows. A mail with a letter still in it is never removed -- the test is the client's own: nothing attached, and nothing left to read."] = true
+L["Complete Recipient Names"] = true
+L["Typing a recipient drops a short list of matching names under the field: your own characters on this realm, your friends and your guild. Click one, or press Tab to take the first."] = true
+L["Modifier Clicks"] = true
+L["Shift-click a row in the inbox to take that mail's attachments, and Ctrl-click to send it back to its sender, without opening the mail first. Returning a mail this way is not confirmed and cannot be undone."] = true

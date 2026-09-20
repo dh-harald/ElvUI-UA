@@ -11,6 +11,7 @@
 -- edgeSize=1 pattern, Chat.lua's own Kill()/tab-recolor recipe).
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 -- AceHook-3.0 -- a skin file's own OnShow re-apply hook (see Blizzard/
 -- Character.lua's own note on why one is needed) must go through
 -- :HookScript, not a bare HookScript call -- no reliably-present bare
@@ -3660,10 +3661,24 @@ function S:SkinChildren(frame, depth)
 				-- have the field's geometry (`MacroFrameTextBackground`) --
 				-- that's what gets `S:CreateField`, at the call site that
 				-- knows about it.
+				--
+				-- The ancestor walk is what makes this reliable: the box is
+				-- only sometimes a DIRECT child of the ScrollFrame
+				-- (`MacroFrameText`). `UIPanelScrollFrameTemplate` puts a
+				-- plain `$parentScrollChildFrame` holder in between
+				-- (`SendMailBodyEditBox`), and a parent-only check reads that
+				-- holder as an ordinary Frame and fields the box anyway -- a
+				-- second, smaller border inside the scroll frame's own.
+				local scrolled = false
+				local depth = 0
 				local okParent, parent = pcall(kid.GetParent, kid)
-				local okPType, pType = false, nil
-				if okParent and parent then okPType, pType = pcall(parent.GetObjectType, parent) end
-				if not (okPType and pType == "ScrollFrame") then
+				while not scrolled and okParent and parent and depth < 2 do
+					local okPType, pType = pcall(parent.GetObjectType, parent)
+					if okPType and pType == "ScrollFrame" then scrolled = true end
+					okParent, parent = pcall(parent.GetParent, parent)
+					depth = depth + 1
+				end
+				if not scrolled then
 					S:StyleEditBox(kid)
 				end
 			elseif kidType == "Button" and IsTabButton(kid, okName and kidName) then

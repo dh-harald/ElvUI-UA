@@ -14,7 +14,7 @@ local lib = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not lib then return end
 
-local _G = _G
+local _G = _G or getfenv()
 
 local pairs		= _G.pairs
 local type		= _G.type

@@ -18,6 +18,7 @@
 -- settings lookup key.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local UF = E.UnitFrames
 
 -- Settings: `P.unitframe.units.party` (Settings/Profile.lua) -- ONE shared

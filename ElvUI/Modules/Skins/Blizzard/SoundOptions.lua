@@ -54,6 +54,7 @@
 -- layout is customised on this server.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- The "Voice Chat Settings" grouping box. Its name is NOT from any

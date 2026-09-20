@@ -49,6 +49,7 @@
 -- client takes PickupContainerItem(-1, slot) in every direction.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local B = E:GetModule("Bags")
 local Util = ElvUI.Util
 local Compat = ElvUI.Compat

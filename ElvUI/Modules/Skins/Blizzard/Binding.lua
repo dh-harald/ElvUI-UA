@@ -62,6 +62,7 @@
 -- press-time texture reassignment cannot bring the art back.
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- Set by the addon itself; the literal is only a floor for the case where
