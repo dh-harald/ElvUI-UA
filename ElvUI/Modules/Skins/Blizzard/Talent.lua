@@ -16,7 +16,7 @@
 --   a different prefix) -- confirmed by TWO independent, already-working
 --   references handling exactly this split: pfUI's own
 --   `skins/blizzard/talents.lua` (`if PlayerTalentFrame then ... else
---   ... end`, a real addon shipped for "vanilla:tbc") and `source/
+--   ... end`, a real addon shipped for "vanilla:tbc") and `
 --   UnrealUI/modules/talents.lua`'s own `ResolveFrame()` (`G("PlayerTalentFrame")
 --   or G("TalentFrame")`, flagged there as unverified "WORKING_SOURCE
 --   evidence, not a runtime measurement"). Since both branches are
@@ -58,8 +58,8 @@
 --   `S:CreateField`: its visible content (`TalentFrameScrollChildFrame`,
 --   holding the 20 talent buttons, 30 branch-line textures and the
 --   30-arrow overlay frame) is a genuine `<ScrollChild>`, not an overlay
---   sibling -- matches the "safe" half of `docs/skins/recipes.md`'s own
---   scroll-frame-field rule. Its own two direct ARTWORK textures
+--   sibling, which is the case where wrapping a scroll frame in a field
+--   is safe. Its own two direct ARTWORK textures
 --   (decorative `UI-Character-ScrollBar` end-caps) get a plain
 --   non-recursive strip first.
 -- - `TalentFrameTalent1-20` (`TalentButtonTemplate`, inherits
@@ -108,7 +108,7 @@ local TALENT_BUTTON_COUNT = 20
 local TAB_COUNT = 5
 
 -- Real ElvUI's own numbers for this window (`Blizzard/Talent.lua`,
--- `source/ElvUI-vanilla`) -- pure padding choices against the real 1.12.1
+-- `ElvUI-vanilla`) -- pure padding choices against the real 1.12.1
 -- FrameXML geometry (384x512), which this window doesn't customise
 -- server-side.
 local PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM = 13, -12, -31, 76

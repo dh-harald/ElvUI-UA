@@ -76,7 +76,7 @@ _G[AddOnName] = Engine
 -- Vanilla ships Shaman in the same pink range as Paladin, which leaves the two
 -- indistinguishable in health bars, name text and chat colors; the blue below is
 -- the value Blizzard settled on later, and the one UnrealUI uses on this engine
--- (source/UnrealUI/core/media.lua:352).
+-- (UnrealUI/core/media.lua:352).
 --
 -- MUTATED IN PLACE, not replaced: several callers here hold `RAID_CLASS_COLORS`
 -- or one of its entries as a local (Modules/UnitFrames/UnitFrames.lua,

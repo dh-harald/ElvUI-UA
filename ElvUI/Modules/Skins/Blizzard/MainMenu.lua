@@ -4,7 +4,7 @@
 -- (never SetBackdrop the native frame itself), automatic sweep for the
 -- generic buttons.
 --
--- Real 1.12.1 structure, per `source/wow-ui-source/FrameXML/
+-- Real 1.12.1 structure, per `wow-ui-source/FrameXML/
 -- GameMenuFrame.xml`:
 -- - `GameMenuFrame` is core FrameXML, NOT a `## LoadOnDemand` AddOn like
 --   MacroFrame -- it exists from PLAYER_LOGIN, so this file needs no

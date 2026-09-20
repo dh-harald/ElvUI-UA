@@ -100,7 +100,7 @@ E.PopupDialogs["APPLY_FONT_WARNING"] = {
 }
 
 -- Top-level "General" category (real ElvUI: E.Options.args.general,
--- source/ElvUI-vanilla/ElvUI_Config/General.lua:24-29, order=1,
+-- ElvUI-vanilla/ElvUI_Config/General.lua:24-29, order=1,
 -- childGroups="tab" with many tabs -- general/colors/skins/chatBubbles/
 -- cooldown/etc.). Only "Cooldown Text" exists here so far -- the rest of
 -- that real tab set needs infrastructure (skins module, a colors system)
@@ -111,12 +111,11 @@ E.PopupDialogs["APPLY_FONT_WARNING"] = {
 -- ActionBars' own multi-child groups).
 --
 -- Cooldown Text fields/defaults matched to real ElvUI's own group
--- exactly (source/ElvUI-vanilla/ElvUI_Config/General.lua:589-659) --
+-- exactly (ElvUI-vanilla/ElvUI_Config/General.lua:589-659) --
 -- `enable` (private, reload-required), `threshold` (range -1..20,
 -- -1 = "never turn red"), and 5 `type = "color"` leaves (expiring/
 -- seconds/minutes/hours/days) -- the first real exercise of
--- LibConfig-1.0's color widget (source/LibConfig-1.0/LibConfig-1.0.lua).
--- Real ElvUI wires these 5
+-- LibConfig-1.0's color widget. Real ElvUI wires these 5
 -- colors via a GROUP-level get/set that each color leaf inherits
 -- (AceConfig's handler-fallback mechanism) -- LibConfig-1.0's RenderLeaf
 -- resolves get/set directly off the LEAF option table, with no such
@@ -294,14 +293,14 @@ E.Options.args.general = {
 					},
 				},
 				-- Matches real ElvUI's own general.general.GameLocale exactly
-				-- (source/ElvUI-vanilla/ElvUI_Config/General.lua:222, order 22,
+				-- (ElvUI-vanilla/ElvUI_Config/General.lua:222, order 22,
 				-- right after numberPrefixStyle) -- same arg key, same path, same
 				-- get/set on the bare global `GAME_LOCALE`, so a real profile's
 				-- options-tree expectations still hold. `name`/`desc` are this
 				-- project's OWN L[] keys rather than real ElvUI's "Change
 				-- Language" pair -- upstream itself only ever translated that
 				-- pair into German, leaving every other locale on plain English
-				-- (source/ElvUI-vanilla/ElvUI_Config/Locales/*_Config.lua), which
+				-- (ElvUI-vanilla/ElvUI_Config/Locales/*_Config.lua), which
 				-- would defeat the point of this control on the other four
 				-- shipped locales. `values` also isn't reused verbatim: upstream
 				-- lists 9 locales, this project ships translations for 6
@@ -446,8 +445,8 @@ E.Options.args.general = {
 		mirrortimers = {
 			type = "group",
 			name = L["Mirror Timers"],
-			-- Project extension (real ElvUI has this as a SKIN -- see
-			-- docs/roadmap.md). Ordered after every vanilla group so it
+			-- Project extension (real ElvUI has this as a SKIN instead).
+			-- Ordered after every vanilla group so it
 			-- cannot disturb their relative order.
 			order = 101,
 			args = {
@@ -598,7 +597,6 @@ E.Options.args.general = {
 				-- constraint is that UA resolves media paths CASE-SENSITIVELY
 				-- while the legacy client does not, so a mis-cased path works on
 				-- one client and silently resolves to nothing on the other.
-				-- See docs/api-diffs/media.md.
 				normTex = {
 					order = 11,
 					type = "select",

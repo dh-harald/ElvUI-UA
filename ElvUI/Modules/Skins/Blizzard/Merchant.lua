@@ -107,7 +107,7 @@ local S = E:GetModule("Skins")
 -- "tabs hang below the panel" shape as Character/Friends/SpellBook, so the
 -- panel must stop there, not cover the tabs. Left/top (10, -11) are real
 -- ElvUI's own numbers for this window (`Blizzard/Merchant.lua`,
--- `source/ElvUI-vanilla`) -- pure padding choices, not measured
+-- `ElvUI-vanilla`) -- pure padding choices, not measured
 -- boundaries, safely clear of the portrait (7,-6) and the first item slot
 -- (24,-80). No hit-rect fix needed, unlike QuestLogFrame: the discrepancy
 -- between the native hit rect and this inset is only a few px on two
@@ -120,9 +120,8 @@ local ITEM_SLOT_COUNT = 12
 -- child frame pinned to the frame's own base level, and at equal frame
 -- levels draw order falls back to draw LAYER -- so the panel covers these
 -- unless they are promoted. Same fix already proven on QuestLogFrame,
--- KeyBindingFrame and PetPaperDollFrame (`docs/skins/general.md` -> "A
--- base level csak a GYEREK FRAME-eket menti meg, a szülő SAJÁT régióit
--- nem").
+-- KeyBindingFrame and PetPaperDollFrame: a raised base frame level
+-- rescues child FRAMES only, never the parent's own regions.
 local PANEL_TEXTS = {
 	"MerchantNameText",
 	"MerchantPageText",
@@ -224,7 +223,7 @@ end
 -- instead of trying to reach the native region: the unnamed one cannot be
 -- resolved by name, and enumeration is not a usable substitute on this
 -- client -- `GetRegions()` on a native Button was measured to return ZERO
--- regions (`docs/api-diffs/widgets-frames.md`), so any "walk the regions
+-- regions, so any "walk the regions
 -- and crop the one icon" approach silently finds nothing and leaves the
 -- native icon rendering untouched, sprite-baked ornate frame and all.
 -- `DisableDrawLayer` is the right tool for the suppression half: a standing
@@ -239,9 +238,8 @@ end
 -- `MerchantRepairItemButton`'s `PushedTexture` (`UI-Quickslot-Depress`)
 -- renders permanently, not just while actually pressed
 -- (`GetPushedTexture():IsShown()` returned `true` at rest). Matches the
--- already-documented, general client fact
--- (`docs/api-diffs/widgets-frames.md` -> "`SetHighlightTexture` UA-n
--- FOLYAMATOSAN renderel"): highlight/pushed/checked state textures all
+-- already-measured, general client fact that a `SetHighlightTexture`
+-- renders CONTINUOUSLY on UA: highlight/pushed/checked state textures all
 -- ignore their normal show-only-while-active gating on this client, so
 -- any that would otherwise READ as a persistent extra border/tint have to
 -- be blanked outright rather than left to native state gating.

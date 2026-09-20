@@ -1,5 +1,5 @@
 -- Gold DataText -- faithful port of real ElvUI's own Gold.lua
--- (source/ElvUI-vanilla/ElvUI/Modules/DataTexts/Gold.lua), assigned to
+-- (ElvUI-vanilla/ElvUI/Modules/DataTexts/Gold.lua), assigned to
 -- RightChatDataPanel by default there (a panel this project doesn't
 -- build, see DataTexts.lua's own header) -- still ported since it's a
 -- generic, independently-selectable widget, usable on this project's own

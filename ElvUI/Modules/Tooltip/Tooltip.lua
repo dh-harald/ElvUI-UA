@@ -1,12 +1,12 @@
 -- Tooltip module -- port of real ElvUI's Modules/Tooltip/Tooltip.lua
--- (source/ElvUI-vanilla/), rebuilt around hook points that work on both
+-- (ElvUI-vanilla/), rebuilt around hook points that work on both
 -- clients.
 --
 -- Real ElvUI drives the unit rewrite from SecureHook(GameTooltip, "SetUnit")
 -- and its item additions from the other GameTooltip setters. On UA none of
 -- GameTooltip's content setters can be hooked: neither AceHook's
 -- object+method SecureHook nor replacing the method takes effect
--- (source/UnrealUI/modules/itemprice.lua measured a replaced setter never
+-- (UnrealUI/modules/itemprice.lua measured a replaced setter never
 -- running). This file uses only:
 --   * UPDATE_MOUSEOVER_UNIT for world units. Measured on UA: it fires on
 --     every mouseover-unit change, including a sweep between two overlapping
@@ -426,7 +426,7 @@ end
 -- The text is read from ElvUI.Util.UnitHealth (UnitHealth/UnitHealthMax, or
 -- the LibMobHealth-4.0 estimate for hostile units) of the unit last rewritten,
 -- not from the bar: on UA the bar's own GetValue/GetMinMaxValues report a
--- fixed 0-100 range (source/UnrealUI/modules/tooltip.lua). It is anchored by a
+-- fixed 0-100 range (UnrealUI/modules/tooltip.lua). It is anchored by a
 -- single CENTER point, because FontString:SetJustifyV does nothing on UA.
 -- SetFont is a no-op on UA and applies on the legacy client.
 function TT:SetupHealthBar()

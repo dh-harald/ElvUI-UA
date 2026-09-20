@@ -293,7 +293,7 @@ L["Comparison Font Size"] = "比较字体大小"
 L["This setting controls the size of text in item comparison tooltips."] = "设置对比框中的文字大小"
 
 --Chat
-L["Only the left/default chat window is docked and skinned -- the right panel exists (datatexts, mover, collapse icon all work) but nothing docks a second chat window into it. Message formatting (timestamps, URL links, keyword highlighting, spam throttle) applies project-wide, not just the docked window. Not implemented: chat history log/replay, hyperlink hover tooltips, channel-link click-to-switch -- see CLAUDE.md."] = "只有左侧/默认聊天窗口会被停靠和美化——右侧面板存在(信息文字、定位框、折叠图标均可用)但不会停靠第二个聊天窗口。消息格式化(时间戳、网址链接、关键字高亮、刷屏限制)作用于所有聊天窗口,不限于停靠窗口。未实现:聊天历史记录/回放、超链接悬停提示、频道链接点击切换——见 CLAUDE.md。"
+L["Only the left/default chat window is docked and skinned -- the right panel exists (datatexts, mover, collapse icon all work) but nothing docks a second chat window into it. Message formatting (timestamps, URL links, keyword highlighting, spam throttle) applies project-wide, not just the docked window. Not implemented: chat history log/replay, hyperlink hover tooltips, channel-link click-to-switch."] = "只有左侧/默认聊天窗口会被停靠和美化——右侧面板存在(信息文字、定位框、折叠图标均可用)但不会停靠第二个聊天窗口。消息格式化(时间戳、网址链接、关键字高亮、刷屏限制)作用于所有聊天窗口,不限于停靠窗口。未实现:聊天历史记录/回放、超链接悬停提示、频道链接点击切换。"
 L["Requires /reload."] = "需要 /reload。"
 L["URL Links"] = "网址链接"
 L["Attempt to create clickable URL links inside the chat."] = "尝试让聊天中的网址变成可点击链接。"
@@ -487,7 +487,7 @@ L["Name"] = "名称"
 L["Use Health Texture Backdrop"] = "生命条背景使用贴图"
 L["Draw the bar background with the statusbar texture instead of a flat fill."] = "条背景使用状态条贴图而不是纯色填充。"
 L["Portrait"] = "头像"
-L["Only real ElvUI's own fields (Enable/Style/Size/Overlay) -- see CLAUDE.md's \"UnitFrames\" section for the UA-specific research (SetCamera, etc.) behind why 3D looks right without any extra project-only knobs."] = "仅保留真实 ElvUI 的字段(启用/样式/大小/覆盖)——UA 专属研究(SetCamera 等)见 CLAUDE.md 的“UnitFrames”章节,说明了为何不加额外选项 3D 头像就能正常显示。"
+L["Only real ElvUI's own fields (Enable/Style/Size/Overlay) -- 3D portraits look right on this client without any extra project-only knobs."] = "仅保留真实 ElvUI 的字段(启用/样式/大小/覆盖)——在此客户端上,不加额外选项 3D 头像也能正常显示。"
 L["Only used when Overlay is off."] = "仅在“覆盖”关闭时使用。"
 L["Overlay"] = "覆盖"
 L["The portrait overlays the Health bar instead of sitting beside it."] = "头像覆盖在生命条上而不是位于其旁边。"
@@ -552,7 +552,7 @@ L["Shows the faction picked with the Character panel's Reputation tab > \"Show a
 
 --Maps
 L["Scale"] = "缩放"
-L["Note: the calendar icon was invisible near the minimap on UA (a frame-stacking issue, see CLAUDE.md) -- a fix was applied 2026-08-31 but isn't yet confirmed in-game."] = "注意:UA 上小地图旁的日历图标曾不可见(框架堆叠问题,见 CLAUDE.md)——已于 2026-08-31 修复,但尚未在游戏中确认。"
+L["Note: the calendar icon was invisible near the minimap on UA (a frame-stacking issue) -- a fix was applied but isn't yet confirmed in-game."] = "注意:UA 上小地图旁的日历图标曾不可见(框架堆叠问题)——已修复,但尚未在游戏中确认。"
 L["Map"] = "地图"
 L["World Map"] = "世界地图"
 L["Smaller World Map"] = "缩小世界地图"

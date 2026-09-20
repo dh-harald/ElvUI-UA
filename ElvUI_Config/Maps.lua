@@ -81,7 +81,7 @@ local function IconArgs(key, label, includeHide)
 		args.hideCalendar = {
 			type = "toggle",
 			name = L["Hide"],
-			desc = L["Note: the calendar icon was invisible near the minimap on UA (a frame-stacking issue, see CLAUDE.md) -- a fix was applied 2026-08-31 but isn't yet confirmed in-game."],
+			desc = L["Note: the calendar icon was invisible near the minimap on UA (a frame-stacking issue) -- a fix was applied but isn't yet confirmed in-game."],
 			order = 1,
 			get = function() return E.private.general.minimap.hideCalendar end,
 			set = function(_, value)

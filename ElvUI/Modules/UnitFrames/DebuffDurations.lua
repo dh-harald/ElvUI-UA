@@ -1,10 +1,10 @@
 -- Debuff duration lookup -- ported from pfUI's own libdebuff (Shagu's
--- addon, source/pfUI/libs/libdebuff.lua): a vanilla-native, quasi-standard
+-- addon, pfUI/libs/libdebuff.lua): a vanilla-native, quasi-standard
 -- solution for this exact problem. Real vanilla `UnitDebuff` has no duration/name at all on this
 -- API vintage (confirmed via UA's own docs too -- see UnitFrames.lua's
 -- own Debuffs section) -- pfUI's answer is a large extracted spell-name
 -- -> {rank: duration} table (below, ~930 entries, verbatim from
--- source/pfUI/env/locales_enUS.lua's own `["debuffs"]` table, English
+-- pfUI/env/locales_enUS.lua's own `["debuffs"]` table, English
 -- only, matching this project's existing no-AceLocale convention) plus a
 -- tooltip-scan to recover the debuff's NAME (which native UnitDebuff
 -- doesn't return either -- only icon/stacks/dispelType).

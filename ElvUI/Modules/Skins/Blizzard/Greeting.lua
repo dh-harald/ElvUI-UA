@@ -5,9 +5,8 @@
 -- (`Gossip.lua`) -- same visual shape, different native frame, and real
 -- ElvUI keeps them as two entirely separate files/flags (`Blizzard/
 -- Gossip.lua` vs `Blizzard/Greeting.lua`), which this project mirrors so
--- an imported profile's per-window toggles keep their real meaning. See
--- `docs/skins/windows/gossip.md` for the full three-flag breakdown
--- (`gossip`/`quest`/`greeting`).
+-- an imported profile's per-window toggles keep their real meaning. The
+-- three flags are `gossip`, `quest` and `greeting`, one per window.
 --
 -- Real 1.12.1 structure, per `FrameXML/QuestFrame.xml` and
 -- `QuestFrameTemplates.xml`. Not yet verified against the live client.
@@ -61,8 +60,8 @@ local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
--- Identical geometry to `GossipFrame`'s own panel insets
--- (`docs/skins/windows/gossip.md`): same 384x512 size, same
+-- Identical geometry to `GossipFrame`'s own panel insets: same 384x512
+-- size, same
 -- `HitRectInsets` (right=30, bottom=70), and
 -- `QuestFrameGreetingGoodbyeButton` anchored at the exact same
 -- `BOTTOMRIGHT -39,73` as `GossipFrameGreetingGoodbyeButton` -- so the

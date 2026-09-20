@@ -55,8 +55,8 @@
 --
 -- Fonts themselves are left completely alone, on purpose. `SetFont` is a
 -- confirmed no-op on this client and the `SetFontObject` route makes text
--- vanish outright (`docs/api-diffs/media.md`; `source/UnrealUI` measured
--- the same independently and also ships with the inherited native font as
+-- vanish outright (`UnrealUI` measured the same independently and
+-- also ships with the inherited native font as
 -- its default). `SetTextColor` is a different call and does work, so
 -- colour is the entire lever available here. Nothing in this file depends
 -- on font family or size, which keeps a later font pass separable.
@@ -449,8 +449,7 @@ local function ApplyQuestLogChrome(frame)
 	-- Catch-all pass -- picks up QuestLogFrameAbandonButton,
 	-- QuestFramePushQuestButton and QuestFrameExitButton, all three plain
 	-- UIPanelButtonTemplate (`QuestLogFrameAbandonButton`'s native art is
-	-- already confirmed present and correctly shaped on UA, see
-	-- `docs/api-diffs/widgets-frames.md`).
+	-- already confirmed present and correctly shaped on UA).
 	S:SkinChildren(frame)
 end
 

@@ -9,7 +9,6 @@
 -- mis-cased entry works on legacy and silently resolves to nothing on UA. That
 -- asymmetry is what once got mistaken for "custom textures don't render on UA"
 -- and for "LibSharedMedia doesn't work for statusbars" -- neither is true.
--- See docs/api-diffs/media.md.
 --
 -- Because the real ElvUI font and texture files ARE vendored, real ElvUI's own
 -- default media names resolve here -- "Homespun", "PT Sans Narrow",
@@ -17,7 +16,7 @@
 -- our own defaults have no reason to deviate on availability grounds.
 --
 -- Two things are NOT settled, and neither is an availability question:
---   * `SetFont` is a no-op on UA (docs/api-diffs/media.md), so a font CHANGE is
+--   * `SetFont` is a no-op on UA, so a font CHANGE is
 --     inert on that client regardless of what is registered here. Custom
 --     TEXTURES do render.
 --   * SOUND playback is unverified on this client. Sound file playback only

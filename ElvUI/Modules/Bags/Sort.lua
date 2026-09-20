@@ -1,6 +1,6 @@
 -- Bag sorting: the sort button in the header of the bag and bank windows.
 --
--- ENGINE: Bagzen's (source/Bagzen/Sort.lua), not real ElvUI's. Real ElvUI
+-- ENGINE: Bagzen's (Bagzen/Sort.lua), not real ElvUI's. Real ElvUI
 -- plans every move up front against a simulated copy of the bags and then
 -- replays that fixed list, so a single move the client refuses or resolves
 -- differently (a partial stack merge, a container rejecting the item) leaves

@@ -316,7 +316,7 @@ L["Comparison Font Size"] = true
 L["This setting controls the size of text in item comparison tooltips."] = true
 
 --Chat
-L["Only the left/default chat window is docked and skinned -- the right panel exists (datatexts, mover, collapse icon all work) but nothing docks a second chat window into it. Message formatting (timestamps, URL links, keyword highlighting, spam throttle) applies project-wide, not just the docked window. Not implemented: chat history log/replay, hyperlink hover tooltips, channel-link click-to-switch -- see CLAUDE.md."] = true
+L["Only the left/default chat window is docked and skinned -- the right panel exists (datatexts, mover, collapse icon all work) but nothing docks a second chat window into it. Message formatting (timestamps, URL links, keyword highlighting, spam throttle) applies project-wide, not just the docked window. Not implemented: chat history log/replay, hyperlink hover tooltips, channel-link click-to-switch."] = true
 L["Requires /reload."] = true
 L["URL Links"] = true
 L["Attempt to create clickable URL links inside the chat."] = true
@@ -510,7 +510,7 @@ L["Name"] = true
 L["Use Health Texture Backdrop"] = true
 L["Draw the bar background with the statusbar texture instead of a flat fill."] = true
 L["Portrait"] = true
-L["Only real ElvUI's own fields (Enable/Style/Size/Overlay) -- see CLAUDE.md's \"UnitFrames\" section for the UA-specific research (SetCamera, etc.) behind why 3D looks right without any extra project-only knobs."] = true
+L["Only real ElvUI's own fields (Enable/Style/Size/Overlay) -- 3D portraits look right on this client without any extra project-only knobs."] = true
 L["Only used when Overlay is off."] = true
 L["Overlay"] = true
 L["The portrait overlays the Health bar instead of sitting beside it."] = true
@@ -575,7 +575,7 @@ L["Shows the faction picked with the Character panel's Reputation tab > \"Show a
 
 --Maps
 L["Scale"] = true
-L["Note: the calendar icon was invisible near the minimap on UA (a frame-stacking issue, see CLAUDE.md) -- a fix was applied 2026-08-31 but isn't yet confirmed in-game."] = true
+L["Note: the calendar icon was invisible near the minimap on UA (a frame-stacking issue) -- a fix was applied but isn't yet confirmed in-game."] = true
 L["Map"] = true
 L["World Map"] = true
 L["Smaller World Map"] = true

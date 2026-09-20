@@ -5,14 +5,14 @@
 -- the generic controls.
 --
 -- SPECIAL CASE for this window: this project can normally read the real
--- 1.12.1 FrameXML (`source/wow-ui-source/FrameXML/SoundOptionsFrame.xml`)
+-- 1.12.1 FrameXML (`wow-ui-source/FrameXML/SoundOptionsFrame.xml`)
 -- as ground truth for a window's exact child names/nesting before writing
 -- a skin file. Here that doesn't apply -- this window's FrameXML has been
 -- customised on this server, so real vanilla's own
 -- 8-checkbox/4-slider/3-button, all-direct-children layout is only a
 -- rough guide, NOT the actual live structure: at minimum there's also a
 -- dropdown (real vanilla has none; only pfUI's TBC branch does, alongside
--- grouped sub-panels -- source/pfUI/skins/blizzard/options-sound.lua), and
+-- grouped sub-panels -- pfUI/skins/blizzard/options-sound.lua), and
 -- a distinct graphical box element not seen in any window skinned so far.
 --
 -- Consequences of not knowing the real structure up front:

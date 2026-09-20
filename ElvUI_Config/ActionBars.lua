@@ -53,7 +53,7 @@ local function BarArgs(id)
 			-- Genuinely reload-bound BY DESIGN, not an oversight: disabling a bar
 			-- routes through HideDisabledBar -> HideFrame, which permanently
 			-- overwrites button.Show as a defence against the native code
-			-- re-asserting it (docs/modules/actionbars.md). That is
+			-- re-asserting it. That is
 			-- irreversible within a session, so the popup is the honest answer.
 			set = function(_, value)
 				E.db.actionbar[key].enabled = value
@@ -194,7 +194,7 @@ E.Options.args.actionbar = {
 	order = 2,
 	-- "tree" (LibConfig-1.0's default, but explicit here for
 	-- clarity), NOT "tab" -- matches real ElvUI's own
-	-- E.Options.args.actionbar (source/ElvUI-vanilla/
+	-- E.Options.args.actionbar (ElvUI-vanilla/
 	-- ElvUI_Config/ActionBars.lua:773: `childGroups = "tree"`):
 	-- Bar 1-5/General sit as separate sidebar rows under
 	-- "ActionBars" in a real install, not as tabs on one page.
@@ -272,7 +272,7 @@ E.Options.args.actionbar = {
 						end
 					end,
 				},
-				-- The real ElvUI reference (source/ElvUI-vanilla/
+				-- The real ElvUI reference (ElvUI-vanilla/
 				-- ElvUI_Config/ActionBars.lua:41-46) does NOT
 				-- duplicate the Cooldown Text settings here --
 				-- it's just an "execute"-type shortcut button
@@ -286,7 +286,7 @@ E.Options.args.actionbar = {
 				-- jump-shortcut itself isn't reproduced -- a
 				-- lower-value nicety, not settings data.
 				-- Ported from real ElvUI's own "Fonts" group
-				-- (source/ElvUI-vanilla/ElvUI_Config/
+				-- (ElvUI-vanilla/ElvUI_Config/
 				-- ActionBars.lua:158-185), even though font size is
 				-- already a confirmed no-op via SetFont on UA --
 				-- wired up anyway since it costs nothing and may
@@ -395,7 +395,7 @@ E.Options.args.actionbar = {
 						set = function(_, value) E.db.actionbar.fontSize = value end,
 					},
 					-- Values matched to real ElvUI's own domain exactly
-					-- (source/ElvUI-vanilla/ElvUI_Config/
+					-- (ElvUI-vanilla/ElvUI_Config/
 					-- ActionBars.lua:174-185): NONE/OUTLINE/
 					-- MONOCHROMEOUTLINE/THICKOUTLINE -- NOT a bare
 					-- "MONOCHROME" (an earlier version of this list
@@ -428,7 +428,7 @@ E.Options.args.actionbar = {
 		bar5 = { type = "group", name = L["Bar "]..5, order = 7, args = BarArgs(5) },
 		-- Nested under "actionbar", NOT a separate top-level
 		-- category -- matches real ElvUI's own structure exactly
-		-- (source/ElvUI-vanilla/ElvUI_Config/ActionBars.lua:280:
+		-- (ElvUI-vanilla/ElvUI_Config/ActionBars.lua:280:
 		-- `group["barPet"] = {...}` inside the SAME `group =
 		-- E.Options.args.actionbar.args` table as general/bar1-5),
 		-- Pet Bar lives under ActionBars, below Bar 5, matching
@@ -551,7 +551,7 @@ E.Options.args.actionbar = {
 		},
 		-- Same nesting/data-location convention as barPet above --
 		-- matches real ElvUI's own `E.db.actionbar.barShapeShift`
-		-- exactly (source/ElvUI-vanilla/ElvUI/Settings/
+		-- exactly (ElvUI-vanilla/ElvUI/Settings/
 		-- Profile.lua:2823). `enabled` is a live profile field
 		-- here too, no reload needed.
 		-- `stanceBar`, not `barShapeShift`: real ElvUI's own CONFIG key

@@ -1,5 +1,5 @@
 -- XP Bar -- the "Experience" sub-feature of real ElvUI's DataBars module
--- (source/ElvUI-vanilla/ElvUI/Modules/DataBars/Experience.lua). Named
+-- (ElvUI-vanilla/ElvUI/Modules/DataBars/Experience.lua). Named
 -- XPBar.lua rather than Experience.lua, but the module OBJECT is the
 -- shared `E.DataBars` from DataBars.lua in this same folder, matching
 -- real ElvUI's actual structure (both files extend the same module).
@@ -17,7 +17,7 @@
 --
 -- Construction technique (the backdrop-anchor + inset-StatusBar shape,
 -- built via DataBars.lua's own M:CreateBar) is UnrealUI's, not real
--- ElvUI's, matching its own proven-on-UA xpbar.lua (source/UnrealUI/
+-- ElvUI's, matching its own proven-on-UA xpbar.lua (UnrealUI/
 -- modules/xpbar.lua). Real ElvUI's own construction (E:CreateBar in its
 -- DataBars.lua) needs E:SetInside/E:RegisterStatusBar/E.UIParent/
 -- E.media.normTex -- a Skins-module infrastructure this project doesn't
@@ -104,7 +104,7 @@ function M:UpdateExperience()
 	end
 
 -- Not in real ElvUI's own UpdateExperience despite the setting existing
-	-- there (source/ElvUI-vanilla/ElvUI_Config/DataBars.lua wires up a
+	-- there (ElvUI-vanilla/ElvUI_Config/DataBars.lua wires up a
 	-- "Hide in Combat" toggle that calls UpdateExperience() on change, but
 	-- the real UpdateExperience never actually checks it -- a real
 	-- incompleteness in the reference, not a deliberate feature).
@@ -126,7 +126,7 @@ function M:UpdateExperience()
 	-- at exactly 60 -- max<=0 already means "no more XP to gain," which
 	-- is exactly what hideAtMaxLevel is meant to catch, with no
 	-- assumption about what the cap actually is. Confirmed as the right
-	-- signal by UnrealUI's own xpbar.lua (source/UnrealUI/modules/
+	-- signal by UnrealUI's own xpbar.lua (UnrealUI/modules/
 	-- xpbar.lua:181-185), which uses the identical check.
 	-- STAY VISIBLE WHILE /moveui IS UNLOCKED: Core/Movers.lua parents a
 	-- mover's drag HANDLE as a CHILD of the frame it moves, so a
@@ -265,7 +265,7 @@ function M:LoadExperienceBar()
 	-- bar.statusBar, explicitly placed BEHIND it via frame level so it
 	-- reads as an extension past the current XP rather than an overlay
 	-- covering it -- ported from UnrealUI's own proven-on-UA technique
-	-- for this exact composite (source/UnrealUI/modules/xpbar.lua:118-132),
+	-- for this exact composite (UnrealUI/modules/xpbar.lua:118-132),
 	-- since relying on creation-order z-stacking alone is less explicit.
 	local rested = CreateFrame("StatusBar", nil, bar)
 	rested:SetPoint("TOPLEFT", bar, "TOPLEFT", 1, -1)
@@ -344,7 +344,7 @@ function M:LoadExperienceBar()
 	end
 
 	-- Fallback poll, matching UnrealUI's own xpbar.lua reasoning
-	-- (source/UnrealUI/modules/xpbar.lua:279-285): none of
+	-- (UnrealUI/modules/xpbar.lua:279-285): none of
 	-- UnitXP/UnitXPMax/GetXPExhaustion/PLAYER_XP_UPDATE/UPDATE_EXHAUSTION
 	-- have a confirmed runtime record on UA, so this polls every 2s
 	-- alongside the event registrations above as a safety net -- also

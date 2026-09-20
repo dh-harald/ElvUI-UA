@@ -1,5 +1,5 @@
 -- Misc module -- the catch-all real ElvUI keeps for small features that
--- don't earn a module of their own (source/ElvUI-vanilla/ElvUI/Modules/
+-- don't earn a module of their own (ElvUI-vanilla/ElvUI/Modules/
 -- Misc/). Ported so far: the solo loot window, the raid marker ring, the
 -- group loot roll bars, auto repair and interrupt announce, plus the colour
 -- picker replacement (real ElvUI keeps that one in Modules/Blizzard/, a

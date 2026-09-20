@@ -10,7 +10,7 @@
 -- First real use of `frame.unitDBKey` (UnitFrames.lua) -- real ElvUI's
 -- own schema configures every party member UNIFORMLY
 -- (`E.db.unitframe.units.party`, ONE table, not `.party1`.."party4"
--- separately, confirmed via source/ElvUI-vanilla/ElvUI_Config/
+-- separately, confirmed via ElvUI-vanilla/ElvUI_Config/
 -- UnitFrames.lua's `GetOptionsTable_Portrait(..., "party")` call) --
 -- but each frame still needs its OWN distinct unit token (`party1`
 -- .."party4") to read its own live unit data. `frame.unit` stays the

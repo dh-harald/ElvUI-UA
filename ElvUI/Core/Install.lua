@@ -19,7 +19,7 @@ local installStepComplete
 
 -- Small confirmation toast shown after a content page's action button
 -- runs (e.g. "CVars Set") -- ported from real ElvUI's own
--- InstallStepComplete (source/ElvUI-vanilla/.../install.lua:853-899),
+-- InstallStepComplete (ElvUI-vanilla/.../install.lua:853-899),
 -- reusing the LevelUpTex asset already vendored in this project
 -- (Media/Textures/LevelUpTex.blp). Plain Show()-then-delayed-Hide()
 -- instead of real ElvUI's UIFrameFadeOut -- matches this project's own
@@ -156,7 +156,7 @@ local function PositionOptionButtons(frame, count)
 end
 
 -- Ported from real ElvUI's own SetupCVars
--- (source/ElvUI-vanilla/.../install.lua:209-223), minus two items
+-- (ElvUI-vanilla/.../install.lua:209-223), minus two items
 -- deliberately dropped: `SetActionBarToggles(1, 0, 1, 1)` and
 -- `ALWAYS_SHOW_MULTIBARS = 1` both drive the exact native
 -- SHOW_MULTI_ACTIONBAR_* / MultiActionBar_Update machinery that was the
@@ -179,7 +179,7 @@ local function SetupCVars()
 end
 
 -- Values ported from real ElvUI's own SetupTheme
--- (source/ElvUI-vanilla/.../install.lua:229-266) -- `border`/`backdrop`
+-- (ElvUI-vanilla/.../install.lua:229-266) -- `border`/`backdrop`
 -- happen to share the SAME backdropcolor across all three real presets,
 -- so `dark` here intentionally does NOT match this project's own
 -- current shipped border tone ({0,0,0,1} -- see Settings/Profile.lua);
@@ -297,7 +297,7 @@ local function SetButtonUsable(button, usable)
 	end
 end
 
--- Real ElvUI's own SetupResolution (source/ElvUI-vanilla/.../
+-- Real ElvUI's own SetupResolution (ElvUI-vanilla/.../
 -- install.lua:280-370) is a GetScreenWidth()-driven rescale touching
 -- E.PixelMode/E:ResetMovers/E:CopyTable and raid/raid40/focus fields,
 -- none of which exist in this project. Rewritten small, touching only
@@ -393,7 +393,7 @@ local function SetupResolutionHigh()
 	ShowStepComplete(L["Resolution Style Set"])
 end
 
--- Real ElvUI's own SetupLayout (source/ElvUI-vanilla/.../
+-- Real ElvUI's own SetupLayout (ElvUI-vanilla/.../
 -- install.lua:372-630) is ~260 lines of per-resolution/per-pixel-mode
 -- mover strings plus raid/raid40/party/focus/GPSArrow/healPrediction/
 -- Clique references, none of which exist in this project (this
@@ -411,8 +411,7 @@ end
 -- there's only one branch to port, not four).
 --
 -- `bar2.enabled` and the castbar's own width/height stay reload-bound
--- (matches `ElvUI_Config`'s own current state for both fields -- see
--- the "Requires /reload" backlog, docs/roadmap.md) -- only the mover
+-- (matches `ElvUI_Config`'s own current state for both fields) -- only the mover
 -- repositions below are live via `E:ApplyMoverPosition`.
 local LAYOUT_PRESETS = {
 	tank = {
@@ -519,7 +518,7 @@ function E:SetupLayout(role)
 end
 
 -- Ported from real ElvUI's own SetupChat
--- (source/ElvUI-vanilla/.../install.lua:104-207) -- the message-group/
+-- (ElvUI-vanilla/.../install.lua:104-207) -- the message-group/
 -- channel setup on `ChatFrame1`/`ChatFrame2` only, native calls that
 -- don't depend on anything about how THIS project's own Chat module
 -- docks/positions windows. Deliberately dropped: opening a THIRD chat
@@ -641,11 +640,11 @@ local function SetupChat()
 end
 
 -- Ported from real ElvUI's own SetupAuras
--- (source/ElvUI-vanilla/.../install.lua:632-682) -- unit-frame-attached
+-- (ElvUI-vanilla/.../install.lua:632-682) -- unit-frame-attached
 -- buff/debuff ICONS only (`Modules/UnitFrames/UnitFrames.lua`'s own
 -- `Construct_Auras`/`UpdateAuras`), NOT the separate standalone Auras
--- module (a native BuffFrame replacement near the minimap,
--- `docs/modules/auras.md`) -- real ElvUI's own page offers "Icons Only"
+-- module (a native BuffFrame replacement near the minimap) -- real
+-- ElvUI's own page offers "Icons Only"
 -- vs "Aura Bar & Icons"; this project has no aura-BAR style at all, so
 -- only the icons choice exists, matching a single-button page like
 -- Welcome/Complete/CVars. Real ElvUI also sets `buffs.attachTo`/

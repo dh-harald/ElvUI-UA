@@ -1,7 +1,7 @@
 -- Misc > RaidMarker -- a ring of the eight raid target icons that opens at the
 -- cursor on the "Raid Marker" key binding (Bindings.xml) and puts the clicked
 -- icon on the current target; right-click clears the target's mark. Port of
--- real ElvUI's Modules/Misc/RaidMarker.lua (source/ElvUI-vanilla).
+-- real ElvUI's Modules/Misc/RaidMarker.lua (ElvUI-vanilla).
 --
 -- Where it differs from real ElvUI:
 --   * No permission check. The 1.12 FrameXML unit menu offers the same marks

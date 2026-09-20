@@ -8,7 +8,7 @@
 -- (RegisterPanel/RegisterDatatext), which works the same regardless of
 -- which panel a widget ends up on.
 --
--- Real module: source/ElvUI-vanilla/ElvUI/Modules/DataTexts/DataTexts.lua
+-- Real module: ElvUI-vanilla/ElvUI/Modules/DataTexts/DataTexts.lua
 -- (324 lines). Adapted for this project in a few places:
 --   - Tooltip: real ElvUI builds its OWN skinned "DatatextTooltip" frame
 --     via a Tooltip module (`TT:SetStyle`) this project doesn't have.
@@ -79,8 +79,7 @@ DT.PointLocation = {
 -- puts the ink centre 5.5px above the box centre.) That is why this project
 -- anchors by a single CENTER point instead of copying upstream's shape, which
 -- is `SetAllPoints` + `JustifyH`/`JustifyV` + `E:FontTemplate`
--- (`source/ElvUI-vanilla/.../DataTexts.lua`'s own `RegisterPanel`).
--- `docs/api-diffs/media.md`.
+-- (`ElvUI-vanilla/.../DataTexts.lua`'s own `RegisterPanel`).
 --
 -- 2.48 is the remaining font-box asymmetry, and the value below rounds it to
 -- a whole pixel to keep glyphs off half-pixel positions.

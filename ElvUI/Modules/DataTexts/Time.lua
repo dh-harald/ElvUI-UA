@@ -1,5 +1,5 @@
 -- Time DataText -- ported from real ElvUI's own Time.lua
--- (source/ElvUI-vanilla/ElvUI/Modules/DataTexts/Time.lua), with a
+-- (ElvUI-vanilla/ElvUI/Modules/DataTexts/Time.lua), with a
 -- DIFFERENT refresh strategy. `onUpdate` is driven by DataTexts.lua's own
 -- periodic 1-second timer, not a raw OnUpdate script (see that file's
 -- header for why), so one second is the finest tick available here.

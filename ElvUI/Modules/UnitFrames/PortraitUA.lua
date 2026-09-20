@@ -41,7 +41,7 @@ local OVERLAY_FILL_ALPHA = 0.65
 -- alpha, which does work on UA). Its background covers only the
 -- missing-health part, at the bar's own alpha, hiding the portrait there.
 --
--- source/UnrealUI/modules/unitframes.lua documents a crash from a 3D
+-- UnrealUI/modules/unitframes.lua documents a crash from a 3D
 -- PlayerModel portrait on UA; a standalone PlayerModel with
 -- SetUnit("player") renders correctly on current UA builds, so 3D is offered.
 function UF:Construct_Portrait(frame, size)

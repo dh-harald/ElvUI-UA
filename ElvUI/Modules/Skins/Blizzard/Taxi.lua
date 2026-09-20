@@ -41,7 +41,7 @@ local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- Real ElvUI's own numbers for this window (`Blizzard/Taxi.lua`,
--- `source/ElvUI-vanilla`) -- pure padding choices against the real 1.12.1
+-- `ElvUI-vanilla`) -- pure padding choices against the real 1.12.1
 -- FrameXML geometry (384x512, map at `TOP -13,-75` sized 316x352), which
 -- this window doesn't customise server-side.
 local PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM = 11, -12, -34, 75

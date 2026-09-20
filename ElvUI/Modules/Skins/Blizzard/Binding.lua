@@ -5,7 +5,7 @@
 -- controls.
 --
 -- **LoadOnDemand -- the second such window in this project.**
--- `source/wow-ui-source/AddOns/Blizzard_BindingUI/Blizzard_BindingUI.toc`
+-- `wow-ui-source/AddOns/Blizzard_BindingUI/Blizzard_BindingUI.toc`
 -- declares `## LoadOnDemand: 1`: until the player opens Key Bindings once,
 -- NOT A SINGLE `KeyBinding*` global exists, so a global search coming back
 -- empty is the normal state, not a bug. `S:WaitForGlobal` owns that wait

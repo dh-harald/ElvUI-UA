@@ -31,12 +31,12 @@
 -- Neither client exposes an addressable per-plate unit token on this API
 -- vintage (that's a TBC+ addition) -- a plate is just an anonymous child of
 -- WorldFrame. Real ElvUI-vanilla's own Modules/NamePlates/NamePlates.lua
--- (source/ElvUI-vanilla) discovers plates the same way: poll
+-- (ElvUI-vanilla) discovers plates the same way: poll
 -- WorldFrame:GetNumChildren()/GetChildren(), and recognize a genuine
 -- nameplate among the new children by its native border texture
 -- (`Interface\Tooltips\Nameplate-Border`). That check is ALSO how this
 -- module's discovery starts (ClassifyPlate below) -- but
--- source/UnrealUI/modules/nameplates.lua found, live on UA, that the
+-- UnrealUI/modules/nameplates.lua found, live on UA, that the
 -- border-texture check finds NOTHING there: UA's native plate doesn't carry
 -- that texture at all (some don't even have a health bar). UnrealUI's fix,
 -- ALSO ported here as the fallback: classify a WorldFrame child
@@ -53,7 +53,7 @@
 -- as this module's *data source* every refresh (there is no unit token to
 -- re-query instead). A real profile's motionType/threat/buffs/debuffs/
 -- castbar/comboPoints/style-filter machinery (real ElvUI's own
--- P.nameplates.units[...] per-unit-type schema, source/ElvUI-vanilla's own
+-- P.nameplates.units[...] per-unit-type schema, ElvUI-vanilla's own
 -- Settings/Profile.lua:202+) is DELIBERATELY NOT attempted this pass.
 
 local E, L, V, P, G = unpack(ElvUI)
@@ -69,7 +69,7 @@ E.NamePlates = NP
 
 -- ---------------------------------------------------------------------
 -- Small call helpers -- ported from UnrealUI's own defensive pattern
--- (source/UnrealUI/modules/nameplates.lua:171-199): every native plate
+-- (UnrealUI/modules/nameplates.lua:171-199): every native plate
 -- part is touched through a pcall, since a WorldFrame child that turns
 -- out not to be a plate at all must never error the scan.
 -- ---------------------------------------------------------------------
@@ -350,7 +350,7 @@ end
 -- region/child tree, through pcall-wrapped closures, on EVERY 0.1s tick --
 -- this freezes the client. Repeated pcall+closure allocation across many
 -- objects, many times a second, is a known stutter/freeze risk on this
--- engine (also documented in source/UnrealUI's own comments) -- exactly
+-- engine (also documented in UnrealUI's own comments) -- exactly
 -- what an unthrottled full re-walk does once WorldFrame's child count is
 -- more than trivial.
 --

@@ -21,8 +21,7 @@ local E, L, V, P, G = unpack(ElvUI)
 -- custom addon-shipped file (Media/Textures/normTex2), and custom
 -- addon-shipped textures DO render on UA as long as the path's character case
 -- matches the file exactly -- a mis-cased path is the silent UA-only failure
--- that was once mistaken for "custom textures don't render there". See
--- docs/api-diffs/media.md.
+-- that was once mistaken for "custom textures don't render there".
 --
 -- `glossTex` is additionally what `E:SetTemplate`'s third argument switches a
 -- backdrop's `bgFile` over to, and where every action-button backdrop's subtle

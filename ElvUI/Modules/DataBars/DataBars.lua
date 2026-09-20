@@ -5,7 +5,7 @@
 --
 -- Kept as a SEPARATE file from XPBar.lua/ReputationBar.lua, in its own
 -- Modules/DataBars/ folder, deliberately mirroring real ElvUI's own actual
--- file layout (source/ElvUI-vanilla/ElvUI/Modules/DataBars/{DataBars,
+-- file layout (ElvUI-vanilla/ElvUI/Modules/DataBars/{DataBars,
 -- Experience,Reputation}.lua), rather than folding everything into one
 -- flat Modules/XPBar.lua file the way this project's other single-feature
 -- modules (Minimap.lua, WorldMap.lua) are written.
@@ -23,7 +23,7 @@ E.DataBars = M
 -- Skins-module infrastructure this project doesn't have yet, same gap
 -- already noted for WorldMap/ActionBars). Frame CONSTRUCTION technique
 -- (backdrop anchor + inset StatusBar) instead follows UnrealUI's own
--- proven-on-UA xpbar.lua (source/UnrealUI/modules/xpbar.lua) --
+-- proven-on-UA xpbar.lua (UnrealUI/modules/xpbar.lua) --
 -- everything else (field names, defaults, settings, formatting, event
 -- list) comes from real ElvUI instead.
 --

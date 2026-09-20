@@ -1,5 +1,5 @@
 -- Avoidance DataText -- faithful port of real ElvUI's own Avoidance.lua
--- (source/ElvUI-vanilla/ElvUI/Modules/DataTexts/Avoidance.lua).
+-- (ElvUI-vanilla/ElvUI/Modules/DataTexts/Avoidance.lua).
 
 local E, L, V, P, G = unpack(ElvUI)
 local DT = E.DataTexts

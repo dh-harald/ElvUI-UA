@@ -50,7 +50,7 @@
 --   `<Button name="TradeSkillSkill1">` block sits under `TradeSkillFrame`'s
 --   own `<Frames>`, not inside the scroll frame's `<ScrollChild>`, because
 --   a Faux scroll frame has no `<ScrollChild>` at all). Same trap
---   `docs/skins/recipes.md` already documents for `QuestLogFrame`: a field
+--   `QuestLogFrame` already hit: a field
 --   surface placed directly on the scroll frame would sit ABOVE the scroll
 --   frame's own base level but BELOW these sibling row buttons only by
 --   accident, and would visibly cover them the moment that accident
@@ -72,7 +72,7 @@
 --   `hooksecurefunc(TradeSkillCollapseAllButton, "SetNormalTexture", fn)`)
 --   CANNOT be ported as-is.** Two independent, already-documented UA
 --   facts both apply here: `hooksecurefunc` is not even a global function
---   on this client at all (`docs/api-diffs/hooks-events.md`), AND even
+--   on this client at all, AND even
 --   its AceHook-3.0 replacement's OBJECT+METHOD 3-arg overload
 --   (`:SecureHook(obj, "method", handler)`, the shape this recipe needs)
 --   is a separately-confirmed dead end. Replaced with this project's own
@@ -132,7 +132,7 @@ local TRADE_SKILL_ROW_COUNT = 25
 local REAGENT_COUNT = 8
 
 -- Real ElvUI's own numbers for this window (`Blizzard/TradeSkill.lua`,
--- `source/ElvUI-vanilla`), already tuned against the SAME 720x508 resize
+-- `ElvUI-vanilla`), already tuned against the SAME 720x508 resize
 -- and 25-row list.
 local PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM = 10, -12, -34, 0
 local LIST_LEFT, LIST_TOP, LIST_RIGHT, LIST_BOTTOM = 14, -92, -367, 4
@@ -172,7 +172,7 @@ local function SetRankBarColor()
 end
 
 -- `TradeSkillFrame_SetSelection` is a bare global function -- the
--- confirmed-safe hook shape (`docs/api-diffs/hooks-events.md`). Re-crops
+-- confirmed-safe hook shape on this client. Re-crops
 -- the recipe icon (a bare Button with no inherited border template) and
 -- colours its border by the crafted item's quality. Reagent slots keep the
 -- merchant-style black border (`S:StyleQuestItemSlot`).

@@ -8,8 +8,8 @@
 -- why that key now holds a LIST, not a single function). The
 -- `QuestFrameGreetingPanel` sub-panel is NOT here -- real ElvUI keeps it as
 -- its own separate flag/file too (`greeting`, `Greeting.lua`), already
--- written; see `docs/skins/windows/gossip.md` for the full three-flag
--- breakdown this project mirrors.
+-- written. The three flags this project mirrors are `gossip`, `quest`
+-- and `greeting`, one per window.
 --
 -- Real 1.12.1 structure, per `FrameXML/QuestFrame.xml` and
 -- `QuestFrameTemplates.xml`. Not yet verified against the live client.
@@ -32,8 +32,7 @@
 --   Accept/Decline/Complete/Cancel/Goodbye buttons across all three panels
 --   anchor at the same `BOTTOMRIGHT -39,72/73` / `BOTTOMLEFT 22/23,72`
 --   shape as Gossip's/Greeting's own Goodbye button, so the same measured
---   8px-below-the-button margin applies (73 - 8 = 65 -- see
---   `docs/skins/windows/gossip.md`).
+--   8px-below-the-button margin applies (73 - 8 = 65).
 -- - **Text colour is load-bearing here too, same reason as QuestLog and
 --   Greeting**: every quest-dialogue FontString inherits
 --   `QuestFont`/`QuestTitleFont`, black by default. UNLIKE Gossip's
@@ -71,8 +70,8 @@ local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
--- Identical geometry to Gossip's/Greeting's own panel insets
--- (`docs/skins/windows/gossip.md`): same 384x512 size, same
+-- Identical geometry to Gossip's/Greeting's own panel insets: same
+-- 384x512 size, same
 -- `HitRectInsets` (right=30, bottom=70), same bottom-button placement, so
 -- the same measured 8px-below-the-button margin applies: 73 - 8 = 65.
 local PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM = 15, -11, -30, 65
@@ -169,8 +168,8 @@ end
 -- entering/leaving the player's bags while the frame is already open).
 -- `QuestFrameProgressItems_Update` is the Progress panel's own equivalent.
 -- Wrapped by reassigning the global directly, NOT `hooksecurefunc` --
--- confirmed not a real global function on this client
--- (`docs/api-diffs/hooks-events.md`) -- same technique already proven in
+-- confirmed not a real global function on this client -- same
+-- technique already proven in
 -- this project by `QuestLog.lua`'s own `WrapQuestLogUpdate`.
 local questFrameUpdatesWrapped = false
 local function WrapQuestFrameUpdates()

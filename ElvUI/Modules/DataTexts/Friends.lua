@@ -1,5 +1,5 @@
 -- Friends DataText -- SIMPLIFIED port of real ElvUI's own Friends.lua
--- (source/ElvUI-vanilla/ElvUI/Modules/DataTexts/Friends.lua).
+-- (ElvUI-vanilla/ElvUI/Modules/DataTexts/Friends.lua).
 -- Deliberately dropped: the right-click invite/whisper/set-AFK-DND
 -- dropdown menu (same reasoning as Guild.lua -- needs
 -- `L_UIDropDownMenuTemplate`/`L_EasyMenu`, untested on UA, a nice-to-have

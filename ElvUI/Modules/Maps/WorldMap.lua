@@ -1,6 +1,6 @@
 -- World Map module.
 --
--- Real ElvUI's own WorldMap.lua (source/ElvUI-vanilla/ElvUI/Modules/Maps/
+-- Real ElvUI's own WorldMap.lua (ElvUI-vanilla/ElvUI/Modules/Maps/
 -- WorldMap.lua) does two things: a player/cursor coordinate readout
 -- (CONFIRMED WORKING in-game -- see CreateCoordsHolder/Refresh below) and
 -- "Smaller World Map" (ApplySmallerWorldMap below -- untested). Its own
@@ -11,7 +11,7 @@
 -- here.
 --
 -- UA construction pattern for the coordinate readout deliberately copied
--- from UnrealUI's OWN worldmap.lua (source/UnrealUI/modules/worldmap.lua),
+-- from UnrealUI's OWN worldmap.lua (UnrealUI/modules/worldmap.lua),
 -- not real ElvUI's -- UnrealUI documents a client-specific rendering bug:
 -- "a bare addon FontString child can report shown,
 -- positioned and opaque throughout the first fullscreen-map presentation

@@ -30,7 +30,7 @@ end
 -- Reputation Bar (Modules/DataBars/ReputationBar.lua) --
 -- same three set-function targets as the XP bar above, mirroring real
 -- ElvUI_Config/DataBars.lua's own "reputation" group
--- (source/ElvUI-vanilla/ElvUI_Config/DataBars.lua:143-245).
+-- (ElvUI-vanilla/ElvUI_Config/DataBars.lua:143-245).
 local function UpdateReputationDimensions()
 	if E.DataBars and E.DataBars.UpdateReputationDimensions then
 		E.DataBars:UpdateReputationDimensions()
@@ -50,7 +50,7 @@ local function EnableDisableReputationBar()
 end
 
 -- DataBars: real ElvUI's own top-level category
--- (E.Options.args.databars, source/ElvUI-vanilla/ElvUI_Config/
+-- (E.Options.args.databars, ElvUI-vanilla/ElvUI_Config/
 -- DataBars.lua:12-17, childGroups="tab" with "experience"/
 -- "reputation" tabs). Both tabs exist here --
 -- "reputation" was added alongside Modules/DataBars/
@@ -58,7 +58,7 @@ end
 -- "Show as Experience Bar" checkbox actually do something.
 -- Field names/order numbers matched to real ElvUI_Config/
 -- DataBars.lua's own groups exactly
--- (source/ElvUI-vanilla/ElvUI_Config/DataBars.lua:29-245).
+-- (ElvUI-vanilla/ElvUI_Config/DataBars.lua:29-245).
 E.Options.args.databars = {
 	type = "group",
 	name = L["DataBars"],
@@ -253,7 +253,7 @@ E.Options.args.databars = {
 		},
 		-- Reputation tab -- field names/order numbers matched to
 		-- real ElvUI_Config/DataBars.lua's own "reputation" group
-		-- (source/ElvUI-vanilla/ElvUI_Config/DataBars.lua:143-245).
+		-- (ElvUI-vanilla/ElvUI_Config/DataBars.lua:143-245).
 		-- Identical to the XP tab above minus "Hide At Max Level"
 		-- (no such field for reputation in the reference either).
 		reputation = {

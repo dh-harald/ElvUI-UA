@@ -1,5 +1,5 @@
 -- Reputation Bar -- the "Reputation" sub-feature of real ElvUI's DataBars
--- module (source/ElvUI-vanilla/ElvUI/Modules/DataBars/Reputation.lua).
+-- module (ElvUI-vanilla/ElvUI/Modules/DataBars/Reputation.lua).
 -- Named ReputationBar.lua rather than Reputation.lua to match this
 -- folder's own XPBar.lua naming, but the module OBJECT is the shared
 -- `E.DataBars` from DataBars.lua, exactly like XPBar.lua.
@@ -93,7 +93,7 @@ local function StandingLabel(reaction)
 end
 
 -- Every named piece of Blizzard's native reputation watch bar, from the
--- real 1.12.1 FrameXML (source/wow-ui-source/FrameXML/
+-- real 1.12.1 FrameXML (wow-ui-source/FrameXML/
 -- ReputationFrame.xml). Listed INDIVIDUALLY, parent first, because Hide() on the
 -- parent doesn't reliably take its children down on UA (see this file's
 -- header):

@@ -7,7 +7,7 @@ local E, L, V, P, G = unpack(ElvUI)
 -- real names for `P.unitframe.units.X.buffs`, but the standalone module's
 -- own `P["auras"].buffs` uses `wrapAfter`/`maxWraps`/`horizontalSpacing`/
 -- `verticalSpacing` (verified against
--- source/ElvUI-vanilla/ElvUI/Settings/Profile.lua:504-536 and its own
+-- ElvUI-vanilla/ElvUI/Settings/Profile.lua:504-536 and its own
 -- ElvUI_Config/Auras.lua). Ranges/labels/descs follow real ElvUI's own
 -- Auras config file.
 --

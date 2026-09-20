@@ -1,7 +1,7 @@
 -- Skins > Blizzard > Trainer -- reskins the native class/profession trainer
 -- window (ClassTrainerFrame) in place, resized to a two-pane "doublewide"
 -- layout like TradeSkill.lua and Craft.lua. Port of real ElvUI's
--- `Blizzard/Trainer.lua` (source/ElvUI-vanilla); its numbers are used unless
+-- `Blizzard/Trainer.lua` (ElvUI-vanilla); its numbers are used unless
 -- noted otherwise.
 --
 -- Structure per `AddOns/Blizzard_TrainerUI/Blizzard_TrainerUI.xml`/`.lua` and

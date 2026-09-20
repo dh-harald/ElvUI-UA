@@ -2,9 +2,9 @@
 --
 -- Registers the AceConfig-format options table with LibConfig-1.0 (not
 -- AceGUI-3.0/AceConfigDialog-3.0 -- those are known broken on Unreal
--- Azeroth, see source/LibConfig-1.0/README.md). Every option `name`/`desc`
--- goes through AceLocale (`L["..."]`, English text as the key), declared in
--- ElvUI_Config/Locales/enUS.lua under the same "ElvUI" application as the core
+-- Azeroth). Every option `name`/`desc` goes through AceLocale (`L["..."]`,
+-- English text as the key), declared in ElvUI_Config/Locales/enUS.lua under
+-- the same "ElvUI" application as the core
 -- addon's strings; only English is shipped, but a translation file is a
 -- drop-in addition rather than a sweep.
 --
@@ -14,7 +14,7 @@
 --
 -- The "Map" tab's checkbox is a DELIBERATE placeholder: there is no
 -- WorldMap module yet (only Minimap exists so far, see
--- target/ElvUI/Modules/Minimap.lua), so its get/set are dummy -- it
+-- ElvUI/Modules/Maps/Minimap.lua), so its get/set are dummy -- it
 -- renders and can be clicked, but doesn't read or change anything real
 -- yet. Wire it to a real DB key once a WorldMap module exists.
 --
@@ -86,7 +86,7 @@ LC:RegisterOptionsTable("ElvUI", "ElvUI", E.Options)
 --
 -- Upstream also has `ElvUI_Header` (needs an E.version this project does not
 -- define), `LoginMessage` (the DB field exists but nothing reads it -- a control
--- there would be an invented setting, see docs/config.md rule 5) and
+-- there would be an invented setting) and
 -- `ToggleTutorial` (no tutorials module here). Those three stay out.
 --
 -- Both toggles CLOSE the config, which upstream's Install button also does:

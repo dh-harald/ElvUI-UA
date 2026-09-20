@@ -5,7 +5,7 @@
 -- real 1.12.1 layout survive on this server -- the live, detected
 -- structure has to be used instead (the UA version has a tab strip,
 -- sliders, checkboxes and a dropdown menu). So the real 1.12.1 file
--- (source/wow-ui-source/FrameXML/OptionsFrame.xml) is used ONLY to know
+-- (wow-ui-source/FrameXML/OptionsFrame.xml) is used ONLY to know
 -- which TEMPLATES exist in this family; every structural decision below is
 -- made from what the frame reports about itself at runtime.
 --
@@ -145,7 +145,7 @@ end
 -- Wraps a panel around a page's boxes instead of around the page itself.
 -- Only used on the screen-sized branch -- see `ApplyVideoOptionsChrome`.
 -- Offsets are real ElvUI's own for this window family
--- (source/ElvUI-vanilla/ElvUI/Modules/Skins/Blizzard/Misc.lua:287-290), the
+-- (ElvUI-vanilla/ElvUI/Modules/Skins/Blizzard/Misc.lua:287-290), the
 -- same ones Blizzard/UIOptions.lua uses: 35px of headroom above the first
 -- box, because that band is where the box's own title FontString sits.
 local function PanelAroundBoxes(page, boxes)

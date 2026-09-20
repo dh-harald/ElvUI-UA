@@ -10,7 +10,7 @@
 -- skin file self-contained, built from proven primitives" convention
 -- (Skins.lua's own header comment).
 --
--- Real 1.12.1 structure, per `source/wow-ui-source/FrameXML/
+-- Real 1.12.1 structure, per `wow-ui-source/FrameXML/
 -- SpellBookFrame.xml`/`.lua`:
 -- - `SpellBookFrameTabButton1-3`: the outer book-type tabs (Spellbook /
 --   Pet). ONLY 1 and 2 are ever actually used in real vanilla --
@@ -274,7 +274,7 @@ local function StyleSpellButton(button)
 	-- the button, since it never gets resized along with everything else
 	-- this skin changes. The native template gives it a FIXED
 	-- `<Size> 60x60` anchored `CENTER`
-	-- (source/wow-ui-source/FrameXML/SpellBookFrame.xml:121-133), a number
+	-- (wow-ui-source/FrameXML/SpellBookFrame.xml:121-133), a number
 	-- picked to sit on top of the native 64x64 `$parentBackground` slot art
 	-- -- which this skin HIDES. With that art gone the button reads as its
 	-- true 37x37 footprint plus our 1px border, and a fixed 60x60 centered
@@ -284,7 +284,7 @@ local function StyleSpellButton(button)
 	-- it is the fix: stop letting the overlay have its own size, anchor it
 	-- OUTSIDE the button on all four sides --
 	-- `E:SetOutside(_G["SpellButton"..i.."AutoCastable"], button, 16, 16)`
-	-- (source/ElvUI-vanilla/ElvUI/Modules/Skins/Blizzard/SpellBook.lua:63).
+	-- (ElvUI-vanilla/ElvUI/Modules/Skins/Blizzard/SpellBook.lua:63).
 	-- `E:SetOutside` is just the two-corner anchor pair
 	-- (`TOPLEFT -x,+y` / `BOTTOMRIGHT +x,-y`, Core/toolkit.lua:74-86), which
 	-- this project already uses everywhere, so it ports 1:1 with no helper
@@ -354,7 +354,7 @@ end
 -- "Prev"/"Next" labels next to the page arrows -- removed since the
 -- arrows are self-explanatory. UNNAMED BACKGROUND-layer FontStrings
 -- declared directly on each page button (confirmed in
--- `source/wow-ui-source/FrameXML/SpellBookFrame.xml`), killed by
+-- `wow-ui-source/FrameXML/SpellBookFrame.xml`), killed by
 -- `S:KillButtonLabel` (`Skins.lua` -- hoisted there once Merchant.lua
 -- needed the identical recipe for its own page-nav buttons).
 
@@ -479,7 +479,7 @@ local function ApplyChrome(frame)
 	InstallSpellBookHooks()
 
 	-- Mouse-wheel paging -- matches real ElvUI's own reference exactly
-	-- (source/ElvUI-vanilla/ElvUI/Modules/Skins/Blizzard/SpellBook.lua) --
+	-- (ElvUI-vanilla/ElvUI/Modules/Skins/Blizzard/SpellBook.lua) --
 	-- a pure behavior addition (not chrome), low risk, only pages the
 	-- SPELL book (native `SpellBookFrame.bookType` check), never touches
 	-- the Pet book's own paging.

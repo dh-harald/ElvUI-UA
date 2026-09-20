@@ -1,5 +1,5 @@
 -- System DataText (FPS/latency) -- faithful port of real ElvUI's own
--- System.lua (source/ElvUI-vanilla/ElvUI/Modules/DataTexts/System.lua).
+-- System.lua (ElvUI-vanilla/ElvUI/Modules/DataTexts/System.lua).
 -- `onUpdate` driven by DataTexts.lua's periodic 1s timer, `t` always `1`
 -- -- see DataTexts.lua's header comment for why.
 

@@ -1,6 +1,6 @@
 -- Misc > LootRoll -- group loot Need/Greed/Pass as one horizontal bar per item
 -- under a movable holder, replacing the native GroupLootFrame1-4. Port of real
--- ElvUI's Modules/Misc/LootRoll.lua (source/ElvUI-vanilla). Switch:
+-- ElvUI's Modules/Misc/LootRoll.lua (ElvUI-vanilla). Switch:
 -- E.private.general.lootRoll; auto-greed: E.db.general.autoRoll.
 --
 -- A bar shows the item icon (tooltip, Ctrl dress-up, Shift link to chat), the

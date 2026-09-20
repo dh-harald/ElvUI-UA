@@ -55,7 +55,7 @@ local S = E:GetModule("Skins")
 
 -- Left/top/right measured off the native, unmodified 384x512 frame -- real
 -- ElvUI's own numbers for those three (`Blizzard/Gossip.lua`,
--- `source/ElvUI-vanilla`) apply directly since this window is never
+-- `ElvUI-vanilla`) apply directly since this window is never
 -- resized, unlike QuestLogFrame. The native `HitRectInsets` (right=30,
 -- bottom=70) already exclude the dead area on the right edge and are left
 -- untouched there.

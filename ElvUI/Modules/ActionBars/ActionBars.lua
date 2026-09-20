@@ -1,7 +1,7 @@
 -- ActionBars module.
 --
 -- Re-skins native action buttons IN PLACE -- matching real ElvUI's own
--- approach (source/ElvUI-vanilla/ElvUI/Modules/ActionBars/ActionBars.lua):
+-- approach (ElvUI-vanilla/ElvUI/Modules/ActionBars/ActionBars.lua):
 -- these are secure/protected buttons, so we template/skin the EXISTING
 -- globals, never create new button widgets. A new plain container frame
 -- per bar (NOT a secure template) is created and each bar's buttons are
@@ -415,7 +415,7 @@ local function StyleButton(button, showGrid)
 	-- live config toggle that CAN legitimately change between sweeps).
 	if icon and not button.elvIconStyled then
 		-- 0.08/0.92 matches real ElvUI's own default E.TexCoords exactly
-		-- (source/ElvUI-vanilla/ElvUI/Core/core.lua) -- crops off the
+		-- (ElvUI-vanilla/ElvUI/Core/core.lua) -- crops off the
 		-- rounded-corner border baked into every stock WoW icon texture.
 		pcall(icon.SetTexCoord, icon, 0.08, 0.92, 0.08, 0.92)
 		icon.SetTexCoord = E.noop
@@ -534,7 +534,7 @@ end
 --
 -- `backdrop` toggles only an optional BACKGROUND PANEL behind the row of
 -- buttons (real ElvUI: a SEPARATE `bar.backdrop` child region, shown/
--- hidden independently -- source/ElvUI-vanilla/ElvUI/Modules/ActionBars/
+-- hidden independently -- ElvUI-vanilla/ElvUI/Modules/ActionBars/
 -- ActionBars.lua) -- it has nothing to do with whether the BAR ITSELF
 -- (and every button parented to it) is visible. Since real ElvUI's own
 -- per-bar defaults have `backdrop = false` for bar1/2/3/5 (only bar4
@@ -725,7 +725,7 @@ function M:Initialize()
 
 	-- Explicit both ways (matches real ElvUI's own
 	-- `LOCK_ACTIONBAR = (self.db.lockActionBars == true and "1" or "0")`,
-	-- source/ElvUI-vanilla/ElvUI/Modules/ActionBars/ActionBars.lua:268) --
+	-- ElvUI-vanilla/ElvUI/Modules/ActionBars/ActionBars.lua:268) --
 	-- only setting the "true" branch would leave a stale "1" in place if
 	-- the global ever started that way, since disabling the option would
 	-- then never clear it back to "0" without a fresh client start.
@@ -823,7 +823,7 @@ function M:Initialize()
 	-- SpellBookFrame calls it 3x per open, and it re-shows a disabled
 	-- multibar's buttons (same object each time, confirmed via identity
 	-- check -- not a native re-create) regardless of our override. Real
-	-- 1.12.1's own SpellBookFrame.lua (source/wow-ui-source) never touches
+	-- 1.12.1's own SpellBookFrame.lua (wow-ui-source) never touches
 	-- action bars at all, so this is UA-only native behavior, not
 	-- anything reachable from this project's own code. `self.bars[id]` is
 	-- nil for a disabled bar, so neither PositionBars nor

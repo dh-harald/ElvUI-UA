@@ -15,7 +15,7 @@
 -- Data lives under `P.actionbar.barPet` / `E.db.actionbar.barPet`, NOT a
 -- separate top-level `petbar` table: this nests Pet Bar under ActionBars
 -- in the config sidebar, and matches real ElvUI's own source, which
--- nests the DATA the same way, not just the config UI (source/
+-- nests the DATA the same way, not just the config UI (
 -- ElvUI-vanilla/ElvUI_Config/ActionBars.lua reads/writes
 -- `E.db.actionbar.barPet[...]` directly, and `enabled` there is a live
 -- PROFILE field, not a private reload-required one -- matching this
@@ -25,7 +25,7 @@
 -- `AB:PositionAndSizeBarPet` (scale-to-0 trick when disabled) rather than
 -- only-checked-at-login.
 --
--- Real ElvUI's own module (source/ElvUI-vanilla/ElvUI/Modules/
+-- Real ElvUI's own module (ElvUI-vanilla/ElvUI/Modules/
 -- ActionBars/BarPet.lua) hooks Blizzard's pet-action state (icon
 -- texture, checked/autocast state) via its own `AB:UpdatePet()`, fired on
 -- UNIT_PET/UNIT_FLAGS/UNIT_AURA/PET_BAR_UPDATE(_COOLDOWN)/
@@ -57,7 +57,7 @@ local PREFIX = "PetActionButton"
 -- buttons do). Empty-slot visibility is handled separately, at the BAR
 -- level, by ApplyShowGrid() below -- native pet slots use their own
 -- counter-based PetActionBar_ShowGrid()/PetActionBar_HideGrid() pair
--- (source/wow-ui-source/FrameXML/PetActionBarFrame.lua), not the
+-- (wow-ui-source/FrameXML/PetActionBarFrame.lua), not the
 -- per-button ActionButton_ShowGrid() regular action buttons use.
 
 -- The pet button's grey, bevelled Blizzard frame (UI-Quickslot2, larger than
@@ -221,7 +221,7 @@ end
 -- A thin white/gold border appears on `PetActionBarFrame` specifically
 -- during combat, pet-attack-related. The culprit: `SlidingActionBarTexture0`/
 -- `1`, two native Texture regions directly on `PetActionBarFrame`
--- (identified via source/UnrealUI/modules/petbar.lua, which solves the
+-- (identified via UnrealUI/modules/petbar.lua, which solves the
 -- identical client element). Critically, the hide must be re-applied on
 -- EVERY UNIT_PET/PET_BAR_UPDATE/PLAYER_ENTERING_WORLD event, not just
 -- once at login: PET_BAR_UPDATE fires when the pet attacks, and native
@@ -279,7 +279,7 @@ end
 
 -- Checked-state refresh (Aggressive/Defensive/Passive stance,
 -- Follow/Stay behavior -- slots 2/3/8/9/10, "isActive" per
--- source/UnrealAzeroth_LuaAPI/en/globals/Pet.md's own documented
+-- UnrealAzeroth_LuaAPI/en/globals/Pet.md's own documented
 -- GetPetActionInfo return shape: `name, subtext, texture, isToken,
 -- isActive, autoCastAllowed, autoCastEnabled`).
 --

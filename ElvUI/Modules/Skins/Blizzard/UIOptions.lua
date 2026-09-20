@@ -139,7 +139,7 @@ local function AnchorPageChrome(frame, panel)
 	end
 
 	-- Okay hangs off Cancel rather than off the panel, matching real ElvUI's
-	-- own line for this exact window (source/ElvUI-vanilla/ElvUI/Modules/
+	-- own line for this exact window (ElvUI-vanilla/ElvUI/Modules/
 	-- Skins/Blizzard/Misc.lua:232-233).
 	local cancel = _G.UIOptionsFrameCancel
 	if cancel then
@@ -212,7 +212,7 @@ local function StylePage(frame, page)
 	end
 
 	-- THE PANEL WRAPS THE BOXES, NOT THE PAGE. Straight from real ElvUI's
-	-- own recipe for this exact window (source/ElvUI-vanilla/ElvUI/Modules/
+	-- own recipe for this exact window (ElvUI-vanilla/ElvUI/Modules/
 	-- Skins/Blizzard/Misc.lua:287-290): it parents a backdrop frame to
 	-- `BasicOptions` but anchors it from the FIRST group box to the LAST,
 	-- not to the page. The reason is visible in any screenshot of this
@@ -281,7 +281,7 @@ end
 -- effect.
 --
 -- `SetParent(UIParent)` is also what real ElvUI does, as the very first line
--- of its own Interface Options block (source/ElvUI-vanilla/ElvUI/Modules/
+-- of its own Interface Options block (ElvUI-vanilla/ElvUI/Modules/
 -- Skins/Blizzard/Misc.lua:261). Confirmed live before being written:
 -- the window closed on the call, and reopened at normal size and STAYED
 -- there -- the client does not put the parent back -- so the guard below is
@@ -356,7 +356,7 @@ local function ApplyInterfaceOptionsChrome(frame)
 				-- FrameXML confirms why -- this window declares its close
 				-- button as a bare `<Button inherits="UIPanelCloseButton">`
 				-- with no `name` attribute at all
-				-- (source/wow-ui-source/FrameXML/UIOptionsFrame.xml:1477),
+				-- (wow-ui-source/FrameXML/UIOptionsFrame.xml:1477),
 				-- unlike every other window this project has skinned, where
 				-- the close button is named and styled by name.
 				--

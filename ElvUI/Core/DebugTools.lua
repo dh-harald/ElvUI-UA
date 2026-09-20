@@ -1,6 +1,6 @@
 -- DebugTools: an ElvUI-styled Lua error window, the counterpart of real
 -- ElvUI's DebugTools module together with its "Debug Tools" skin
--- (source/ElvUI-vanilla/ElvUI/Modules/Misc/DebugTools.lua and
+-- (ElvUI-vanilla/ElvUI/Modules/Misc/DebugTools.lua and
 -- Modules/Skins/Blizzard/Debug.lua). Real ElvUI-vanilla ships a separately
 -- packaged backport of Blizzard_DebugTools and styles its ScriptErrorsFrame;
 -- here the whole window is built from frames this file creates, so no

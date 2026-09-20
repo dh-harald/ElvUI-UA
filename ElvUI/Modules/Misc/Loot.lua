@@ -1,5 +1,5 @@
 -- Solo loot replacement window, a file of the Misc module -- ported from
--- real ElvUI's own Modules/Misc/Loot.lua (source/ElvUI-vanilla/), itself
+-- real ElvUI's own Modules/Misc/Loot.lua (ElvUI-vanilla/), itself
 -- already Lua-5.0/1.12.1-clean: bare `arg1`/`arg2` globals instead of event
 -- payload args, `table.getn` instead of `#`, no `...`/`%` anywhere.
 --

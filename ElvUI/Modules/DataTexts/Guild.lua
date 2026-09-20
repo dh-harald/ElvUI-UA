@@ -1,5 +1,5 @@
 -- Guild DataText -- SIMPLIFIED port of real ElvUI's own Guild.lua
--- (source/ElvUI-vanilla/ElvUI/Modules/DataTexts/Guild.lua). Deliberately
+-- (ElvUI-vanilla/ElvUI/Modules/DataTexts/Guild.lua). Deliberately
 -- dropped: the right-click invite/whisper dropdown menu (needs
 -- `L_UIDropDownMenuTemplate`/`L_EasyMenu`, untested on UA, and is a
 -- nice-to-have interaction shortcut, not core display functionality) --

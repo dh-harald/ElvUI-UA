@@ -7,7 +7,7 @@
 -- `scripts/check-config.lua` exists to do.
 --
 -- Field names and shapes follow real ElvUI's own
--- source/ElvUI-vanilla/ElvUI/Settings/Profile.lua. That matters more than
+-- ElvUI-vanilla/ElvUI/Settings/Profile.lua. That matters more than
 -- the values: AceDB-3.0 omits any field equal to its registered default
 -- when writing SavedVariables, so an imported real profile is SPARSE, and
 -- every key we spell differently silently falls back to our own value.
@@ -77,7 +77,6 @@ P.movers = {}
 -- NAMES this field, it registers a callback that receives the hex, so a grep
 -- for `valuecolor` finds every other consumer (movers, chat tab text, skin
 -- mouseover borders, Microbar and Bags highlights) but none of the data texts.
--- Full account in docs/roadmap.md.
 --
 -- `bottomPanel` is the Layout module's bottom screen strip. There is
 -- deliberately NO `topPanel` key: real ElvUI does not declare one either,
@@ -330,7 +329,7 @@ P.actionbar.barShapeShift = {
 --
 -- The 8x4 / 8x2 grids deviate from real ElvUI's 12x3 / 12x1 (whitelisted).
 -- The client's own buff index is 0-47, slots 0-31 helpful and 32-47 harmful
--- (source/UnrealAzeroth_LuaAPI/en/globals/Buff.md), so 32 buff and 16
+-- (UnrealAzeroth_LuaAPI/en/globals/Buff.md), so 32 buff and 16
 -- debuff cells cover every slot that can exist while keeping both displays
 -- narrow (8*32 + 7*6 = 298px) instead of one enormous row.
 P.auras = {
@@ -372,7 +371,7 @@ P.auras = {
 -- Bags
 -- ---------------------------------------------------------------------
 -- Taken verbatim from real ElvUI's own `P["bags"]`
--- (source/ElvUI-vanilla/ElvUI/Settings/Profile.lua:101-165), including keys
+-- (ElvUI-vanilla/ElvUI/Settings/Profile.lua:101-165), including keys
 -- nothing reads yet. Two deliberate exceptions, both marked below:
 -- `split.bag11` and the `cooldown` sub-table.
 P.bags = {
@@ -530,7 +529,7 @@ P.chat = {
 -- DataBars (Experience, Reputation)
 -- ---------------------------------------------------------------------
 -- `width`/`height`/`orientation`/`font` and `enable = true` all deviate
--- from real ElvUI's values (whitelisted -- see docs/modules/databars.md).
+-- from real ElvUI's values, deliberately.
 -- "PT Sans Narrow" isn't registered in this project's trimmed
 -- LibSharedMedia, and both bars ship visible because the native watch bars
 -- they replace are hidden outright.
@@ -625,7 +624,7 @@ P.nameplates = {
 	width = 150,
 	healthHeight = 10,
 	-- Real ElvUI's own default reaction palette
-	-- (source/ElvUI-vanilla/ElvUI/Settings/Profile.lua:239-245), verbatim.
+	-- (ElvUI-vanilla/ElvUI/Settings/Profile.lua:239-245), verbatim.
 	reactions = {
 		friendlyPlayer = {r = 0.31, g = 0.45, b = 0.63},
 		tapped = {r = 0.6, g = 0.6, b = 0.6},
@@ -639,7 +638,7 @@ P.nameplates = {
 -- Tooltip
 -- ---------------------------------------------------------------------
 -- Real ElvUI's `P["tooltip"]` verbatim
--- (source/ElvUI-vanilla/ElvUI/Settings/Profile.lua:631). Keys the module
+-- (ElvUI-vanilla/ElvUI/Settings/Profile.lua:631). Keys the module
 -- does not read yet are still declared, so an imported profile keeps them.
 -- The text font keys are applied by the Tooltip module's `SetTooltipFonts`,
 -- the `healthBar` font keys by its `ApplyHealthBarSettings`.
@@ -814,7 +813,7 @@ P.unitframe.units.player = {
 		attachTextTo = "Health",
 	},
 	-- Real ElvUI's own exact field set for a portrait: enable/width/style/
-	-- overlay (source/ElvUI-vanilla/ElvUI_Config/UnitFrames.lua's
+	-- overlay (ElvUI-vanilla/ElvUI_Config/UnitFrames.lua's
 	-- GetOptionsTable_Portrait) -- no alpha/model-scale fields, the working
 	-- overlay on UA needs SetCamera(0), not extra settings.
 	portrait = {

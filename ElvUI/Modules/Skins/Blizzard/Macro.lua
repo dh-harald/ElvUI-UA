@@ -7,7 +7,7 @@
 -- S:HandleScrollBar for anything already covered by a shared helper.
 --
 -- **LoadOnDemand, unlike every other window skinned so far.**
--- `source/wow-ui-source/AddOns/Blizzard_MacroUI/Blizzard_MacroUI.toc`
+-- `wow-ui-source/AddOns/Blizzard_MacroUI/Blizzard_MacroUI.toc`
 -- declares `## LoadOnDemand: 1` -- `MacroFrame`/`MacroPopupFrame` do NOT
 -- exist at PLAYER_LOGIN, only once the player actually opens Macros for
 -- the first time in the session (micro-button click or `/macro`, which
@@ -21,7 +21,7 @@
 -- See `S:WaitForGlobal` for why it is event + poll rather than either
 -- alone.
 --
--- Real 1.12.1 structure, per `source/wow-ui-source/AddOns/
+-- Real 1.12.1 structure, per `wow-ui-source/AddOns/
 -- Blizzard_MacroUI/Blizzard_MacroUI.xml`:
 -- - `MacroFrameSelectedMacroButton` (id 0), `MacroButton1-18` (`MAX_MACROS`),
 --   and `MacroPopupButton1-20` (`NUM_MACRO_ICONS_SHOWN`) ALL inherit the

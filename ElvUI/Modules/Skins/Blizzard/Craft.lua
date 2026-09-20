@@ -1,7 +1,7 @@
 -- Skins > Blizzard > Craft -- reskins the native craft window (CraftFrame:
 -- Enchanting, and a hunter's Beast Training) in place, resized to the same
 -- two-pane "doublewide" layout as TradeSkill.lua. Port of real ElvUI's
--- `Blizzard/Craft.lua` (source/ElvUI-vanilla), which is that window's
+-- `Blizzard/Craft.lua` (ElvUI-vanilla), which is that window's
 -- TradeSkill skin minus the controls CraftFrame does not have (filter
 -- dropdowns, Create All, quantity stepper).
 --

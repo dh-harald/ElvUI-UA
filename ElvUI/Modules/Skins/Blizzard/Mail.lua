@@ -46,7 +46,7 @@ local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- Real ElvUI's own insets for this window (`Blizzard/Mail.lua`,
--- source/ElvUI-vanilla): clear of the portrait, stopping above the tab row
+-- ElvUI-vanilla): clear of the portrait, stopping above the tab row
 -- that hangs below the frame.
 local PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM = 10, -12, -30, 74
 local OPEN_LEFT, OPEN_TOP, OPEN_RIGHT, OPEN_BOTTOM = 12, -12, -34, 74

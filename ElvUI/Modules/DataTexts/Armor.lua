@@ -1,5 +1,5 @@
 -- Armor DataText -- faithful port of real ElvUI's own Armor.lua
--- (source/ElvUI-vanilla/ElvUI/Modules/DataTexts/Armor.lua).
+-- (ElvUI-vanilla/ElvUI/Modules/DataTexts/Armor.lua).
 
 local E, L, V, P, G = unpack(ElvUI)
 local DT = E.DataTexts

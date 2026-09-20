@@ -86,7 +86,7 @@ end
 
 -- DataTexts (Modules/DataTexts/*.lua) -- real ElvUI's
 -- own top-level category (E.Options.args.datatexts,
--- source/ElvUI-vanilla/ElvUI_Config/DataTexts.lua). Scoped down to
+-- ElvUI-vanilla/ElvUI_Config/DataTexts.lua). Scoped down to
 -- what this project actually has: minimapTop/
 -- minimapTopLeft/etc. (real ElvUI has 8 possible minimap-adjacent
 -- panel slots -- this project only builds LeftMiniPanel/

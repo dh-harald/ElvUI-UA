@@ -4,8 +4,8 @@
 -- The operation set and its semantics follow AceDBOptions-3.0's own profile
 -- panel (new / choose / copyfrom / reset / delete), because that is the panel
 -- every Ace3 addon shows and therefore the one a user already knows. The
--- LIBRARY itself is not used -- it is deliberately not vendored here (see
--- docs/architecture.md), and it only knows how to drive a real AceDB database
+-- LIBRARY itself is not used -- it is deliberately not vendored here, and
+-- it only knows how to drive a real AceDB database
 -- object, which this project does not have (below).
 --
 -- NOT built on AceDB-3.0's own runtime API (`:New()`/`:SetProfile()`/
@@ -172,7 +172,7 @@ function E:DeleteProfile(key)
 end
 
 -- Export/Import -- lets a real ElvUI-vanilla profile (exported via ITS OWN
--- "Export as Lua Table" option, source/ElvUI-vanilla/ElvUI/Core/
+-- "Export as Lua Table" option, ElvUI-vanilla/ElvUI/Core/
 -- distributor.lua's `exportFormat == "luaTable"` branch) be pasted into
 -- this addon. Deliberately the SIMPLE plain-Lua-table format, not real
 -- ElvUI's OTHER "text" export option (AceSerializer+LibCompress+

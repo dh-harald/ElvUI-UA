@@ -1,6 +1,6 @@
 -- Auras -- the SEPARATE, standalone replacement for the native BuffFrame/
 -- DebuffFrame, matching real ElvUI's own actual architecture
--- (source/ElvUI-vanilla/ElvUI/Modules/Auras/Auras.lua, `E:NewModule
+-- (ElvUI-vanilla/ElvUI/Modules/Auras/Auras.lua, `E:NewModule
 -- ("Auras", ...)`). This is a genuinely DIFFERENT thing from
 -- UnitFrames.lua's own Construct_Auras/UpdateAuras (which attach a small
 -- icon grid to a specific unit frame, including the player's) -- real
@@ -40,7 +40,7 @@
 -- correctness risk -- can be revisited if asked for specifically.
 --
 -- Fade threshold + text color + expiring-icon flash. Real ElvUI has this
--- field (`E.db.auras.fadeThreshold`, real default 5, source/
+-- field (`E.db.auras.fadeThreshold`, real default 5, 
 -- ElvUI-vanilla/ElvUI/Settings/Profile.lua) and its config description
 -- literally says the icon fades as the duration nears the threshold --
 -- BUT the actual flash CALLS in real Modules/Auras/Auras.lua are
@@ -256,7 +256,7 @@ local function KillNativeBuffFrame()
 	-- frame's own buttons are `BuffButton1..23` in one continuous run:
 	-- 1-16 helpful (`BuffButtonTemplate`) and 17-23 harmful
 	-- (`BuffButtonHarmful`, `DEBUFF_MAX_DISPLAY = 7`), confirmed in
-	-- source/wow-ui-source/FrameXML/BuffFrame.xml / BuffFrame.lua. Parent
+	-- wow-ui-source/FrameXML/BuffFrame.xml / BuffFrame.lua. Parent
 	-- visibility does NOT reliably propagate to children on UA, so this
 	-- loop over the real button names, not just `BuffFrame:Hide()` above,
 	-- is what actually covers every child on this client.
@@ -446,7 +446,7 @@ function A:CreateAuraHeader(name, auraType)
 	header.auraType = auraType
 
 	-- Matches real ElvUI's own trigger event exactly
-	-- (source/ElvUI-vanilla/ElvUI/Modules/Auras/Auras.lua:
+	-- (ElvUI-vanilla/ElvUI/Modules/Auras/Auras.lua:
 	-- `header:RegisterEvent("PLAYER_AURAS_CHANGED")`). `this`, not a
 	-- passed `self` -- vanilla script-handler convention, established
 	-- project-wide.

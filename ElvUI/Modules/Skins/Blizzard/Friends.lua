@@ -7,7 +7,7 @@
 -- S:MakeDraggable (hoisted from Character.lua this same round, see
 -- Skins.lua's own comments on each).
 --
--- Real 1.12.1 FrameXML confirmed (source/wow-ui-source/FrameXML/
+-- Real 1.12.1 FrameXML confirmed (wow-ui-source/FrameXML/
 -- FriendsFrame.xml): FriendsFrame has exactly 4 outer tabs --
 -- FriendsFrameTab1-4, text FRIENDS/WHO/GUILD/RAID. Each inherits FriendsFrameTabTemplate ->
 -- CharacterFrameTabButtonTemplate, the SAME 6-piece Left/Middle/Right(+
@@ -32,9 +32,9 @@
 -- content (explicit scope cut, not an oversight).
 --
 -- ******************************************************************
--- source/UnrealUI crash claims -- LIVE-TESTED, READ FIRST
+-- UnrealUI crash claims -- LIVE-TESTED, READ FIRST
 -- ******************************************************************
--- source/UnrealUI/modules/friends.lua (an existing, independently-coded
+-- UnrealUI/modules/friends.lua (an existing, independently-coded
 -- UA addon that already skins this exact frame) documents crash claims
 -- for touching two things this file also touches. Both were tested live
 -- on the real build instead of taken on faith (UnrealUI has separately
@@ -123,7 +123,7 @@ end
 -- from real ElvUI's own Modules/Skins/Blizzard/Friends.lua Who-frame
 -- block, rebuilt on this project's own primitives. `WhoFrameButton<i>`
 -- rows ARE touched directly here (Level/Class/Name text re-anchored, see
--- LayoutWhoRows) -- unlike Friends/Ignore rows, source/UnrealUI never
+-- LayoutWhoRows) -- unlike Friends/Ignore rows, UnrealUI never
 -- claimed a crash for these, and repositions the same three regions itself. Deliberately NOT calling `S:HandleButtonHighlight` on
 -- these rows though -- that's not an UnrealUI claim, it's this project's
 -- own live-confirmed regression (permanently-grey, unselectable rows on
@@ -137,7 +137,7 @@ end
 -- back to class FILE NAME via `LOCALIZED_CLASS_NAMES_MALE`/`_FEMALE`, for
 -- a class-icon-crop + class-color feature real ElvUI's own Friends.lua
 -- has: both globals do not exist ANYWHERE in real 1.12.1 at all
--- (confirmed: zero hits in the entire source/wow-ui-source tree; traced
+-- (confirmed: zero hits in the entire wow-ui-source tree; traced
 -- to patch 10.1.7, Dragonflight) -- real vanilla's own `WhoList_Update`
 -- (FrameXML/FriendsFrame.lua:253-325) never shows a class icon at all,
 -- just plain text. Class-color for the Who tab is picked up separately,
@@ -184,7 +184,7 @@ end
 -- header. Natively both rows run Name, Zone, Level, Class -- left that way
 -- under reordered headers, the level numbers sit under the zone header.
 --
--- Called again from each list's update hook: source/UnrealUI records that on
+-- Called again from each list's update hook: UnrealUI records that on
 -- UA WhoList_Update puts the native row anchors back on every refresh.
 local function LayoutClassRows(prefix, count, levelX)
 	local i
@@ -216,7 +216,7 @@ local function ApplyWhoChrome()
 
 	-- Column order is Level/Class/Name/Zone (header3/4/1/2), NOT 1/2/3/4
 	-- left-to-right -- matches real ElvUI's own exact reordering, and
-	-- independently matches source/UnrealUI's own structurally-different
+	-- independently matches UnrealUI's own structurally-different
 	-- implementation reaching the same order -- strong cross-validated
 	-- signal this is the correct native anchor chain, not a guess.
 	if WhoFrameColumnHeader3 then
@@ -365,7 +365,7 @@ end
 -- specifically so it inherits that confidence, rather than improvising
 -- something new and unverified.
 --
--- SCOPE CUT, matching source/UnrealUI's own precedent for this exact
+-- SCOPE CUT, matching UnrealUI's own precedent for this exact
 -- window (its own comment: the Guild Control rank/permission editor
 -- popup is left native as a separate admin/raid subsystem, not the
 -- roster itself): `GuildControlPopupFrame` (rank/permission editor,
@@ -631,7 +631,7 @@ local function ApplyGuildChrome()
 	-- level-difficulty color + zone green-highlight -- same recipe as
 	-- Who's own `WhoList_Update` hook, ported to Guild's dual-mode update
 	-- function. `GetGuildRosterInfo` signature CONFIRMED against
-	-- `source/UnrealAzeroth_LuaAPI/en/globals/Guild.md`:
+	-- `UnrealAzeroth_LuaAPI/en/globals/Guild.md`:
 	-- name, rankName, rankIndex, level, class, zone, publicNote,
 	-- officerNote, online, status -- matches real ElvUI's own destructure
 	-- exactly (it just doesn't capture the trailing `status`).
@@ -705,7 +705,7 @@ end
 -- ---------------------------------------------------------------------
 -- Raid tab: a base only, to be tested and extended later. `RaidFrame`
 -- confirmed a genuine child of FriendsFrame
--- (`source/wow-ui-source/FrameXML/RaidFrame.xml:40`,
+-- (`wow-ui-source/FrameXML/RaidFrame.xml:40`,
 -- `parent="FriendsFrame"` explicit, even though declared in its own
 -- file) -- same SUB_FRAMES shape as Who/Guild, already reached by the
 -- outer recursive strip.
@@ -718,7 +718,7 @@ end
 --
 -- DELIBERATELY NOT ATTEMPTED: the actual raid ROSTER GRID
 -- (`RaidGroupButton<i>`, `RaidGroup<i>` + its 5 member slots). Confirmed
--- via `source/wow-ui-source/AddOns/Blizzard_RaidUI/Blizzard_RaidUI.toc`
+-- via `wow-ui-source/AddOns/Blizzard_RaidUI/Blizzard_RaidUI.toc`
 -- (`LoadOnDemand: 1`) that this is a GENUINELY SEPARATE, lazily-loaded
 -- addon -- its own templates (`RaidGroupButtonTemplate`/
 -- `RaidGroupTemplate`) are virtual, only instantiated by native code once
@@ -726,14 +726,14 @@ end
 -- nor "wait for the dynamic instances to exist" has an established
 -- pattern in this project yet, and this needs both. Real ElvUI's own
 -- reference doesn't handle the lazy-load boundary explicitly either (it
--- assumes the globals already exist); source/UnrealUI's own version uses
+-- assumes the globals already exist); UnrealUI's own version uses
 -- its own `HookAddonOrVariable("Blizzard_RaidUI", ...)` helper, which
 -- this project has no equivalent of. Picking this up needs its own
 -- dedicated investigation (how/when do `RaidGroupButton1`-style globals
 -- actually appear on THIS client -- addon-load event, or only once
 -- `GetNumRaidMembers() > 0`, or both), not a guess bolted onto this
 -- round. `GetRaidRosterInfo` IS already confirmed against
--- `source/UnrealAzeroth_LuaAPI/en/globals/Raid.md` for whenever this is
+-- `UnrealAzeroth_LuaAPI/en/globals/Raid.md` for whenever this is
 -- picked up -- notably it returns the class FILE NAME directly (5th
 -- value), no `string.upper()` trick needed there unlike Who/Guild.
 -- ---------------------------------------------------------------------
@@ -783,7 +783,7 @@ end
 -- `IsInGuild()` is the authoritative test, and not a guess: it is the
 -- exact one Blizzard's own `ToggleFriendsFrame` uses to make this tab a
 -- no-op ("If not in a guild don't do anything when they try to toggle
--- the guild tab" -- source/wow-ui-source/FrameXML/FriendsFrame.lua:750),
+-- the guild tab" -- wow-ui-source/FrameXML/FriendsFrame.lua:750),
 -- and the one `InGuildCheck()` drives `PanelTemplates_DisableTab` from.
 -- pcall'd like every native call in this project; if it ever failed we
 -- fall back to `S:StyleTab`'s own inference rather than forcing a state.

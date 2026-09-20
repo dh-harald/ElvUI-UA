@@ -10,13 +10,13 @@
 -- for eventual real-profile compatibility) -- but the actual RENDERING
 -- primitives are custom, built from pieces already proven working on UA
 -- elsewhere in this project, plus one new one (Util.CreateStatusBar,
--- Core/Util.lua) stolen from source/UnrealUI/modules/unitframes.lua's own
+-- Core/Util.lua) stolen from UnrealUI/modules/unitframes.lua's own
 -- proven-on-UA hand-rolled status bar technique.
 --
 -- SECOND PASS: port over every setting related to the character frame and
 -- try to implement it, ahead of copying a real profile onto this
 -- character. Real ElvUI's actual Player unit frame
--- (source/ElvUI-vanilla/ElvUI/Modules/UnitFrames/{UnitFrames,Units/
+-- (ElvUI-vanilla/ElvUI/Modules/UnitFrames/{UnitFrames,Units/
 -- Player,Elements/{Health,Power,Name,Portrait,RestingIndicator,
 -- CombatIndicator}}.lua) is genuinely enormous -- pixel-perfect
 -- BORDER/SPACING/portrait/classbar-offset layout math, detached/inset/
@@ -83,7 +83,7 @@ end
 -- be redundant with, and could confusingly override, that granularity.
 -- ---------------------------------------------------------------------
 -- Tag substitution -- a small subset of real ElvUI's own tag DSL
--- (source/ElvUI-vanilla/ElvUI/Modules/UnitFrames/Tags.lua), not the
+-- (ElvUI-vanilla/ElvUI/Modules/UnitFrames/Tags.lua), not the
 -- whole thing. `[tagname]` inside a text_format string is replaced by
 -- its resolved value; unknown tags resolve to "". Pattern-based, not a
 -- live `%` arithmetic operator, so this is Lua-5.0-parse-safe (see
@@ -187,7 +187,7 @@ function UF:Construct_HealthBar(frame, height)
 	-- Text sits on a raised child layer above the bar -- the fill is a
 	-- sibling texture whose width changes every refresh, and text on the
 	-- SAME layer can end up drawn behind it (UnrealUI's own documented
-	-- reason for this same construction, source/UnrealUI/modules/
+	-- reason for this same construction, UnrealUI/modules/
 	-- unitframes.lua:926-940).
 	local textLayer = CreateFrame("Frame", nil, bar)
 	textLayer:SetAllPoints(bar)
@@ -273,7 +273,7 @@ end
 -- gap, not scope-limited to just the 3 units reported (Target/
 -- TargetTarget/Party had the exact same gap, just less noticed). Plain
 -- `TargetUnit(unit)` -- confirmed NOT protected on UA
--- (source/UnrealAzeroth_LuaAPI/en/globals/Targetting.md has no
+-- (UnrealAzeroth_LuaAPI/en/globals/Targetting.md has no
 -- "Protected: yes" marker, unlike e.g. CastSpell/CastShapeshiftForm,
 -- which do) -- so no SecureUnitButtonTemplate/secure-attribute
 -- machinery is needed at all, avoiding the template-backed-CreateFrame
@@ -293,7 +293,7 @@ end
 -- `ToggleDropDownMenu(1, nil, <that dropdown>, ...)` -- confirmed in the
 -- FrameXML: `PlayerFrame.lua:170`, `TargetFrame.lua:253`,
 -- `PetFrame.lua:128`, `PartyMemberFrame.lua:236`. Reusing those frames is
--- what real ElvUI/oUF and `source/UnrealUI` both do, so the menu contents
+-- what real ElvUI/oUF and `UnrealUI` both do, so the menu contents
 -- (Set Focus / Trade / Invite / Raid Target / Leave Party / ...) stay
 -- native and correct with no menu-building code here at all.
 --
@@ -302,7 +302,7 @@ end
 -- chain this file was flagged as unverified on -- `ToggleDropDownMenu`,
 -- the native `*DropDown` globals, `UnitPopup_ShowMenu` and the dropdown
 -- frames surviving their hidden parents ALL exist and work on this
--- client. `source/UnrealUI`'s "no compact-DB record for any of these"
+-- client. `UnrealUI`'s "no compact-DB record for any of these"
 -- warning is superseded by evidence.
 --
 -- NO MENU APPEARING ON THE PLAYER FRAME IS NOT A BUG -- it is vanilla's
@@ -445,7 +445,7 @@ function UF:ShowUnitMenu(frame)
 end
 
 -- `GameTooltip:SetUnit(unit)` is documented on UA
--- (source/UnrealAzeroth_LuaAPI/en/widgets/GameTooltip.md), as are
+-- (UnrealAzeroth_LuaAPI/en/widgets/GameTooltip.md), as are
 -- `SetOwner` and `FadeOut` -- so unlike the menu above, this half rests on
 -- the client's own docs, not on borrowed source. `GameTooltip_SetDefaultAnchor`
 -- is a FrameXML global (not a widget method) and therefore NOT covered by
@@ -515,7 +515,7 @@ function UF:ShowUnitTooltip(frame)
 end
 
 -- FadeOut first, Hide as the fallback -- matches native `UnitFrame_OnLeave`
--- (FrameXML/UnitFrame.lua) and `source/UnrealUI`'s own note that a bare
+-- (FrameXML/UnitFrame.lua) and `UnrealUI`'s own note that a bare
 -- Hide() makes the tooltip vanish the instant the cursor crosses the edge
 -- instead of easing out the way the rest of the UI does.
 function UF:HideUnitTooltip(frame)
@@ -546,7 +546,7 @@ function UF:EnableUnitMouse(frame)
 
 	frame:SetScript("OnClick", function(a, b)
 		-- Vanilla script handlers receive the clicked button in the `arg1`
-		-- GLOBAL; `source/UnrealUI` reports UA may instead pass it as a
+		-- GLOBAL; `UnrealUI` reports UA may instead pass it as a
 		-- direct argument (their own `ResolveClickButton` accepts either),
 		-- so both shapes are read here. `frame` itself is captured by the
 		-- closure, so no `this`-wrapping is needed (same reasoning as the
@@ -613,7 +613,7 @@ end
 -- Pet Happiness -- HUNTER-pet-only loyalty indicator: only Hunter pets
 -- have it, e.g. a Warlock pet doesn't. Checked real ElvUI's own Elements/Happiness.lua first:
 -- it uses `HasPetUI()`'s SECOND return value (`isHunterPet`) to gate
--- this exactly -- confirmed on UA too (source/UnrealAzeroth_LuaAPI/en/
+-- this exactly -- confirmed on UA too (UnrealAzeroth_LuaAPI/en/
 -- globals/Pet.md: "The default stable UI treats the second return as
 -- isHunterPet", real booleans on this client, not 1/nil). A narrow
 -- VERTICAL bar, real ElvUI field names verbatim (`happiness = {enable,
@@ -680,7 +680,7 @@ function UF:UpdateHappiness(frame)
 	-- the `else` (content/yellow) branch regardless of the pet's real
 	-- state. `happinessIndex` itself
 	-- is the one value UA's own docs explicitly confirm as 1/2/3
-	-- (source/UnrealAzeroth_LuaAPI/en/globals/Pet.md), confirmed directly
+	-- (UnrealAzeroth_LuaAPI/en/globals/Pet.md), confirmed directly
 	-- by live testing -- branching on that instead is strictly safer, not
 	-- a guess.
 	local value, r, g, b
@@ -1217,7 +1217,7 @@ end
 -- ---------------------------------------------------------------------
 -- Information Panel -- a third bar below Health/Power, matching real
 -- ElvUI's own field exactly (P.unitframe.units.<unit>.infoPanel =
--- {enable, height, transparent}, source/ElvUI-vanilla/ElvUI/Settings/
+-- {enable, height, transparent}, ElvUI-vanilla/ElvUI/Settings/
 -- Profile.lua's own per-unit block). Carries no text of its own in real
 -- ElvUI either -- it's a bare colored strip, purely a mounting surface
 -- for Custom Text entries (attachTextTo = "InfoPanel"): a strip below the
@@ -1347,7 +1347,7 @@ end
 --   1. Player's own buffs AND debuffs: the native `GetPlayerBuff*`
 --      family (`GetPlayerBuff(index, "HELPFUL"/"HARMFUL")` ->
 --      `GetPlayerBuffTexture`/`Applications`/`TimeLeft`), confirmed via
---      UA's own docs (source/UnrealAzeroth_LuaAPI/en/globals/Buff.md).
+--      UA's own docs (UnrealAzeroth_LuaAPI/en/globals/Buff.md).
 --      REAL, exact, second-accurate duration -- no approximation at
 --      all. This turns out to cover debuffs too (same function
 --      family, `"HARMFUL"` filter), so Player needs neither the pfUI

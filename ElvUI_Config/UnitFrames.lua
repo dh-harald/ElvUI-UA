@@ -607,8 +607,9 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 		-- (health/power/name/portrait/RestIcon/CombatIcon/buffs/debuffs/castbar/
 		-- infoPanel/customText) -- this one was the last odd one out, and because
 		-- its leaves are `enable`/`width`/`height` (names that occur many times
-		-- in both trees) the mismatch never showed up as MOVED, only as MISSING.
-		-- See docs/config.md on why a MOVED of 0 is not proof on its own.
+		-- in both trees) the mismatch never showed up as MOVED, only as MISSING:
+		-- a leaf name that repeats across the tree cannot be matched by name
+		-- alone, so a MOVED count of 0 is never proof that a group sits right.
 		generalGroup = {
 			type = "group",
 			name = L["General"],
@@ -770,7 +771,7 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 				intro = {
 					type = "description",
 					order = 1,
-					name = L["Only real ElvUI's own fields (Enable/Style/Size/Overlay) -- see CLAUDE.md's \"UnitFrames\" section for the UA-specific research (SetCamera, etc.) behind why 3D looks right without any extra project-only knobs."],
+					name = L["Only real ElvUI's own fields (Enable/Style/Size/Overlay) -- 3D portraits look right on this client without any extra project-only knobs."],
 				},
 				enable = {
 					type = "toggle",
@@ -1083,7 +1084,7 @@ E.Options.args.unitframe = {
 	-- sections live under UnitFrame's own dropdown menu, matching
 	-- the original layout. Matches real
 	-- ElvUI's own top-level unitframe category exactly
-	-- (source/ElvUI-vanilla/ElvUI_Config/UnitFrames.lua:1606:
+	-- (ElvUI-vanilla/ElvUI_Config/UnitFrames.lua:1606:
 	-- `childGroups = "tree"`) -- Colors/Player/Target/Pet/Target
 	-- of Target/Pet Target/Party (and the new General node just
 	-- below) become their own SIDEBAR nodes under "UnitFrames"

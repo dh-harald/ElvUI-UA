@@ -53,7 +53,7 @@ local MIN_DURATION = 1.9
 
 -- formatid (E:GetTimeInfo's 2nd return value) -> which E.db.cooldown
 -- color field applies. Matches real ElvUI's own TimeColors index
--- convention (source/ElvUI-vanilla/ElvUI/Core/Cooldowns.lua:16-22,
+-- convention (ElvUI-vanilla/ElvUI/Core/Cooldowns.lua:16-22,
 -- 131-146) exactly: 0=days, 1=hours, 2=minutes, 3=whole seconds (above
 -- threshold), 4=decimal seconds ("expiring", below threshold). 5/6
 -- (mmss/hhmm) never occur here since nothing calls E:GetTimeInfo with

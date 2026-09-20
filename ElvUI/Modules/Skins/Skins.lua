@@ -1,7 +1,7 @@
 -- Skins module -- shared scaffolding for reskinning native Blizzard
 -- windows in place. Mirrors real ElvUI's own file LAYOUT (a shared
 -- "Skins" module, one file per Blizzard window under Skins/Blizzard/,
--- source/ElvUI-vanilla/ElvUI/Modules/Skins/{Skins,Blizzard/*}.lua) -- but
+-- ElvUI-vanilla/ElvUI/Modules/Skins/{Skins,Blizzard/*}.lua) -- but
 -- NOT its actual generic API (E:StripTextures/E:CreateBackdrop/
 -- E:StyleButton/S:HandleButton/S:HandleTab/S:HandleCheckBox/
 -- ... dozens of functions that don't exist here). Only the couple of helpers actually shared by
@@ -217,12 +217,12 @@ S.TAB_COLOR = S.TAB_COLOR or { 0.2, 0.2, 0.2, 1 }
 --
 -- The two-tone split is real ElvUI's own, not invented here:
 --   * PANEL  -- `E:CreateBackdrop(f, "Transparent")` -> `backdropfadecolor`
---     `{.06,.06,.06,.8}` (source/ElvUI-vanilla/ElvUI/Core/Media.lua) for
+--     `{.06,.06,.06,.8}` (ElvUI-vanilla/ElvUI/Core/Media.lua) for
 --     WINDOWS. This project's own already-tuned equivalent is .05/.95.
 --   * WIDGET -- `E:CreateBackdrop(f, "Default")` -> `backdropcolor`
 --     `{.1,.1,.1,1}` for the CONTROLS that sit ON a window (edit boxes,
 --     dropdown boxes, buttons). `S:HandleEditBox`
---     (source/ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:258-274) is
+--     (ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:258-274) is
 --     literally just `E:CreateBackdrop(frame, "Default")`.
 -- So in real ElvUI an edit box is ALREADY exactly one step lighter than
 -- the window it sits on (26/255 vs 15/255), and byte-identical to a
@@ -569,7 +569,7 @@ end
 -- overlap by ~16px, leaving which box's edge line wins undefined -- which
 -- is why 3 of the 4 Friends junctions blended and one showed a hard seam.
 -- Real ElvUI never borders the footprint: `S:HandleTab`
--- (source/ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:163-183) insets its
+-- (ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:163-183) insets its
 -- backdrop by 10px horizontally, and its own SpellBook.lua overrides that
 -- to 14/17/19 for the bigger book-type tabs. Ported here 1:1 via
 -- `Util.CreateButtonBorder`'s new inset parameters. With a 10px inset and a
@@ -849,7 +849,7 @@ end
 -- theory.
 --
 -- There are FOUR separate overlays stacked on a `SpellButtonTemplate`
--- (source/wow-ui-source/FrameXML/SpellBookFrame.xml:74-201), and the
+-- (wow-ui-source/FrameXML/SpellBookFrame.xml:74-201), and the
 -- screenshot cannot tell them apart:
 --   * `$parentAutoCastable` -- gold corner flares, shown when auto-cast is
 --     ALLOWED. Fixed 60x60 CENTER natively; this skin re-anchors it.
@@ -988,7 +988,7 @@ function S:StyleCloseButton(button)
 end
 
 -- Ported from real ElvUI's own `S:HandleButtonHighlight`
--- (source/ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:85-101) -- a lighter
+-- (ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:85-101) -- a lighter
 -- touch than it might look: blanks the native HighlightTexture slot, then
 -- ADDS two brand-new HIGHLIGHT-layer gradient textures as children (never
 -- modifies the row Button's own existing regions beyond that one setter
@@ -999,7 +999,7 @@ end
 -- **CONFIRMED BROKEN on FriendsFrameFriendButton<i> -- DO NOT call this
 -- on Friends/Ignore rows without new evidence, and think twice before
 -- any other native LIST ROW too.** Added as a deliberate live test of
--- source/UnrealUI's own crash claim for touching these rows (see
+-- UnrealUI's own crash claim for touching these rows (see
 -- Friends.lua's own history) -- it did NOT crash the client, but a real,
 -- different regression appeared instead: a friend's row went from its
 -- normal color to a permanent grey, and the row could no longer be
@@ -1187,7 +1187,7 @@ function S:StyleUIPanelButton(button)
 	end
 	pcall(button.SetDisabledTexture, button, "")
 
-	-- `UIPanelButtonTemplate2` (source/wow-ui-source/FrameXML/
+	-- `UIPanelButtonTemplate2` (wow-ui-source/FrameXML/
 	-- UIPanelTemplates.xml:28+) has NO Normal/Pushed/Highlight/Disabled
 	-- slot at all: it draws the same `UI-Panel-Button` art as three NAMED
 	-- BACKGROUND regions, `$parentLeft`/`$parentMiddle`/`$parentRight`, and
@@ -1219,7 +1219,7 @@ end
 
 -- Shared square-icon-button recipe, ported from real ElvUI's own
 -- `S:HandleNextPrevButton`/`S:SquareButton_SetIcon`
--- (source/ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:24-37, 185-241).
+-- (ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:24-37, 185-241).
 -- Hoisted here (not left local to Blizzard/Character.lua, where it was
 -- first written) once a SECOND consumer (scrollbar up/down arrows, see
 -- `S:HandleScrollBar` below) needed the identical recipe -- matches
@@ -1762,7 +1762,7 @@ end
 -- specific lines in the middle of someone else's function body.
 --
 -- Ported near-verbatim from real 1.12.1's own `FauxScrollFrame_Update`
--- (source/wow-ui-source/FrameXML/UIPanelTemplates.lua:160-226) -- this
+-- (wow-ui-source/FrameXML/UIPanelTemplates.lua:160-226) -- this
 -- REPLACES the global function outright (affects every OTHER addon/
 -- native list that also calls it, not just this project's own frames --
 -- a real, acknowledged tradeoff, but functionally IDENTICAL to the
@@ -1854,7 +1854,7 @@ local function ReplaceFauxScrollFrameUpdate()
 end
 
 -- Ported from real ElvUI's own `S:HandleScrollBar`
--- (source/ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:103-151), adapted
+-- (ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:103-151), adapted
 -- to this project's own primitives (no E:Point/E:Size/
 -- E:Height generic helpers here -- inlined SetBackdrop bgFile+edgeFile+
 -- edgeSize=1 pairing and explicit SetPoint/SetWidth/SetHeight calls
@@ -1898,7 +1898,7 @@ function S:HandleScrollBar(frame)
 		-- `UIPanelScrollFrameTemplate`, which `FauxScrollFrameTemplate`
 		-- itself inherits) unconditionally `Disable()`s BOTH buttons the
 		-- moment the scroll frame first loads
-		-- (`source/wow-ui-source/FrameXML/UIPanelTemplates.lua:244-246`)
+		-- (`wow-ui-source/FrameXML/UIPanelTemplates.lua:244-246`)
 		-- -- normally `FauxScrollFrame_Update`'s own "Arrow button
 		-- handling" block re-`Enable()`s whichever one shouldn't be
 		-- disabled, the FIRST time real data populates the list. Since
@@ -2074,7 +2074,7 @@ function S:StyleOptionsSlider(slider)
 	-- track box rather than inside it. If they get clipped, the fix is not
 	-- to shrink this surface by guesswork but to push the BOTTOM-anchored
 	-- FontStrings down, which is what real ElvUI's own
-	-- `S:HandleSliderFrame` does (source/ElvUI-vanilla/ElvUI/Modules/Skins/
+	-- `S:HandleSliderFrame` does (ElvUI-vanilla/ElvUI/Modules/Skins/
 	-- Skins.lua:434).
 	-- UA ONLY, and for the same reason the drag below is: on the LEGACY
 	-- client `S:ClearNativeBackdrop` still runs its alpha-0 recolor, that
@@ -2092,7 +2092,7 @@ function S:StyleOptionsSlider(slider)
 		--   * `$parentLow`/`$parentHigh` anchor TOPLEFT/TOPRIGHT to the
 		--     slider's BOTTOM corners at y **+3**, i.e. they poke exactly
 		--     3px INTO the frame's own rect
-		--     (source/wow-ui-source/FrameXML/OptionsFrameTemplates.xml:92-108)
+		--     (wow-ui-source/FrameXML/OptionsFrameTemplates.xml:92-108)
 		--     -- which is what this project's older "the labels sit inside
 		--     the rect on this client" note was really seeing;
 		--   * the groove that has to be covered is the backdrop's bgFile,
@@ -2242,7 +2242,7 @@ function S:StyleOptionsSlider(slider)
 			--
 			-- ⚠ NOT THE CAUSE: `S:StripTextures` (top of this function)
 			-- `Hide()`ing the slider's thumb region -- `$parentThumb` is a
-			-- declared `<ThumbTexture>`, source/wow-ui-source/FrameXML/
+			-- declared `<ThumbTexture>`, wow-ui-source/FrameXML/
 			-- OptionsFrameTemplates.xml:127 -- even though a hidden thumb
 			-- breaking native drag tracking is already on record here (the
 			-- scrollbar regression noted above). The SAME strip runs on the
@@ -2277,7 +2277,7 @@ function S:StyleOptionsSlider(slider)
 				--
 				-- TWO signals, because the obvious one is unavailable here:
 				--  1. `IsEnabled()` -- UA's Slider has no such method at all
-				--     (source/UnrealAzeroth_LuaAPI/en/widgets/Slider.md), so
+				--     (UnrealAzeroth_LuaAPI/en/widgets/Slider.md), so
 				--     only an EXPLICIT disabled answer counts; a getter that
 				--     doesn't answer must not freeze every slider.
 				--  2. **A HIDDEN THUMB**, which is what actually catches it
@@ -2363,7 +2363,7 @@ function S:StyleOptionsSlider(slider)
 
 				-- `SetValue` is what APPLIES the setting: changing a
 				-- slider's value runs its own `OnValueChanged`
-				-- (source/UnrealAzeroth_LuaAPI/en/widgets/Slider.md, in so
+				-- (UnrealAzeroth_LuaAPI/en/widgets/Slider.md, in so
 				-- many words), which for this window is
 				-- `SoundOptionsSlider_OnValueChanged` -> `SetCVar`. We
 				-- never call that script by hand and never put a script ON
@@ -2904,7 +2904,7 @@ end
 -- strip on CharacterFrame removes nothing at all: its own corner/border
 -- art isn't drawn as direct regions of CharacterFrame itself, it lives on
 -- nested child (non-Button) frames. Matches real ElvUI's own call shape
--- exactly (`E:StripTextures(CharacterFrame, true)` -- source/ElvUI-
+-- exactly (`E:StripTextures(CharacterFrame, true)` -- ElvUI-
 -- vanilla's own second "recurse into children" argument), just rebuilt
 -- from this project's own primitives. FontStrings are always left alone,
 -- at every level.
@@ -2926,7 +2926,7 @@ end
 -- ElvUI[1].Skins:Dump("PaperDollFrame")` on the 4 unnamed
 -- BACKGROUND-layer quadrant textures that make up this client's ornate
 -- window chrome (UI-Character-CharacterTab-L1/R1/BottomLeft/BottomRight,
--- source/wow-ui-source/FrameXML/PaperDollFrame.xml:130-173) comes back
+-- wow-ui-source/FrameXML/PaperDollFrame.xml:130-173) comes back
 -- `tex=4 ... shownWithSize=4` -- ALL FOUR still fully rendering at real
 -- size, even though `paths={}` proves their file reference WAS
 -- successfully cleared. Hide()+permanently-noop'd Show
@@ -2941,7 +2941,7 @@ end
 --     regression on the scrollbar, see `S:StyleOptionsSlider`);
 --   * vanilla marks a slider DISABLED by hiding it and nothing else
 --     (`OptionsFrame_DisableSlider` -> `Thumb:Hide()`,
---     source/wow-ui-source/FrameXML/OptionsFrame.lua:483), which is the
+--     wow-ui-source/FrameXML/OptionsFrame.lua:483), which is the
 --     signal `S:StyleOptionsSlider`'s handle greys off.
 -- So hiding it here is not "removing native art", it is overwriting a state
 -- flag that other code depends on.
@@ -3138,7 +3138,7 @@ end
 -- outside the box it's supposed to sit in.
 --
 -- Note this is a DELIBERATE divergence from real ElvUI, which keeps the
--- native tick (`S:HandleCheckBox`, source/ElvUI-vanilla/ElvUI/Modules/
+-- native tick (`S:HandleCheckBox`, ElvUI-vanilla/ElvUI/Modules/
 -- Skins/Skins.lua:309 -- it only clears Normal/Pushed/Highlight/Disabled
 -- and adds the inset backdrop). That works there because real 1.12.1's own
 -- tick actually fits its box; this client's doesn't.
@@ -3321,7 +3321,7 @@ local PANEL_BUTTON_ART = "ui-panel-button"
 local CHECKBOX_ART = "ui-checkbox"
 -- `UIDropDownMenuTemplate`'s own Left/Middle/Right box art
 -- (`Interface\Glues\CharacterCreate\CharacterCreate-LabelFrame`, confirmed
--- via `source/wow-ui-source/FrameXML/UIDropDownMenuTemplates.xml`) --
+-- via `wow-ui-source/FrameXML/UIDropDownMenuTemplates.xml`) --
 -- needed for the Sound Options sweep, where the FrameXML is
 -- customised so no dropdown's global name can be hardcoded up front.
 local DROPDOWN_ART = "charactercreate-labelframe"
@@ -3501,7 +3501,7 @@ local NAMED_CHROME_SUFFIXES = { "Left", "Middle", "Right" }
 -- `$parentRight` (plus the `...Disabled` set that renders the SELECTED
 -- state) -- confirmed in the FrameXML for both families this project has
 -- already skinned by hand (`CharacterFrameTabButtonTemplate`,
--- `UIOptionsFrameTab1`, source/wow-ui-source/FrameXML/UIOptionsFrame.xml
+-- `UIOptionsFrameTab1`, wow-ui-source/FrameXML/UIOptionsFrame.xml
 -- :1238-1298). Nothing else in these windows carries that trio.
 --
 -- `$parentMiddle` alone is the test: `Left`/`Right` are common enough
@@ -4056,7 +4056,7 @@ end
 --     applied by the time the window is first drawn: no flash at all, not
 --     just a shorter one. This is also real ElvUI's own mechanism
 --     (`S:ADDON_LOADED` + `S:AddCallbackForAddon`,
---     source/ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:480,529,633).
+--     ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:480,529,633).
 --     Note what this deliberately does NOT do: real ElvUI keys off the
 --     `arg1` payload to find out WHICH addon loaded. This project has a
 --     standing finding that its AceEvent-3.0 copy forwards no event
@@ -4151,7 +4151,7 @@ end
 -- used by EVERY dropdown menu in the whole game -- not specific to the
 -- Title dropdown at all, so this is a global skin, matching real ElvUI's
 -- own actual scope for this exact feature (confirmed via
--- `source/ElvUI-vanilla/ElvUI/Modules/Skins/Blizzard/Misc.lua:64-95`,
+-- `ElvUI-vanilla/ElvUI/Modules/Skins/Blizzard/Misc.lua:64-95`,
 -- which hooks `UIDropDownMenu_Initialize` -- a GLOBAL function, 2-arg
 -- bare-name `hooksecurefunc` overload, the SAME form already confirmed
 -- reliable elsewhere in this project e.g. Castbar's own icon-capture
@@ -4208,7 +4208,7 @@ local function StyleDropDownBackdrop(frame)
 	-- (`UI-DialogBox-Background`/`-Border` with a 32px edge and 11/12px
 	-- insets for `$parentBackdrop`, `UI-Tooltip-Background`/`-Border` with
 	-- a 16px edge for `$parentMenuBackdrop` -- both confirmed in
-	-- source/wow-ui-source/FrameXML/UIDropDownMenuTemplates.xml:157-190),
+	-- wow-ui-source/FrameXML/UIDropDownMenuTemplates.xml:157-190),
 	-- and a fresh SetBackdrop that doesn't mention insets inherits nothing
 	-- but also guarantees nothing about what the old one left behind.
 	pcall(frame.SetBackdrop, frame, nil)
@@ -4546,7 +4546,7 @@ end
 -- Cross-cutting skin for the SHARED `StaticPopup1-4` dialog frames:
 -- clicking "Add Friend" without a target selected pops one of these up
 -- (`StaticPopupDialogs["ADD_FRIEND"]`, `hasEditBox = 1` -- confirmed via
--- `source/wow-ui-source/FrameXML/StaticPopup.lua:775-806`). Skinnable
+-- `wow-ui-source/FrameXML/StaticPopup.lua:775-806`). Skinnable
 -- globally, the same way the dropdown-menu skin above is, rather than
 -- per-window: `StaticPopup1-4` (`STATICPOPUP_NUMDIALOGS`, 4 in real
 -- vanilla) are the SAME generic, ALWAYS-EXISTING persistent frames used by
@@ -4555,7 +4555,7 @@ end
 -- `StaticPopup_Show` just repopulates one of these 4 frames' CONTENT
 -- (.text, which of Button1/Button2/EditBox/MoneyFrame are shown) per
 -- dialog type, never creates a new frame per popup. Real recipe confirmed
--- via `source/pfUI/skins/blizzard/popup_dialogs.lua` (Shagu's pfUI, real
+-- via `pfUI/skins/blizzard/popup_dialogs.lua` (Shagu's pfUI, real
 -- vanilla, already working) -- a ONE-TIME loop over StaticPopup1-4 at load
 -- time, NO OnShow hook: `CreateBackdrop`+close/accept/cancel button skin+
 -- `editbox:DisableDrawLayer("BACKGROUND")`+its own backdrop. Ported to
@@ -4604,7 +4604,7 @@ end
 --
 -- Also kills the NAMED chrome pieces by hand (`$parentLeft/Middle/Right/
 -- Mid`), matching real ElvUI's own `S:HandleEditBox`: `InputBoxTemplate`
--- (source/wow-ui-source/FrameXML/UIPanelTemplates.xml:226+) draws its
+-- (wow-ui-source/FrameXML/UIPanelTemplates.xml:226+) draws its
 -- border as three named `Common-Input-Border` textures, and its `$parentLeft`
 -- is anchored at x=-5, i.e. it deliberately hangs OUTSIDE the box's own
 -- footprint -- `DisableDrawLayer("BACKGROUND")` already covers them (they
@@ -5201,7 +5201,7 @@ function S:Dump(target, childIndex)
 		-- Options pass, where the client's own layout is the only source of
 		-- truth -- its FrameXML is customised on this server and carries
 		-- options vanilla never had, so nothing may be assumed from
-		-- `source/wow-ui-source`. Knowing a child is a `Frame` says nothing;
+		-- `wow-ui-source`. Knowing a child is a `Frame` says nothing;
 		-- knowing it is called `BasicOptions` or `UIOptionsFrameTab3` is
 		-- what tells you where the real window and its tabs actually live.
 		-- Resolved through `S:ResolveWidget` first for the same reason
@@ -5235,7 +5235,7 @@ function S:Dump(target, childIndex)
 	-- either), so the value gets read out instead of estimated.
 	--
 	-- `step=` also settles an open question outright: UA's own docs say
-	-- there is no `GetValueStep` (source/UnrealAzeroth_LuaAPI/en/widgets/
+	-- there is no `GetValueStep` (UnrealAzeroth_LuaAPI/en/widgets/
 	-- Slider.md), which is why `S:StyleOptionsSlider`'s drag can't snap
 	-- there while the legacy client -- still on its native drag -- does
 	-- step (live-confirmed). If this prints a number on UA, the

@@ -1,5 +1,5 @@
 -- Chat module -- ports every setting and default from real ElvUI's Chat
--- module (source/ElvUI-vanilla/ElvUI/Modules/Chat/Chat.lua), plus its
+-- module (ElvUI-vanilla/ElvUI/Modules/Chat/Chat.lua), plus its
 -- Layout.lua (panel creation) and ElvUI_Config/Chat.lua, using the same
 -- field/variable names as the original so an exported real profile drives
 -- this module directly. Deliberately scoped down from the full reference,
@@ -42,7 +42,7 @@
 --    WINDOW into it, matching real ElvUI's own everyday experience of
 --    that panel being empty by default.
 --
--- Structural reference: source/ElvUI-vanilla/ElvUI/Layout/Layout.lua
+-- Structural reference: ElvUI-vanilla/ElvUI/Layout/Layout.lua
 -- (panel/tab/toggle-button/data-panel creation, `E:CreateMover` names,
 -- SPACING formula) -- that file's chat-panel job is folded directly into
 -- this one, which is a DIVERGENCE from real ElvUI's file layout, not a
@@ -138,7 +138,7 @@ end
 
 -- ===========================================================================
 -- Panel / tab / toggle-button / datatext-panel creation
--- (source/ElvUI-vanilla/ElvUI/Layout/Layout.lua, folded into this
+-- (ElvUI-vanilla/ElvUI/Layout/Layout.lua, folded into this
 -- module -- see this file's header comment for why)
 -- ===========================================================================
 -- Collapsing only removes the CHAT MESSAGE AREA -- the panel itself
@@ -574,7 +574,7 @@ function CH:SkinEditBox()
 	-- NOT E:SetTemplate: this is a NATIVE frame, and that helper's contract is
 	-- our own CreateFrame'd frames only (on UA a native frame's <Backdrop> is a
 	-- template-level shared resource, so one SetBackdrop can alter an unrelated
-	-- window -- see docs/pitfalls/native-frames.md). The explicit call below is
+	-- window). The explicit call below is
 	-- the ONE audited exception in this project: it predates the rule, it is
 	-- what real ElvUI does to the same frame, and no collateral damage has ever
 	-- shown up from it -- the edit box's own chrome is texture-based
@@ -793,7 +793,7 @@ end
 -- comment (section 1, above) for the risk tradeoff that this ports
 -- anyway, to keep chat text parsing in sync with vanilla and drive the
 -- stored settings that would otherwise be inert.
--- Ported closely from source/ElvUI-vanilla/ElvUI/Modules/Chat/Chat.lua
+-- Ported closely from ElvUI-vanilla/ElvUI/Modules/Chat/Chat.lua
 -- (matching structure, not simplifying, since the goal is vanilla-parity)
 -- with these deviations:
 --   - `CH:GetColoredName` (class-colors a linked player name) depended on

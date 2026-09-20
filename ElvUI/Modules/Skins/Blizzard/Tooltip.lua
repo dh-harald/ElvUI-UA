@@ -1,5 +1,5 @@
 -- Tooltip skin -- real ElvUI's Modules/Skins/Blizzard/Tooltip.lua
--- (source/ElvUI-vanilla/): a flat "Transparent" body with a 1px border on every
+-- (ElvUI-vanilla/): a flat "Transparent" body with a 1px border on every
 -- GameTooltip-type frame, and an ElvUI status bar texture with its own
 -- backdrop on GameTooltipStatusBar.
 --

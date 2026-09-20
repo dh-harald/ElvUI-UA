@@ -6,11 +6,11 @@
 -- map, repositions the calendar/mail/battlefield-queue icons, persists/
 -- restores zoom level, and switches to mouse-wheel zoom (+/- buttons as a
 -- fallback). Ported from real ElvUI's Modules/Maps/Minimap.lua
--- (source/ElvUI-vanilla), scoped down -- deliberately NOT included: the
+-- (ElvUI-vanilla), scoped down -- deliberately NOT included: the
 -- right-click menu, Farm Mode.
 --
 -- Settings coverage, against real ElvUI's actual config table
--- (source/ElvUI-vanilla/ElvUI_Config/Maps.lua's `minimap` group):
+-- (ElvUI-vanilla/ElvUI_Config/Maps.lua's `minimap` group):
 --   - size, locationText (SHOW/HIDE/MOUSEOVER), resetZoom (enable+time),
 --     icons (calendar/mail/battlefield position/scale/offset + calendar's
 --     private hideCalendar toggle) -> IMPLEMENTED below, all live (no
@@ -24,7 +24,7 @@
 --     check) -- matches real ElvUI's own design (the PRIVATE_RL/
 --     StaticPopup call in its `set`), not a limitation introduced here.
 --
--- UA note: UnrealUI's own minimap.lua (source/UnrealUI/modules/minimap.lua)
+-- UA note: UnrealUI's own minimap.lua (UnrealUI/modules/minimap.lua)
 -- documents that the native Minimap renders in a special pass *beneath*
 -- ordinary frames on this engine -- any frame placed on top of the map
 -- surface ends up hidden behind it. The border holder sits BEHIND Minimap
@@ -46,10 +46,9 @@
 -- SetMaskTexture leaving the map circular on UA is a no-op, not a bug --
 -- left as-is intentionally, don't try to fix. The wheel catcher below is a
 -- `CreateFrame("ScrollFrame", ...)`, not a plain Frame: OnMouseWheel only
--- fires on a ScrollFrame on this client, matching
--- source/LibConfig-1.0/LibConfig-1.0.lua:456-457's own dropdown-menu
--- workaround for the same limitation. Explicit +/- buttons are kept
--- alongside the wheel catcher rather than relying on the wheel alone, same
+-- fires on a ScrollFrame on this client, matching LibConfig-1.0's own
+-- dropdown-menu workaround for the same limitation. Explicit +/- buttons
+-- are kept alongside the wheel catcher rather than relying on the wheel, same
 -- as LibConfig-1.0's own scrollable widgets.
 
 local E, L, V, P, G = unpack(ElvUI)
@@ -66,7 +65,7 @@ E.Minimap = M
 -- minimap buttons ride an invisible circle around our square map. The
 -- library already handles "SQUARE" fully -- see its own `minimapShapes`
 -- table -- so nothing needs patching in it, this declaration IS the fix.
--- Real ElvUI does exactly the same thing (source/ElvUI-vanilla/ElvUI/
+-- Real ElvUI does exactly the same thing (ElvUI-vanilla/ElvUI/
 -- Modules/Maps/Minimap.lua:42), also at file scope: LibDBIcon defers its
 -- initial pass to PLAYER_LOGIN specifically to "let any GetMinimapShape
 -- addons load up", and file scope runs long before that, so icons come up
@@ -87,7 +86,7 @@ end
 local HEADER_HEIGHT = 20
 
 -- Zone-PvP-status coloring. friendly/hostile/contested RGB values copied
--- from real ElvUI-vanilla's own GetLocTextColor (source/ElvUI-vanilla/
+-- from real ElvUI-vanilla's own GetLocTextColor (ElvUI-vanilla/
 -- ElvUI/Modules/Maps/Minimap.lua:46-57) -- only these three exist at this
 -- API vintage (no sanctuary/arena, those are later-client pvpTypes).
 --
@@ -95,7 +94,7 @@ local HEADER_HEIGHT = 20
 -- the same red as hostile for anything else) -- confirmed wrong in-game:
 -- Bloodhoof Village, an ordinary home-faction starting town, showed red
 -- for a Tauren character. Root cause, per UA's own API docs
--- (source/UnrealAzeroth_LuaAPI/en/functions.md and .../globals/
+-- (UnrealAzeroth_LuaAPI/en/functions.md and .../globals/
 -- Location.md): GetZonePVPInfo() is a STUB on UA -- "Currently always
 -- returns three nil values" -- so on UA this `default` entry isn't just a
 -- sane fallback for unflagged zones, it's the ONLY color this module will
@@ -143,7 +142,7 @@ local ZOOM_DEBOUNCE = 0.15
 local lastZoomTime = 0
 
 -- Reset Zoom + zoom persistence: ported from real ElvUI's actual logic
--- (source/ElvUI-vanilla/ElvUI/Modules/Maps/Minimap.lua:93-114), not just
+-- (ElvUI-vanilla/ElvUI/Modules/Maps/Minimap.lua:93-114), not just
 -- the config option -- a `hooksecurefunc` on Minimap:SetZoom catches
 -- EVERY zoom change, not only ours (wheel/buttons below), but also
 -- Blizzard's own native auto-zoom (e.g. entering an instance auto-zooms
@@ -290,7 +289,7 @@ end
 
 -- "Minimap Buttons": calendar/mail/battlefield are pre-existing native
 -- Blizzard frames already parented to Minimap -- we just reposition/
--- rescale them, matching real ElvUI's Minimap.lua (source/ElvUI-vanilla/
+-- rescale them, matching real ElvUI's Minimap.lua (ElvUI-vanilla/
 -- ElvUI/Modules/Maps/Minimap.lua:209-235), minus its `E:Point` wrapper
 -- (no such core helper exists in this project yet -- plain SetPoint is
 -- equivalent for our purposes, just without whatever pixel-perfect
@@ -467,7 +466,7 @@ function M:Initialize()
 	holder:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -4, -4)
 
 	-- Movable via /moveui (Core/Movers.lua) -- real ElvUI registers its own
-	-- Minimap holder as a mover too (source/ElvUI-vanilla/ElvUI/Modules/
+	-- Minimap holder as a mover too (ElvUI-vanilla/ElvUI/Modules/
 	-- Maps/Minimap.lua:317: `E:CreateMover(MMHolder, "MinimapMover",
 	-- MINIMAP_LABEL, ...)`). Same mover name ("MinimapMover") as real
 	-- ElvUI for profile-format compatibility.

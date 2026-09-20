@@ -65,7 +65,7 @@ local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
 -- Real ElvUI's own numbers for this window (`Blizzard/Stable.lua`,
--- `source/ElvUI-vanilla`) -- pure padding choices against the real 1.12.1
+-- `ElvUI-vanilla`) -- pure padding choices against the real 1.12.1
 -- FrameXML geometry (384x512), which this window doesn't customise
 -- server-side. Close to the native `<HitRectInsets>` (right=34, bottom=75)
 -- already declared on the frame, same "tabs/margin already drawn the

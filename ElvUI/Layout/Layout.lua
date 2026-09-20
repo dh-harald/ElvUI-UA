@@ -1,5 +1,5 @@
 -- Layout -- real ElvUI's own screen-furniture module
--- (source/ElvUI-vanilla/ElvUI/Layout/Layout.lua, `E:NewModule("Layout")`).
+-- (ElvUI-vanilla/ElvUI/Layout/Layout.lua, `E:NewModule("Layout")`).
 -- Upstream it owns three things: the two cosmetic screen-edge strips, the two
 -- chat panels (frames, tabs, datatext strips, toggle buttons, fade), and the
 -- minimap-adjacent datatext panels.

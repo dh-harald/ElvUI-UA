@@ -1,5 +1,5 @@
 -- Durability DataText -- faithful port of real ElvUI's own Durability.lua
--- (source/ElvUI-vanilla/ElvUI/Modules/DataTexts/Durability.lua).
+-- (ElvUI-vanilla/ElvUI/Modules/DataTexts/Durability.lua).
 
 local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()

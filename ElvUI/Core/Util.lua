@@ -58,7 +58,7 @@ function Util.MergeTable(dst, src)
 	return dst
 end
 
--- Matches real ElvUI's own E:Round exactly (source/ElvUI-vanilla/ElvUI/
+-- Matches real ElvUI's own E:Round exactly (ElvUI-vanilla/ElvUI/
 -- Core/math.lua:94) -- attached directly to the AddOn object (not under
 -- ElvUI.Util) since that's where real ElvUI itself puts it and other
 -- code may call E:Round(...) expecting it there.
@@ -71,7 +71,7 @@ function E:Round(num, idp)
 	return math.floor(num + 0.5)
 end
 
--- Matches real ElvUI's own E:RGBToHex exactly (source/ElvUI-vanilla/ElvUI/
+-- Matches real ElvUI's own E:RGBToHex exactly (ElvUI-vanilla/ElvUI/
 -- Core/math.lua:106-111).
 function E:RGBToHex(r, g, b)
 	r = r <= 1 and r >= 0 and r or 1
@@ -80,7 +80,7 @@ function E:RGBToHex(r, g, b)
 	return string.format("|cff%02x%02x%02x", r * 255, g * 255, b * 255)
 end
 
--- Matches real ElvUI's own E:ColorGradient exactly (source/ElvUI-vanilla/
+-- Matches real ElvUI's own E:ColorGradient exactly (ElvUI-vanilla/
 -- ElvUI/Core/math.lua:79-92), except for going through Compat.modf --
 -- math.modf does not exist on the real 1.12.1 client. Callers:
 -- Modules/DataTexts/Durability.lua (tooltip lines by durability percent)
@@ -117,7 +117,7 @@ E.InversePoints = {
 }
 
 -- Abbreviates a number the way real ElvUI's own `E:ShortValue` does
--- (source/ElvUI-vanilla/ElvUI/Core/math.lua:15-73): 1700 -> "1.7K". Driven by
+-- (ElvUI-vanilla/ElvUI/Core/math.lua:15-73): 1700 -> "1.7K". Driven by
 -- two profile fields, `E.db.general.numberPrefixStyle` (which prefix set) and
 -- `decimalLength` (how many decimals), both real ElvUI keys with real ElvUI
 -- defaults.
@@ -135,7 +135,7 @@ E.InversePoints = {
 -- decimals left carries so little information that the full number is the more
 -- useful reading. 1 and up behave exactly as upstream.
 --
--- No `%` operator anywhere in here -- it does not parse on Lua 5.0.3 (CLAUDE.md).
+-- No `%` operator anywhere in here -- it does not parse on Lua 5.0.3.
 -- `string.format`'s own "%%.%df" is a format LITERAL, which is unaffected.
 local SHORT_VALUE_PREFIXES = {
 	METRIC  = { { 1e12, "T" }, { 1e9, "G" },   { 1e6, "M" },   { 1e3, "k" } },
@@ -184,7 +184,7 @@ function Util.UnitHealth(unit)
 	return UnitHealth(unit), UnitHealthMax(unit)
 end
 
--- Matches real ElvUI's own E:FormatMoney exactly (source/ElvUI-vanilla/
+-- Matches real ElvUI's own E:FormatMoney exactly (ElvUI-vanilla/
 -- ElvUI/Core/math.lua:383-450), except the copper/silver/gold abbreviation
 -- strings are hardcoded here instead of read from AceLocale (the MODULES
 -- still use inline literals -- only ElvUI_Config's option text goes through
@@ -267,7 +267,7 @@ end
 
 -- Matches real ElvUI's own E:Delay PUBLIC BEHAVIOR (schedule `func` to run
 -- once, `delay` seconds from now) but not its internal mechanism -- real
--- ElvUI (source/ElvUI-vanilla/ElvUI/Core/math.lua) hand-rolls a
+-- ElvUI (ElvUI-vanilla/ElvUI/Core/math.lua) hand-rolls a
 -- "wait table" driven by a raw `OnUpdate` script; this project avoids raw
 -- `OnUpdate` project-wide (unreliable on UA) in favor of AceTimer-3.0
 -- (`E:ScheduleTimer`, already vendored and proven throughout this
@@ -282,7 +282,7 @@ function E:Delay(delay, func)
 	return E:ScheduleTimer(func, delay)
 end
 
--- Matches real ElvUI's own E.TimeFormats/E:GetTimeInfo exactly (source/
+-- Matches real ElvUI's own E.TimeFormats/E:GetTimeInfo exactly (
 -- ElvUI-vanilla/ElvUI/Core/math.lua) -- Core/Cooldowns.lua uses this to
 -- format a cooldown's remaining time. [x][1] is real ElvUI's own longer/
 -- tooltip-style variant; [x][2] (what Cooldowns.lua actually uses) is the
@@ -303,7 +303,7 @@ E.TimeFormats = {
 	[6] = {"%d:%02d", "%d:%02d"}, --hhmm
 }
 
--- Real ElvUI's own `E.TimeColors` (source/ElvUI-vanilla/ElvUI/Core/
+-- Real ElvUI's own `E.TimeColors` (ElvUI-vanilla/ElvUI/Core/
 -- math.lua), converted from its colour-escape strings to plain r/g/b so
 -- this project's `SetTextColor` call sites can use it directly.
 --
@@ -424,7 +424,7 @@ local BACKDROP_COLOR = Util.BACKDROP_COLOR
 -- ("ElvUI Norm" by default) into `E.media.glossTex`; Init.lua does the same
 -- for us. Fallback path is the same file, spelled out literally, for the
 -- case where this runs before OnInitialize (or LSM is missing) -- the file
--- is vendored at `target/ElvUI/Media/Textures/normTex2.tga`, and custom
+-- is vendored at `ElvUI/Media/Textures/normTex2.tga`, and custom
 -- addon textures render fine on UA.
 local GLOSS_TEX_FALLBACK = "Interface\\AddOns\\ElvUI\\Media\\Textures\\normTex2"
 
@@ -657,7 +657,7 @@ function Util.SkinItemButton(button)
 end
 
 -- Hover/pushed/checked textures -- matches real ElvUI's own
--- E:StyleButton (source/ElvUI-vanilla/ElvUI/Core/toolkit.lua:290-321)
+-- E:StyleButton (ElvUI-vanilla/ElvUI/Core/toolkit.lua:290-321)
 -- exactly, including its solid-color SetTexture(r,g,b,a) shorthand (no
 -- file needed for a flat color -- a different API than SetBackdrop, not
 -- subject to the missing-edgeFile bug above).
@@ -713,7 +713,7 @@ function Util.CreateButtonHoverTextures(button)
 end
 
 -- Matches real ElvUI's own per-bar container padding formula exactly
--- (`AB:PositionAndSizeBar`, source/ElvUI-vanilla/ElvUI/Modules/
+-- (`AB:PositionAndSizeBar`, ElvUI-vanilla/ElvUI/Modules/
 -- ActionBars/ActionBars.lua:74-75): `(backdrop and (E.Border +
 -- backdropSpacing) or E.Spacing) * 2`, i.e. NOT one flat padding value
 -- for every bar -- it depends on the bar's OWN `backdrop` setting.
@@ -761,7 +761,7 @@ end
 
 -- Hand-rolled status bar -- a plain Frame plus two textures (background +
 -- fill), NOT the native `CreateFrame("StatusBar", ...)` widget. Ported
--- from source/UnrealUI/modules/unitframes.lua's own `U.CreateStatusBar`,
+-- from UnrealUI/modules/unitframes.lua's own `U.CreateStatusBar`,
 -- for the UnitFrames module (the native oUF framework had to be abandoned
 -- there over a UA incompatibility). UnrealUI's own header comment
 -- documents WHY they don't trust the native widget on this client: their
@@ -951,7 +951,7 @@ function Util.ChangeChatColor(chatType, r, g, b)
 end
 
 -- Ported verbatim from real ElvUI's own E:TableToLuaString
--- (source/ElvUI-vanilla/ElvUI/Core/core.lua) -- a plain, readable
+-- (ElvUI-vanilla/ElvUI/Core/core.lua) -- a plain, readable
 -- Lua table LITERAL string, NOT the compressed/AceSerializer+LibCompress+
 -- LibBase64 "text" export format real ElvUI's own Distributor also
 -- offers (this project doesn't vendor either of those libraries, and the

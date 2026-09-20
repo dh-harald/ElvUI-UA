@@ -2,7 +2,7 @@
 -- persists it, plus arrow-key nudging with a live coordinate readout for
 -- pixel-precise placement.
 --
--- STORAGE FORMAT DELIBERATELY MATCHES REAL ELVUI EXACTLY (source/
+-- STORAGE FORMAT DELIBERATELY MATCHES REAL ELVUI EXACTLY (
 -- ElvUI-vanilla/ElvUI/Core/movers.lua) -- this is a hard project
 -- requirement, not a style choice: a real ElvUI SavedVariables profile
 -- must eventually be droppable into this addon as-is. Real ElvUI stores
@@ -162,7 +162,7 @@ end
 -- point would.
 --
 -- Ported directly from real ElvUI's own E:CalculateMoverPoints
--- (source/ElvUI-vanilla/ElvUI/Core/movers.lua:244-306) -- same thirds/
+-- (ElvUI-vanilla/ElvUI/Core/movers.lua:244-306) -- same thirds/
 -- halves thresholds, same GetCenter/GetLeft/GetRight/GetTop/GetBottom
 -- reads. Deliberately NOT using GetPoint() here at all (unlike
 -- CaptureFramePositionParts above): GetCenter/GetLeft/GetRight/GetTop/
@@ -223,7 +223,7 @@ end
 -- ===========================================================================
 -- Dragging
 --
--- Matches UnrealUI's proven recipe exactly (source/UnrealUI/core/
+-- Matches UnrealUI's proven recipe exactly (UnrealUI/core/
 -- mover.lua:230-256, their own summary of what actually works on UA vs.
 -- their first, failed attempt) -- deliberately NOT real ElvUI's own drag
 -- handling, which assumes real-vanilla-correct StartMoving/GetPoint:
@@ -299,7 +299,7 @@ end
 -- equivalent is the mouse wheel, which is unreliable on UA -- this ports
 -- the IDEA, not the mechanism. A shown, keyboard-enabled plain Frame with
 -- OnKeyDown is reliable on UA (matches UnrealUI's own edit-mode key
--- frame, source/UnrealUI/core/mover.lua -- must be a plain Frame, not a
+-- frame, UnrealUI/core/mover.lua -- must be a plain Frame, not a
 -- Button, and must use OnKeyDown, not OnKeyUp).
 -- Nudges by applying the raw pixel delta to whatever anchor the frame
 -- currently has, then RECOMPUTES the quadrant-relative point fresh
@@ -388,7 +388,7 @@ end
 --
 -- A proper draggable window with two buttons (Lock Movers, Reset All),
 -- replacing two loose screen-pinned buttons. Real ElvUI has
--- `ElvUIMoverPopupWindow`; `source/UnrealUI/core/mover.lua` has
+-- `ElvUIMoverPopupWindow`; `UnrealUI/core/mover.lua` has
 -- `CreateEditPanel` (title + three hint lines + a Save/Exit and a Reset
 -- button). This panel follows UnrealUI's own layout, with one addition
 -- neither reference has: it is DRAGGABLE, so it can be moved out of the
@@ -597,7 +597,7 @@ end
 --   * real ElvUI (`E:Grid_Create`, Core/config.lua:100-150) divides the
 --     screen into `E.db.gridSize` COLUMNS -- a divisor, not a pixel size --
 --     default 64, with the two centre lines drawn red.
---   * `source/UnrealUI/core/mover.lua:505-536` uses a fixed 20 PIXEL step
+--   * `UnrealUI/core/mover.lua:505-536` uses a fixed 20 PIXEL step
 --     with a distinct centre-axis colour.
 -- Real ElvUI's convention wins here, because `gridSize` is a real
 -- top-level profile field name and an imported profile will drive it --
@@ -725,7 +725,7 @@ end
 -- OnDragStop). A right-click triggers the full StartDrag
 -- throwaway-StartMoving/StopMovingOrSizing pair for nothing, and that
 -- pair alone can nudge the frame slightly even with no real drag. Matches
--- UnrealUI's own `IsLeftMouseButton` guard (source/UnrealUI/core/
+-- UnrealUI's own `IsLeftMouseButton` guard (UnrealUI/core/
 -- mover.lua), including its fallback reasoning: some scripts on this
 -- client expose no direct arguments and no `arg1`, and since this handle
 -- is only ever registered for left-button dragging, an unresolvable
@@ -848,7 +848,7 @@ function E:CreateMover(frame, name, label)
 	-- `default` MUST be captured BEFORE applying the saved position below --
 	-- capturing it after would mean a corrupted saved position becomes the
 	-- "default" too, and Reset would just reapply the same corruption.
-	-- Matches real ElvUI's own CreateMover (source/ElvUI-vanilla/ElvUI/
+	-- Matches real ElvUI's own CreateMover (ElvUI-vanilla/ElvUI/
 	-- Core/movers.lua: `E.CreatedMovers[name].point = GetPoint(parent)` runs
 	-- BEFORE the saved-position restore, not after) -- capture the caller's
 	-- own hardcoded starting position (from its own SetPoint call just

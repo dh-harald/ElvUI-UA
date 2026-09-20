@@ -293,7 +293,7 @@ L["Comparison Font Size"] = "Tamaño de fuente de comparación"
 L["This setting controls the size of text in item comparison tooltips."] = "Este ajuste controla el tamaño del texto en las descripciones emergentes de comparación de objetos."
 
 --Chat
-L["Only the left/default chat window is docked and skinned -- the right panel exists (datatexts, mover, collapse icon all work) but nothing docks a second chat window into it. Message formatting (timestamps, URL links, keyword highlighting, spam throttle) applies project-wide, not just the docked window. Not implemented: chat history log/replay, hyperlink hover tooltips, channel-link click-to-switch -- see CLAUDE.md."] = "Solo la ventana de chat izquierda/predeterminada está acoplada y con estilo -- el panel derecho existe (datatexts, movedor, icono de colapso funcionan todos) pero nada acopla una segunda ventana de chat en él. El formato de mensajes (marcas de tiempo, enlaces URL, resaltado de palabras clave, limitación de spam) se aplica a todo el proyecto, no solo a la ventana acoplada. No implementado: historial/repetición de chat, tooltips al pasar sobre hipervínculos, cambio de canal al hacer clic en el enlace -- ver CLAUDE.md."
+L["Only the left/default chat window is docked and skinned -- the right panel exists (datatexts, mover, collapse icon all work) but nothing docks a second chat window into it. Message formatting (timestamps, URL links, keyword highlighting, spam throttle) applies project-wide, not just the docked window. Not implemented: chat history log/replay, hyperlink hover tooltips, channel-link click-to-switch."] = "Solo la ventana de chat izquierda/predeterminada está acoplada y con estilo -- el panel derecho existe (datatexts, movedor, icono de colapso funcionan todos) pero nada acopla una segunda ventana de chat en él. El formato de mensajes (marcas de tiempo, enlaces URL, resaltado de palabras clave, limitación de spam) se aplica a todo el proyecto, no solo a la ventana acoplada. No implementado: historial/repetición de chat, tooltips al pasar sobre hipervínculos, cambio de canal al hacer clic en el enlace."
 L["Requires /reload."] = "Requiere /reload."
 L["URL Links"] = "Enlaces URL"
 L["Attempt to create clickable URL links inside the chat."] = "Intenta crear enlaces URL en los que se pueda hacer clic dentro del chat."
@@ -487,7 +487,7 @@ L["Name"] = "Name"
 L["Use Health Texture Backdrop"] = "Use Health Texture Backdrop"
 L["Draw the bar background with the statusbar texture instead of a flat fill."] = "Dibuja el fondo de la barra con la textura de la barra de estado en lugar de un relleno plano."
 L["Portrait"] = "Retrato"
-L["Only real ElvUI's own fields (Enable/Style/Size/Overlay) -- see CLAUDE.md's \"UnitFrames\" section for the UA-specific research (SetCamera, etc.) behind why 3D looks right without any extra project-only knobs."] = "Solo los propios campos del ElvUI real (Activar/Estilo/Tamaño/Superposición) -- ver la sección \"UnitFrames\" de CLAUDE.md para la investigación específica de UA (SetCamera, etc.) detrás de por qué el 3D se ve bien sin ningún control adicional exclusivo del proyecto."
+L["Only real ElvUI's own fields (Enable/Style/Size/Overlay) -- 3D portraits look right on this client without any extra project-only knobs."] = "Solo los propios campos del ElvUI real (Activar/Estilo/Tamaño/Superposición) -- los retratos 3D se ven bien en este cliente sin ningún control adicional exclusivo del proyecto."
 L["Only used when Overlay is off."] = "Solo se usa cuando Superposición está desactivada."
 L["Overlay"] = "Recubrir"
 L["The portrait overlays the Health bar instead of sitting beside it."] = "El retrato se superpone a la barra de vida en lugar de estar al lado."
@@ -552,7 +552,7 @@ L["Shows the faction picked with the Character panel's Reputation tab > \"Show a
 
 --Maps
 L["Scale"] = "Scale"
-L["Note: the calendar icon was invisible near the minimap on UA (a frame-stacking issue, see CLAUDE.md) -- a fix was applied 2026-08-31 but isn't yet confirmed in-game."] = "Nota: el icono del calendario era invisible cerca del minimapa en UA (un problema de apilamiento de marcos, ver CLAUDE.md) -- se aplicó una corrección el 2026-08-31 pero aún no está confirmada en el juego."
+L["Note: the calendar icon was invisible near the minimap on UA (a frame-stacking issue) -- a fix was applied but isn't yet confirmed in-game."] = "Nota: el icono del calendario era invisible cerca del minimapa en UA (un problema de apilamiento de marcos) -- se aplicó una corrección pero aún no está confirmada en el juego."
 L["Map"] = "Mapa"
 L["World Map"] = "Mapa del mundo"
 L["Smaller World Map"] = "Smaller World Map"

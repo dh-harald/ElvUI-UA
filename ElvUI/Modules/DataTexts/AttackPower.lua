@@ -1,5 +1,5 @@
 -- Attack Power DataText -- faithful port of real ElvUI's own
--- AttackPower.lua (source/ElvUI-vanilla/ElvUI/Modules/DataTexts/
+-- AttackPower.lua (ElvUI-vanilla/ElvUI/Modules/DataTexts/
 -- AttackPower.lua).
 
 local E, L, V, P, G = unpack(ElvUI)

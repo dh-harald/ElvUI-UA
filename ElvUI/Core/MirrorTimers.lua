@@ -131,7 +131,7 @@ local function StyleMirrorTimer(i)
 	timerText:SetPoint("CENTER", statusBar, "CENTER", 0, 0)
 	frame.elvTimerText = timerText
 
-	-- Real ElvUI's own exact mover name (source/ElvUI-vanilla/ElvUI/
+	-- Real ElvUI's own exact mover name (ElvUI-vanilla/ElvUI/
 	-- Modules/Skins/Blizzard/MirrorTimers.lua:56) -- kept for eventual
 	-- real-profile position compatibility, same convention already
 	-- established for every other mover in this project.

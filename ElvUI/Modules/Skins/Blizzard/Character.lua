@@ -10,7 +10,7 @@
 -- text-recolor recipe for the tab buttons.
 --
 -- IMPORTANT CAVEAT on the several fixes below that cite
--- source/wow-ui-source/FrameXML directly (region names, draw layers):
+-- wow-ui-source/FrameXML directly (region names, draw layers):
 -- that tree is the OFFICIAL REAL 1.12.1 client's FrameXML, not UA's own
 -- -- UA has no known extraction method or published source for its own
 -- FrameXML equivalent. Region names/layer assignments confirmed there
@@ -21,12 +21,12 @@
 -- expected but unverified for UA" unless a live UA test says otherwise.
 --
 -- Ported STRUCTURALLY from real ElvUI's own Modules/Skins/Blizzard/
--- Character.lua (source/ElvUI-vanilla) -- same target frames, same 20-slot
+-- Character.lua (ElvUI-vanilla) -- same target frames, same 20-slot
 -- list, same PaperDollItemSlotButton_Update quality-color hook -- but NOT
 -- its actual implementation, which depends on a full generic Skins API
 -- (E:StripTextures/E:CreateBackdrop/E:StyleButton/
 -- S:HandleTab/S:HandleCloseButton/...) this project doesn't have. Also
--- checked against source/UnrealUI/modules/character.lua for UA-specific
+-- checked against UnrealUI/modules/character.lua for UA-specific
 -- risk areas (pcall around every native call; that file layers a SEPARATE
 -- background panel inside the native frame rather than SetBackdrop
 -- directly on it -- not needed here, SetBackdrop on a container frame
@@ -146,7 +146,7 @@ local SLOTS = {
 
 -- CharacterFrameTab1-5: Character, Reputation, Pet (conditional on
 -- HasPetUI(), stays a valid frame either way, just hidden), Skills,
--- Honor -- per source/UnrealUI/modules/character.lua's own comment on
+-- Honor -- per UnrealUI/modules/character.lua's own comment on
 -- this exact frame set. Only cosmetic styling is applied here (corner
 -- art, text color) -- native anchoring/show-hide logic is untouched, so
 -- unlike UnrealUI's own tab handling there's no "don't chain into a
@@ -221,7 +221,7 @@ local RESIST_FRAMES = { "MagicResFrame1", "MagicResFrame2", "MagicResFrame3", "M
 -- including the baked-in border) -- both replace them outright with
 -- these tighter, independently-converged-on numbers. Ported from real
 -- ElvUI's own Modules/Skins/Blizzard/Character.lua:65-69 (pfUI's own
--- version, source/pfUI/skins/blizzard/character.lua:25-31, differs only
+-- version, pfUI/skins/blizzard/character.lua:25-31, differs only
 -- in the last decimal place or two -- used ElvUI's exact numbers here).
 -- Order is Arcane/Fire/Nature/Frost/Shadow for MagicResFrame1-5, matching
 -- both reference sources' own comments.
@@ -322,17 +322,17 @@ end
 -- Blizzard's own code already sets on each button afterward
 -- (`factionHeader.isCollapsed` -- confirmed via real ElvUI's own read of
 -- the same field; `skillTypeLabel.isExpanded`/`SkillFrameCollapseAllButton
--- .isExpanded` -- confirmed via source/wow-ui-source/FrameXML/
+-- .isExpanded` -- confirmed via wow-ui-source/FrameXML/
 -- SkillFrame.lua:63-68/417-425, opposite polarity from Reputation's own
 -- field, both read as-is rather than normalized).
 --
 -- REAL SPRITE, not an ASCII glyph: custom addon-shipped texture files do
--- render fine on UA (`source/Bagzen` successfully renders custom shipped
+-- render fine on UA (`Bagzen` successfully renders custom shipped
 -- icon/button textures via this exact mechanism) -- a missing file at
 -- the referenced path, not a client limitation, is what breaks this if
 -- it ever appears to fail. Real ElvUI's own actual asset,
 -- `Interface\AddOns\ElvUI\Media\Textures\PlusMinusButton` (now vendored
--- into `target/ElvUI/media/textures/PlusMinusButton.blp`), is used here,
+-- into `ElvUI/Media/Textures/PlusMinusButton.blp`), is used here,
 -- matching real ElvUI's own visual result exactly.
 local NUM_FACTIONS_DISPLAYED = _G.NUM_FACTIONS_DISPLAYED or 15
 local SKILLS_TO_DISPLAY = _G.SKILLS_TO_DISPLAY or 12
@@ -531,7 +531,7 @@ end
 -- confirmed live via `S:DumpMouseFocus()`: `PlayerTitleDropDown`/
 -- `PlayerTitleDropDownButton` -- this naming EXACTLY matches real
 -- vanilla's own actual, real `UIDropDownMenuTemplate`
--- (`source/wow-ui-source/FrameXML/UIDropDownMenuTemplates.xml:253-361`,
+-- (`wow-ui-source/FrameXML/UIDropDownMenuTemplates.xml:253-361`,
 -- a genuine 1.12.1-era shared template, just never used by
 -- PaperDollFrame.xml itself in the unmodified client) -- so a real
 -- reference DOES exist after all, once the right file was found:
@@ -677,7 +677,7 @@ local function ApplyPaperDollChrome()
 	-- CharacterResistanceFrame is deliberately NEVER stripped -- see this
 	-- file's own top-level S.stripSkipNames registration for why.
 
-	-- CONFIRMED via the actual vanilla FrameXML (source/wow-ui-source/
+	-- CONFIRMED via the actual vanilla FrameXML (wow-ui-
 	-- FrameXML/PaperDollFrame.xml:274-404): CharacterAttributesFrame owns
 	-- exactly 9 Texture regions, all on the BACKGROUND layer, forming the
 	-- three separate boxed panels (Strength-through-Armor, Melee Attack,
@@ -707,7 +707,7 @@ local function ApplyPaperDollChrome()
 end
 
 -- Checked the real 1.12.1 FrameXML for each subframe
--- (source/wow-ui-source/FrameXML/
+-- (wow-ui-source/FrameXML/
 -- {ReputationFrame,SkillFrame,HonorFrame,PetPaperDollFrame}.xml) instead of
 -- guessing -- all 4 use the EXACT SAME chrome convention already solved for
 -- PaperDollFrame: a handful of UNNAMED corner Texture regions, direct
@@ -920,7 +920,7 @@ local function StyleReputationBar(index)
 	pcall(bar.DisableDrawLayer, bar, "OVERLAY")
 
 	-- E.media.normTex -- matches real ElvUI's own EXACT call here
-	-- (`factionBar:SetStatusBarTexture(E.media.normTex)`, source/
+	-- (`factionBar:SetStatusBarTexture(E.media.normTex)`, 
 	-- ElvUI-vanilla's own Character.lua) rather than a hardcoded literal.
 	-- See Init.lua's own comment for the full `E.media.normTex` explanation.
 	pcall(bar.SetStatusBarTexture, bar, E.media and E.media.normTex or "Interface\\Buttons\\WHITE8x8")
@@ -936,7 +936,7 @@ end
 
 -- Skill rank bars (SkillRankFrame1-SKILLS_TO_DISPLAY) -- same treatment
 -- as Reputation's own bars: replace the bar texture, strip the border.
--- Real ElvUI's own actual code for this (source/ElvUI-vanilla's
+-- Real ElvUI's own actual code for this (ElvUI-vanilla's
 -- Character.lua) confirms the exact structure: `SkillRankFrame%d` (the bar itself),
 -- `SkillRankFrame%dBorder` (chrome to strip), `SkillRankFrame%dBackground`
 -- (a background texture to clear) -- `E:StripTextures(border)` +
@@ -1050,7 +1050,7 @@ end
 -- own existing ASCII "X" already matches real ElvUI's own real convention
 -- and needed no change.
 -- Matches real ElvUI's OWN actual recipe exactly
--- (`source/ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua`'s own
+-- (`ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua`'s own
 -- `S:HandleNextPrevButton`/`S:SquareButton_SetIcon`, and
 -- `Blizzard/Character.lua`'s own `SkillDetailStatusBarUnlearnButton`
 -- call site). An inset-crop approach on the native-sized button alone is
@@ -1165,7 +1165,7 @@ end
 -- (`E:StripTextures` + `E:SetTemplate` + `S:HandleCloseButton` +
 -- `S:HandleCheckBox` x3) -- rebuilt here from this project's own
 -- primitives, same recipe as everywhere else in this file. Checked the
--- real FrameXML (source/wow-ui-source/FrameXML/ReputationFrame.xml:
+-- real FrameXML (wow-ui-source/FrameXML/ReputationFrame.xml:
 -- 631-834): `ReputationDetailFrame` has its own native `<Backdrop>`
 -- (cleared by `S:StripTextures`'s own first line) plus 3 direct regions
 -- -- an unnamed `UI-Character-Reputation-DetailBackground` texture and 2
@@ -1178,7 +1178,7 @@ end
 -- Native checkbox chrome: a 26x26 button carrying UI-CheckBox-Up/Down/
 -- Highlight art plus a CheckedTexture (the sword/checkmark that conveys
 -- the actual state). Real ElvUI's own S:HandleCheckBox
--- (source/ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:309-326) does
+-- (ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:309-326) does
 -- exactly four things: nil the Normal/Pushed/Highlight/Disabled texture
 -- slots, add its own backdrop, INSET that backdrop 4px on every side
 -- (E:SetInside(frame.backdrop, nil, 4, 4)), and leave the CheckedTexture
@@ -1471,7 +1471,7 @@ local function ApplyChrome(frame)
 	-- untouched by this).
 	S:StripTextures(frame, true)
 
-	-- DisableDrawLayer("ARTWORK") -- ported directly from source/pfUI's
+	-- DisableDrawLayer("ARTWORK") -- ported directly from pfUI's
 	-- own Character skin (`CharacterFrame:DisableDrawLayer("ARTWORK")`,
 	-- skins/blizzard/character.lua:43), a REAL, working-on-vanilla addon:
 	-- region-nil'ing alone produces zero visible change here. Fundamentally different
@@ -1495,7 +1495,7 @@ local function ApplyChrome(frame)
 	-- never backdrops CharacterFrame directly either -- it creates its
 	-- own backdrop child, INSET from the frame's true edges (11px left,
 	-- 12px top, 32px right, and specifically 76px up from the BOTTOM --
-	-- source/ElvUI-vanilla/ElvUI/Modules/Skins/Blizzard/Character.lua:
+	-- ElvUI-vanilla/ElvUI/Modules/Skins/Blizzard/Character.lua:
 	-- 24-26) so the background stops short of the tab strip instead of
 	-- covering it. Same insets reused here. EnableMouse(false) so it
 	-- never intercepts clicks meant for the slots/tabs/model above it.
