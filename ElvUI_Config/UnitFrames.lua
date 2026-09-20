@@ -500,6 +500,12 @@ local function CustomTextArgs(dbKey)
 				size = E.db.unitframe.fontSize,
 				fontOutline = E.db.unitframe.fontOutline,
 			}
+			-- Grows a whole new group in the options tree, which the open
+			-- page and the sidebar were built without. No refresh call
+			-- needed here: LibConfig-1.0 redraws the page after every
+			-- committed control, so the new group is picked up as soon as
+			-- this set returns. Only a change made OUTSIDE a control would
+			-- need LibConfig's own NotifyChange.
 			AddCustomTextGroup(value)
 		end,
 	}

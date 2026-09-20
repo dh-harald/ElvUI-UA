@@ -352,18 +352,12 @@ E.Options.args.profiles = {
 			desc = L["(Re)computes the export text below from this character's current profile."],
 			order = 92,
 			func = function()
-				-- Flattened to ONE line -- live-reported (screenshot):
-				-- the multi-line text (Util.TableToLuaString inserts a
-				-- real "\n" + indentation between every table entry)
-				-- rendered completely unclipped in the small "input"
-				-- EditBox, sprawling across and behind the entire
-				-- options window instead of staying confined to its
-				-- own box. This vintage client has no SetClipsChildren
-				-- to fall back on, and a real clipped multi-line view
-				-- would need a ScrollFrame-backed widget this project
-				-- doesn't have yet -- stripping the newlines/indentation
-				-- entirely removes the cause instead (whitespace
-				-- doesn't matter to loadstring on import either way).
+				-- Flattened to ONE line: Util.TableToLuaString puts a
+				-- real newline + indentation between every table entry,
+				-- and a single-line value is both shorter to carry
+				-- around and safe to paste into any one-line field.
+				-- Whitespace makes no difference to loadstring on the
+				-- import side either way.
 				local text = E:ExportProfile()
 				text = string.gsub(text, "\n%s*", " ")
 				exportText = text
@@ -373,6 +367,9 @@ E.Options.args.profiles = {
 			type = "input",
 			name = L["Export (read from here)"],
 			width = "full",
+			-- A one-line box cannot show a whole profile, and the value
+			-- is long enough to be worth seeing before copying it.
+			multiline = 8,
 			order = 93,
 			get = function() return exportText end,
 			set = function() end,
