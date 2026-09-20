@@ -1,3 +1,16 @@
+# [0.7.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.6.0...v0.7.0) (2026-09-20)
+
+
+### Bug Fixes
+
+* add math.modf compat ([0d121c6](https://github.com/dh-harald/ElvUI-UA/commit/0d121c6a1720fc0f30fbf5bdc9d4bab5e84e2347))
+* **profiles:** generate export is using 8 multiline box ([d03e94f](https://github.com/dh-harald/ElvUI-UA/commit/d03e94f5fe642cc478de8a1f15a88a3c0aee9cee))
+
+
+### Features
+
+* **skins:** add auctionhouse ([58e0ad0](https://github.com/dh-harald/ElvUI-UA/commit/58e0ad020ec513dfebb226189271a42ba1d52051))
+
 # [0.6.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.5.0...v0.6.0) (2026-09-20)
 
 
