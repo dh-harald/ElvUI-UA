@@ -1,3 +1,10 @@
+# [0.6.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.5.0...v0.6.0) (2026-09-20)
+
+
+### Features
+
+* **mail:** initial commit ([acd4498](https://github.com/dh-harald/ElvUI-UA/commit/acd4498bcc59a268fedd9337e0d0ec49bbab5946))
+
 # [0.5.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.4.2...v0.5.0) (2026-09-19)
 
 
