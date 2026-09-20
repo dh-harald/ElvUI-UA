@@ -61,6 +61,7 @@ E.Options.args.skins = {
 			args = {
 				-- Display names copied from real ElvUI's own Skins.lua, so the
 				-- alphabetical ordering lands identically.
+				auctionhouse = { type = "toggle", name = L["Auctions"], desc = SKIN_DESC },
 				character = { type = "toggle", name = L["Character Frame"], desc = SKIN_DESC },
 				friends = { type = "toggle", name = L["Friends"], desc = SKIN_DESC },
 				spellbook = { type = "toggle", name = L["Spellbook"], desc = SKIN_DESC },

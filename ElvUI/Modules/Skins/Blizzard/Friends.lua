@@ -151,27 +151,11 @@ local WHOS_TO_DISPLAY = _G.WHOS_TO_DISPLAY or 17
 -- BACKGROUND-layer sprite (`WhoFrame-ColumnTabs`, confirmed via the
 -- FrameXML), NOT the 6-piece CharacterFrameTabButtonTemplate `S:StyleTab`
 -- handles -- no Enable/Disable-driven "selected" variant here, so no
--- separate Disabled-piece kill and no `IsEnabled` check needed. Local to
--- this file for now (only one consumer, the Who tab) -- hoist to
--- Skins.lua if/when the Guild tab's own identical `GuildFrameColumnHeaderTemplate`
--- columns are picked up later, matching this project's established
--- "hoist on 2nd consumer" policy.
+-- separate Disabled-piece kill and no `IsEnabled` check needed. The recipe
+-- itself is `S:StyleColumnHeader` (Skins.lua), hoisted there once the
+-- auction window's own 15 sort headers became a second consumer.
 local function StyleColumnHeader(header)
-	if not header then return end
-	S:StripTextures(header, false)
-	-- 2px horizontal inset for the same reason `S:StyleTab` has one (see
-	-- Skins.lua): consecutive column headers are anchored `LEFT` to the
-	-- previous one's `RIGHT` at x=-2, so full-footprint border boxes would
-	-- overlap by 4px and their edge lines would fight -- the same defect
-	-- that produced the Friends Who/Guild tab seam, just 4px wide instead
-	-- of 16. At 2px the boxes end up exactly touching, keeping the
-	-- continuous header-strip look with no overlap left to render
-	-- ambiguously.
-	ElvUI.Util.CreateButtonBorder(header, 2, 0, 0)
-	local okText, text = pcall(header.GetFontString, header)
-	if okText and text then
-		pcall(text.SetTextColor, text, ACCENT_COLOR[1], ACCENT_COLOR[2], ACCENT_COLOR[3])
-	end
+	S:StyleColumnHeader(header)
 end
 
 -- Row text of a Who or guild roster list in the header order this file sets

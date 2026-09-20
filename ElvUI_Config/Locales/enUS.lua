@@ -424,6 +424,7 @@ L["Skins"] = true
 L["Reskins native Blizzard windows in place -- same frame, same functionality, just restyled to match this UI. Individually toggleable per window."] = true
 L["Blizzard"] = true
 L["Master switch for every Blizzard window skin below. Requires /reload to take effect."] = true
+L["Auctions"] = true
 L["Character Frame"] = true
 L["Spellbook"] = true
 L["Macros"] = true

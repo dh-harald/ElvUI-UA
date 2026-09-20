@@ -754,6 +754,47 @@ function S:StyleTab(tab, insetX, insetTop, insetBottom, forceDisabled)
 	tab.elvStyled = true
 end
 
+-- Sortable COLUMN HEADER of a list (`WhoFrameColumnHeader1-4`,
+-- `AuctionSortButtonTemplate`'s 15 headers). Structurally a tab family --
+-- same three-piece `$parentLeft/Middle/Right` BACKGROUND art, in the Who
+-- case the very same `WhoFrame-ColumnTabs` asset -- but it is NOT a tab, and
+-- two differences make that matter:
+--
+--  * consecutive headers overlap by only 2px (`LEFT` to the previous one's
+--    `RIGHT` at x=-2), not a tab's 14, so the border box is inset by 2 and
+--    the boxes end up exactly touching, keeping the continuous header strip;
+--    a tab's 10px inset would leave visible gaps inside one list's header row.
+--  * the auction headers carry their SORT ARROW in the button's
+--    NormalTexture (`$parentArrow`), which `S:StyleTab` blanks. The strip
+--    below only clears region art, so the arrow survives -- and `elvStyled`
+--    is set at the end so `S:SkinChildren`'s own tab branch (which
+--    fingerprints on `_G[name.."Middle"]`, a test these headers also pass)
+--    leaves the header alone instead of running `S:StyleTab` over it.
+--
+-- Fill is `S.TAB_COLOR` for the same reason a tab's is: a header strip sits
+-- directly ON a panel and has to separate from it.
+function S:StyleColumnHeader(header)
+	if not header then return end
+	S:StripTextures(header, false)
+	-- Standing frame property, so the three art pieces stay gone through any
+	-- native re-show -- the same guarantee `S:StyleTab` relies on. The sort
+	-- arrow is a NormalTexture (ARTWORK), not on this layer.
+	pcall(header.DisableDrawLayer, header, "BACKGROUND")
+
+	ElvUI.Util.CreateButtonBorder(header, 2, 0, 0)
+	if header.elvBackdrop then
+		pcall(header.elvBackdrop.SetBackdropColor, header.elvBackdrop,
+			S.TAB_COLOR[1], S.TAB_COLOR[2], S.TAB_COLOR[3], S.TAB_COLOR[4] or 1)
+	end
+
+	local okText, text = pcall(header.GetFontString, header)
+	if okText and text then
+		pcall(text.SetTextColor, text, S.ACCENT_COLOR[1], S.ACCENT_COLOR[2], S.ACCENT_COLOR[3])
+	end
+
+	header.elvStyled = true
+end
+
 -- A tab-seam collision is NOT a frame-level issue: giving each tab an
 -- explicit, widely-spaced frame level before `CreateButtonBorder` runs
 -- does not fix a visible seam between tabs, and can introduce the same
@@ -3061,9 +3102,12 @@ S.stripSkipNames = S.stripSkipNames or {}
 -- checkboxes doesn't get a fourth private copy.
 S.CHECKBOX_INSET = 4
 
-function S:StyleCheckBox(checkbox)
+-- `inset` (optional) overrides `S.CHECKBOX_INSET` for one call: a 16x16
+-- radio button has no room for the 4px a 26x26 checkbox uses.
+function S:StyleCheckBox(checkbox, inset)
 	if not checkbox or checkbox.elvStyled then return end
 	checkbox.elvStyled = true
+	inset = tonumber(inset) or S.CHECKBOX_INSET
 
 	local okNormal, normalTexture = pcall(checkbox.GetNormalTexture, checkbox)
 	if okNormal and normalTexture then
@@ -3117,8 +3161,8 @@ function S:StyleCheckBox(checkbox)
 	-- click meant for the checkbox above it.
 	local okHolder, holder = pcall(CreateFrame, "Frame", nil, checkbox)
 	if okHolder and holder then
-		pcall(holder.SetPoint, holder, "TOPLEFT", checkbox, "TOPLEFT", S.CHECKBOX_INSET, -S.CHECKBOX_INSET)
-		pcall(holder.SetPoint, holder, "BOTTOMRIGHT", checkbox, "BOTTOMRIGHT", -S.CHECKBOX_INSET, S.CHECKBOX_INSET)
+		pcall(holder.SetPoint, holder, "TOPLEFT", checkbox, "TOPLEFT", inset, -inset)
+		pcall(holder.SetPoint, holder, "BOTTOMRIGHT", checkbox, "BOTTOMRIGHT", -inset, inset)
 		pcall(holder.SetFrameLevel, holder, checkboxLevel)
 		pcall(holder.EnableMouse, holder, false)
 		ElvUI.Util.CreateButtonBorder(holder)
@@ -3126,6 +3170,24 @@ function S:StyleCheckBox(checkbox)
 	end
 
 	S:InstallCheckMark(checkbox)
+end
+
+-- A RADIO button is the same widget with a different native sprite: a
+-- CheckButton whose Normal/Highlight/Checked art is cut from
+-- `Interface\Buttons\UI-RadioButton` instead of `UI-CheckBox`, which is why
+-- the sweep's `ui-checkbox` art test never matches one. Vanilla's own
+-- auction duration selector is the first of these this project skins.
+--
+-- Same recipe, smaller inset: these buttons are 16x16, where the checkbox's
+-- own 4px would leave an 8x8 box. Real ElvUI-vanilla has no radio recipe at
+-- all (it leaves them native), so the look is this project's own: a square
+-- box with a square accent mark, matching every other tick in the UI rather
+-- than inventing a second shape for the same "one of these is selected"
+-- idea.
+S.RADIO_INSET = 2
+
+function S:StyleRadioButton(button)
+	S:StyleCheckBox(button, S.RADIO_INSET)
 end
 
 -- OUR OWN "checked" mark, replacing the native one.
@@ -4647,6 +4709,51 @@ function S:StyleEditBox(box)
 	pcall(box.SetTextInsets, box, 4, 4, 0, 0)
 end
 
+-- `UI-MoneyIcons` cells, per `FrameXML/MoneyInputFrame.xml`, with each coin's
+-- native anchor offset from its own edit box's RIGHT edge.
+local MONEY_INPUT_COINS = {
+	{ suffix = "Gold",   left = 0,    right = 0.25, x = 2 },
+	{ suffix = "Silver", left = 0.25, right = 0.5,  x = -8 },
+	{ suffix = "Copper", left = 0.5,  right = 0.75, x = -8 },
+}
+local MONEY_INPUT_COIN_SIZE = 13
+local MONEY_INPUT_COIN_ASSET = "Interface\\MoneyFrame\\UI-MoneyIcons"
+
+-- `MoneyInputFrameTemplate`'s three edit boxes carry their coin icon as an
+-- UNNAMED BACKGROUND region, the same layer as the input-border art.
+-- `S:StyleEditBox` disables that whole layer (the only durable way to clear
+-- the border), which takes the coins with it -- and `S:SkinChildren` applies
+-- that recipe to every EditBox it finds anyway. So the boxes get the standard
+-- recipe, and each one gets a fresh coin texture on ARTWORK at the native
+-- size, crop and anchor.
+--
+-- HOISTED from Blizzard/Trade.lua once the auction window became a second
+-- consumer (4 of these frames: both bid boxes, start price, buyout price).
+function S:StyleMoneyInputFrame(moneyFrame)
+	if not moneyFrame then return end
+	local okName, name = pcall(moneyFrame.GetName, moneyFrame)
+	if not okName or not name then return end
+	local i
+	for i = 1, table.getn(MONEY_INPUT_COINS) do
+		local coin = MONEY_INPUT_COINS[i]
+		local box = _G[name..coin.suffix]
+		if box then
+			S:StyleEditBox(box)
+			if not box.elvCoin then
+				local okTex, tex = pcall(box.CreateTexture, box, nil, "ARTWORK")
+				if okTex and tex then
+					pcall(tex.SetTexture, tex, MONEY_INPUT_COIN_ASSET)
+					pcall(tex.SetTexCoord, tex, coin.left, coin.right, 0, 1)
+					pcall(tex.SetWidth, tex, MONEY_INPUT_COIN_SIZE)
+					pcall(tex.SetHeight, tex, MONEY_INPUT_COIN_SIZE)
+					pcall(tex.SetPoint, tex, "LEFT", box, "RIGHT", coin.x, 0)
+					box.elvCoin = tex
+				end
+			end
+		end
+	end
+end
+
 -- Generic `UIDropDownMenuTemplate` BOX chrome (the closed-state control
 -- itself -- $parentLeft/Middle/Right background art + the $parentButton
 -- arrow) -- NOT the popup LIST that opens from it, which is already
@@ -5468,6 +5575,161 @@ function S:FindThinTextures(maxDim, maxVisit, maxResults)
 	end
 
 	E:Print(string.format("FindThinTextures: visited=%d found=%d (maxDim=%d)", visited, found, maxDim))
+end
+
+-- "WHAT IS DRAWING THIS?" -- finds every VISIBLE texture whose asset path
+-- contains `fragment`, and names the frame it belongs to (plus that frame's
+-- parent, which is usually the identifying half).
+--
+-- Exists because the usual answer, `S:DumpMouseFocus()`, only works on
+-- something that takes mouse input -- and the case that produced this one was
+-- exactly the opposite: a dropdown's art rendering over the world with no
+-- mouse focus anywhere on it, so nothing could be hovered to name it.
+-- Guessing candidate frame names one at a time is the anti-pattern this
+-- project keeps warning about, so this measures instead.
+--
+--   /run ElvUI[1].Skins:FindTexture("scrolldown")
+--   /run ElvUI[1].Skins:FindTexture("charactercreate-labelframe")
+--
+-- Same budgeted breadth-first walk as `S:FindThinTextures` above. TWO things
+-- measured the hard way on the round this was written for, both of which the
+-- budget and the filter now reflect:
+--
+--  * **6000 visits CRASHED the client**, intermittently. That is this
+--    project's documented "one big synchronous loop kills the client"
+--    finding, and it applies to `S:FindThinTextures`'s identical default
+--    too. The default here is 1200; raising it is not a free knob.
+--  * **`IsShown()` is NOT a usable filter for "is this drawing".** A hidden
+--    texture can still render on this client -- the single most repeated
+--    finding in this project. The first version gated on it and reported
+--    nothing for art that was plainly on screen. The state is printed
+--    instead of filtered on.
+--
+-- For "which frame is this", prefer `S:FindFrames` below: a name scan over
+-- `_G` costs a fraction of a widget-tree walk and cannot crash it.
+--
+-- The match is a plain `string.find` against the normalised (lowercased,
+-- separator-folded) path -- never a Lua pattern, since an asset path is full
+-- of `-`.
+function S:FindTexture(fragment, maxVisit, maxResults)
+	if type(fragment) ~= "string" or string.len(fragment) == 0 then
+		E:Print("FindTexture: needs a path fragment, e.g. \"scrolldown\"")
+		return
+	end
+	fragment = string.lower(fragment)
+	maxVisit = maxVisit or 1200
+	maxResults = maxResults or 12
+
+	local queue, qHead, qTail = {}, 1, 0
+	if UIParent then qTail = qTail + 1; queue[qTail] = UIParent end
+	if WorldFrame then qTail = qTail + 1; queue[qTail] = WorldFrame end
+	local visited, found = 0, 0
+
+	while qHead <= qTail and visited < maxVisit and found < maxResults do
+		local f = queue[qHead]
+		qHead = qHead + 1
+		visited = visited + 1
+
+		if f then
+			local okType, objType = pcall(f.GetObjectType, f)
+			if okType and objType == "Texture" then
+				local okShown, shown = pcall(f.IsShown, f)
+				local path = TexturePath(f)
+				if path and string.find(path, fragment, 1, true) then
+					found = found + 1
+					local okName, texName = pcall(f.GetName, f)
+					local okParent, parent = pcall(f.GetParent, f)
+					local pname, gname = "?", "?"
+					if okParent and parent then
+						local okPName, n = pcall(parent.GetName, parent)
+						pname = (okPName and n) or "(unnamed)"
+						local okGP, grand = pcall(parent.GetParent, parent)
+						if okGP and grand then
+							local okGName, g = pcall(grand.GetName, grand)
+							gname = (okGName and g) or "(unnamed)"
+						end
+					end
+					E:Print(string.format("tex #%d: %s shown=%s", found,
+						tostring((okName and texName) or "(unnamed)"),
+						tostring(okShown and shown)))
+					E:Print(string.format("   on %s, in %s", tostring(pname), tostring(gname)))
+				end
+			else
+				local okRegions, regions = pcall(function() return { f:GetRegions() } end)
+				if okRegions and type(regions) == "table" then
+					local i
+					for i = 1, table.getn(regions) do
+						qTail = qTail + 1
+						queue[qTail] = regions[i]
+					end
+				end
+				local okKids, kids = pcall(function() return { f:GetChildren() } end)
+				if okKids and type(kids) == "table" then
+					local j
+					for j = 1, table.getn(kids) do
+						qTail = qTail + 1
+						queue[qTail] = kids[j]
+					end
+				end
+			end
+		end
+	end
+
+	E:Print(string.format("FindTexture(%s): visited=%d found=%d", fragment, visited, found))
+end
+
+-- "WHICH FRAME IS THIS" BY NAME, not by walking the widget tree.
+--
+--   /run ElvUI[1].Skins:FindFrames("dropdown")
+--
+-- Scans `_G` for globals whose NAME contains `fragment` and prints each one's
+-- type, shown state and screen position. Every frame the FrameXML and every
+-- addon create is a named global, so a thing visible on screen is almost
+-- always findable this way -- and matching the printed position against where
+-- the thing actually sits identifies it without hovering it.
+--
+-- Why this and not `S:FindTexture`/`S:FindThinTextures`: a widget-tree walk
+-- costs a pcall'd method call per node and CRASHED this client at 6000 nodes
+-- (measured), while at 20000 it still reported nothing -- a walk can only
+-- find what it reaches, and it depends on guessing the asset path right. A
+-- string compare over a few thousand table keys costs a fraction of that and
+-- assumes nothing about the art.
+--
+-- `shown=` is printed, never filtered on: a hidden object can still render on
+-- this client. Position is the reliable identifier here.
+--
+-- Only `Frame`-typed objects are listed, which drops the template's own
+-- child textures and buttons (`...Middle`, `...Button`) that would otherwise
+-- bury the result under near-duplicates.
+function S:FindFrames(fragment, maxResults)
+	if type(fragment) ~= "string" or string.len(fragment) == 0 then
+		E:Print("FindFrames: needs a name fragment, e.g. \"dropdown\"")
+		return
+	end
+	fragment = string.lower(fragment)
+	maxResults = maxResults or 25
+
+	local found, scanned = 0, 0
+	local name, value
+	for name, value in pairs(_G) do
+		scanned = scanned + 1
+		if found < maxResults and type(name) == "string"
+			and string.find(string.lower(name), fragment, 1, true) then
+			local okType, objType = pcall(function() return value:GetObjectType() end)
+			if okType and objType == "Frame" then
+				found = found + 1
+				local okShown, shown = pcall(value.IsShown, value)
+				local okLeft, left = pcall(value.GetLeft, value)
+				local okTop, top = pcall(value.GetTop, value)
+				E:Print(string.format("%s shown=%s x=%s y=%s", name,
+					tostring(okShown and shown),
+					tostring((okLeft and tonumber(left) and math.floor(left)) or "?"),
+					tostring((okTop and tonumber(top) and math.floor(top)) or "?")))
+			end
+		end
+	end
+
+	E:Print(string.format("FindFrames(%s): scanned=%d found=%d", fragment, scanned, found))
 end
 
 -- Identity-based snapshot/diff -- FindThinTextures' own "found=12 both

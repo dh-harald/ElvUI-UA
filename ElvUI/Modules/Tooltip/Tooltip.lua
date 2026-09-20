@@ -1801,12 +1801,39 @@ function TT:HookCraftSurfaces()
 	end
 end
 
--- AuctionFrameItem_OnEnter fills the native auction comparison itself, so only
--- the item lines are added.
+-- This hook is UA-only (`HookItemSurfaces` returns early on the legacy
+-- client). An earlier version of this comment said the item lines were all
+-- that was needed here, because "AuctionFrameItem_OnEnter fills the native
+-- auction comparison itself" -- and a later one over-corrected, claiming UA
+-- has no auction comparison at all. Measured, both are half right: UA's
+-- `SetAuctionCompareItem` DOES fill `ShoppingTooltip1/2`, but only where the
+-- hovered item's slot actually holds something (a weapon against the equipped
+-- weapon, live; a wand against an empty ranged slot, nothing). So the rows
+-- fall into two groups, and only the second had no comparison at all.
+--
+-- Where the native one filled, it is left alone: it re-fills on EVERY frame
+-- (the row template's own OnUpdate calls this OnEnter again while hovered),
+-- so a comparison of ours put on top of it is overwritten the next frame,
+-- leaving the native content plus a second "Currently Equipped" heading of
+-- ours -- which is exactly what a live screenshot showed. Taking those rows
+-- over means re-asserting every frame, which `SetCompareItem` deliberately
+-- does not do (re-showing refills the frames at native size and throws the
+-- heading's layout away). Adding the stat block to the NATIVE comparison
+-- instead is the open item, and it applies to both clients equally.
 function TT:OnAuctionItemEnter(auctionType, index)
 	if not TooltipShown() then return end
 	local link, count = ITEM_SETTERS.SetAuctionItem(auctionType, index)
 	self:AddItemLines(GameTooltip, link, count)
+
+	local native = _G.ShoppingTooltip1
+	local okShown, shown = false, false
+	if native then okShown, shown = pcall(native.IsShown, native) end
+	if okShown and shown then return end
+
+	-- No native comparison for this row: ours takes the slot. The same-link
+	-- early out in `SetCompareItem` is what keeps the per-frame OnEnter from
+	-- refilling the comparison frames.
+	self:SetCompareItem(link)
 end
 
 function TT:HookAuctionSurfaces()

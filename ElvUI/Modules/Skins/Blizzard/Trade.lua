@@ -26,8 +26,8 @@
 --   BACKGROUND pieces are native gold art; they get their layer disabled and
 --   one flat green texture of our own instead.
 -- - `TradePlayerInputMoneyFrame` is a `MoneyInputFrameTemplate`: see
---   `StyleMoneyInputFrame` for why the shared edit-box recipe alone would
---   delete its coin icons.
+--   `S:StyleMoneyInputFrame` (Skins.lua) for why the shared edit-box recipe
+--   alone would delete its coin icons.
 --
 -- Deliberately NOT done: real ElvUI's quality-coloured slot border and
 -- name. It hooks `TradeFrame_UpdatePlayerItem`/`UpdateTargetItem`, and bare
@@ -69,16 +69,6 @@ local HIGHLIGHT_FRAMES = {
 	"TradeHighlightPlayerEnchant",
 	"TradeHighlightRecipientEnchant",
 }
-
--- `UI-MoneyIcons` cells, per `FrameXML/MoneyInputFrame.xml`, with each
--- coin's native anchor offset from its own edit box's RIGHT edge.
-local COINS = {
-	{ suffix = "Gold",   left = 0,    right = 0.25, x = 2 },
-	{ suffix = "Silver", left = 0.25, right = 0.5,  x = -8 },
-	{ suffix = "Copper", left = 0.5,  right = 0.75, x = -8 },
-}
-local COIN_SIZE = 13
-local COIN_ASSET = "Interface\\MoneyFrame\\UI-MoneyIcons"
 
 local function PromotePanelText()
 	local i
@@ -150,38 +140,6 @@ local function StyleHighlight(frame, level)
 	frame.elvGlow = tex
 end
 
--- `MoneyInputFrameTemplate`'s three edit boxes carry their coin icon as an
--- UNNAMED BACKGROUND region, the same layer as the input-border art.
--- `S:StyleEditBox` disables that whole layer (the only durable way to clear
--- the border), which takes the coins with it -- and `S:SkinChildren` applies
--- that recipe to every EditBox it finds anyway. So the boxes get the
--- standard recipe, and each one gets a fresh coin texture on ARTWORK at the
--- native size, crop and anchor.
-local function StyleMoneyInputFrame(moneyFrame)
-	if not moneyFrame then return end
-	local okName, name = pcall(moneyFrame.GetName, moneyFrame)
-	if not okName or not name then return end
-	local i
-	for i = 1, table.getn(COINS) do
-		local coin = COINS[i]
-		local box = _G[name..coin.suffix]
-		if box then
-			S:StyleEditBox(box)
-			if not box.elvCoin then
-				local okTex, tex = pcall(box.CreateTexture, box, nil, "ARTWORK")
-				if okTex and tex then
-					pcall(tex.SetTexture, tex, COIN_ASSET)
-					pcall(tex.SetTexCoord, tex, coin.left, coin.right, 0, 1)
-					pcall(tex.SetWidth, tex, COIN_SIZE)
-					pcall(tex.SetHeight, tex, COIN_SIZE)
-					pcall(tex.SetPoint, tex, "LEFT", box, "RIGHT", coin.x, 0)
-					box.elvCoin = tex
-				end
-			end
-		end
-	end
-end
-
 local function ApplyTradeChrome(frame)
 	PromotePanelText()
 	S:StripTextures(frame, false)
@@ -212,7 +170,7 @@ local function ApplyTradeChrome(frame)
 		StyleHighlight(_G[HIGHLIGHT_FRAMES[i]], glowLevel)
 	end
 
-	StyleMoneyInputFrame(_G.TradePlayerInputMoneyFrame)
+	S:StyleMoneyInputFrame(_G.TradePlayerInputMoneyFrame)
 
 	S:StyleUIPanelButton(_G.TradeFrameTradeButton)
 	S:StyleUIPanelButton(_G.TradeFrameCancelButton)

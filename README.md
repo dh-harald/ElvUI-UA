@@ -93,7 +93,7 @@ Two addons ship together:
   place (Character, Friends, SpellBook, Macro, Key Bindings, Main Menu,
   Interface/Video/Sound Options, Gossip/Greeting/Quest/QuestLog,
   Merchant, Trade, Taxi, Pet Stable, Talents, Trade Skills, Enchanting,
-  Trainer, Mail, and more)
+  Trainer, Mail, Auction House, and more)
 - Mailbox: open several mails at once (all of them, or the ones ticked with
   a checkbox), send the ticked ones back to their senders, stop a run in
   progress, Shift-click or Ctrl-click a row to take or return that one mail,
@@ -110,8 +110,8 @@ Two addons ship together:
   lines are not yet
   shown on action buttons (the client offers no way to read the item of an
   action slot)
-- A handful of native windows not yet reskinned (Auction House, Tabard,
-  World Map polish, and a few more niche ones)
+- A handful of native windows not yet reskinned (Tabard, World Map polish,
+  and a few more niche ones)
 - Nameplate customization — blocked by a client-side limitation on
   Unreal Azeroth, parked until that changes
 - Heal prediction: channelled heals (Tranquility, Mend Pet, bandages) are not
