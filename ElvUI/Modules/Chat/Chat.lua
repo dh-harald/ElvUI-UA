@@ -147,7 +147,8 @@ end
 -- tab, AND the tab-strip backdrop (`LeftChatTab`) -- only the datatext
 -- bar (`LeftChatDataPanel`) and this toggle button itself stay.
 --
--- Two things must both be handled for a clean collapse:
+-- Besides hiding the content (below), two things must be handled for a clean
+-- collapse:
 -- 1. `LeftChatPanel` (`lchat`) has its OWN backdrop (`E:SetTemplate` in
 --    CreateChatPanels), independent of `ChatFrame1`'s -- hiding
 --    ChatFrame1 left that backdrop rectangle sitting there empty,
@@ -163,19 +164,58 @@ end
 --    first ~30s after login, so a collapse hours into a session outran
 --    it. Fixed by re-running `HideNativeChatButtons()` on every toggle,
 --    not just at login.
+--
+-- Collapsing hides `LeftChatContent`, a plain container that parents every
+-- chat window in the native dock, their tabs, the tab-strip backdrop and the
+-- wheel catcher (same principle as real ElvUI, which hides the whole
+-- `LeftChatPanel`; here the datatext bar and this button must stay, so the
+-- container sits one level lower). Hiding the windows one by one does not
+-- hold: native code re-shows them at will -- `FCF_DockUpdate` shows the
+-- selected window at login, `FCF_OnUpdate` fades a hidden docked window's
+-- tab back in on hover, a tab click re-selects the window -- and a hidden
+-- ancestor is the only state none of that can undo.
+
+-- The native dock stacks every docked window (Combat Log, custom windows) on
+-- ChatFrame1's rectangle, so the whole dock belongs to the left panel.
+local function IsLeftDockFrame(chatFrame)
+	return chatFrame ~= nil and (chatFrame == ChatFrame1 or chatFrame.isDocked ~= nil)
+end
+
+-- Moves every docked window and its tab into LeftChatContent, and an undocked
+-- one back to UIParent. Tabs are `frameStrata="LOW"` in the template; a new
+-- parent resets that, so the original strata is re-applied. ChatFrame1Tab is
+-- left to RestyleChatTab, which gives it its own strata and level.
+local function AdoptLeftDock()
+	local content = LeftChatContent
+	if not content then return end
+	local i
+	for i = 1, (NUM_CHAT_WINDOWS or 10) do
+		local chatFrame = _G["ChatFrame"..i]
+		local tab = _G["ChatFrame"..i.."Tab"]
+		if chatFrame then
+			local parent = IsLeftDockFrame(chatFrame) and content or UIParent
+			if tab and not tab.elvOriginalStrata then
+				local okStrata, strata = pcall(tab.GetFrameStrata, tab)
+				tab.elvOriginalStrata = (okStrata and strata) or "LOW"
+			end
+			pcall(chatFrame.SetParent, chatFrame, parent)
+			if tab and i ~= 1 then
+				pcall(tab.SetParent, tab, parent)
+				pcall(tab.SetFrameStrata, tab, tab.elvOriginalStrata)
+			end
+		end
+	end
+end
+CH.AdoptLeftDock = AdoptLeftDock
+
 local function ToggleLeftChat()
 	if E.db.LeftChatPanelFaded then
 		E.db.LeftChatPanelFaded = nil
-		pcall(ChatFrame1.Show, ChatFrame1)
-		pcall(ChatFrame1Tab.Show, ChatFrame1Tab)
-		-- Respect the separate "Tab Panel" backdrop setting -- don't force
-		-- it visible on un-collapse if the user has it turned off anyway.
-		if LeftChatTab and E.db.chat.panelTabBackdrop then LeftChatTab:Show() end
+		if LeftChatContent then LeftChatContent:Show() end
 	else
 		E.db.LeftChatPanelFaded = true
-		pcall(ChatFrame1.Hide, ChatFrame1)
-		pcall(ChatFrame1Tab.Hide, ChatFrame1Tab)
-		if LeftChatTab then LeftChatTab:Hide() end
+		AdoptLeftDock()
+		if LeftChatContent then LeftChatContent:Hide() end
 	end
 	CH:UpdatePanelBackdrop()
 	CH:HideNativeChatButtons()
@@ -258,7 +298,11 @@ function CH:CreateChatPanels()
 	E:SetTemplate(lchat, "Transparent")
 	E:CreateMover(lchat, "LeftChatMover", L["Left Chat"])
 
-	local lchattab = CreateFrame("Frame", "LeftChatTab", lchat)
+	-- Everything the collapse hides; see ToggleLeftChat.
+	local lcontent = CreateFrame("Frame", "LeftChatContent", lchat)
+	lcontent:SetAllPoints(lchat)
+
+	local lchattab = CreateFrame("Frame", "LeftChatTab", lcontent)
 	lchattab:SetHeight(PANEL_HEIGHT)
 	lchattab:SetPoint("TOPLEFT", lchat, "TOPLEFT", SPACING, -SPACING)
 	lchattab:SetPoint("TOPRIGHT", lchat, "TOPRIGHT", -SPACING, -SPACING)
@@ -315,9 +359,7 @@ function CH:CreateChatPanels()
 	-- -- so a /reload while collapsed doesn't show the "empty rectangle"/
 	-- "leftover border" bugs those fixed for a live toggle.
 	if E.db.LeftChatPanelFaded then
-		pcall(ChatFrame1.Hide, ChatFrame1)
-		pcall(ChatFrame1Tab.Hide, ChatFrame1Tab)
-		lchattab:Hide()
+		lcontent:Hide()
 	end
 	if E.db.RightChatPanelFaded then
 		rchattab:Hide()
@@ -360,8 +402,9 @@ function CH:RestyleChatTab()
 	-- `ToggleChatTabPanels` does. Parenting the tab onto `LeftChatPanel`
 	-- instead of `LeftChatTab`, matching the reference, keeps
 	-- `LeftChatTab` purely a backdrop sibling behind it, so its own
-	-- visibility no longer affects the tab at all.
-	pcall(tab.SetParent, tab, LeftChatPanel)
+	-- visibility no longer affects the tab at all. The parent is
+	-- `LeftChatContent`, the panel-sized container the collapse hides.
+	pcall(tab.SetParent, tab, LeftChatContent or LeftChatPanel)
 	pcall(tab.ClearAllPoints, tab)
 	pcall(tab.SetPoint, tab, "BOTTOMLEFT", LeftChatTab, "BOTTOMLEFT", 4, 0)
 	pcall(tab.SetFrameStrata, tab, LeftChatPanel:GetFrameStrata())
@@ -542,13 +585,13 @@ end
 
 function CH:EnableWheelScroll(frame)
 	if self.wheelCatcher then return end
-	-- Parented to LeftChatPanel directly (not `frame:GetParent()`) --
+	-- Parented to LeftChatContent directly (not `frame:GetParent()`) --
 	-- this runs BEFORE ChatFrame1 itself actually gets reparented onto
-	-- LeftChatPanel later in Initialize, so `frame:GetParent()` would
-	-- still be ChatFrame1's original native parent at this point.
+	-- it later in Initialize, so `frame:GetParent()` would still be
+	-- ChatFrame1's original native parent at this point.
 	-- `SetAllPoints(frame)` tracks ChatFrame1's on-screen rectangle
 	-- correctly regardless of the catcher's own parent either way.
-	local okCatcher, catcher = pcall(CreateFrame, "ScrollFrame", "LeftChatWheelCatcher", LeftChatPanel)
+	local okCatcher, catcher = pcall(CreateFrame, "ScrollFrame", "LeftChatWheelCatcher", LeftChatContent or LeftChatPanel)
 	if not okCatcher or not catcher then return end
 	catcher:SetAllPoints(frame)
 	pcall(catcher.SetFrameLevel, catcher, (frame:GetFrameLevel() or 0) + 5)
@@ -638,7 +681,8 @@ function CH:PositionChat()
 	-- "external" reposition -- set for the whole duration of this
 	-- function's own SetParent/ClearAllPoints/SetPoint calls.
 	CH.repositioning = true
-	chat:SetParent(LeftChatPanel)
+	chat:SetParent(LeftChatContent or LeftChatPanel)
+	AdoptLeftDock()
 	CH:RestyleChatTab()
 
 	chat:ClearAllPoints()
@@ -1615,7 +1659,13 @@ function CH:Initialize()
 
 	pcall(ChatFrame1.SetTimeVisible, ChatFrame1, 100)
 
-	pcall(DEFAULT_CHAT_FRAME.SetParent, DEFAULT_CHAT_FRAME, LeftChatPanel)
+	pcall(DEFAULT_CHAT_FRAME.SetParent, DEFAULT_CHAT_FRAME, LeftChatContent or LeftChatPanel)
+
+	-- The native dock is filled after this point at login, and windows can be
+	-- docked/undocked at any time; both paths end in FCF_DockUpdate or
+	-- FCF_UnDockFrame, so the container's membership follows them.
+	pcall(function() CH:SecureHook("FCF_DockUpdate", AdoptLeftDock) end)
+	pcall(function() CH:SecureHook("FCF_UnDockFrame", AdoptLeftDock) end)
 
 	-- Matches real ElvUI's own one-shot delayed PositionChat -- the
 	-- native chat frame's own layout isn't necessarily settled yet at
