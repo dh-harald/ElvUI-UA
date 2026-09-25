@@ -111,6 +111,10 @@ local function FormatRemain(remain)
 	return text, color.r, color.g, color.b
 end
 
+-- Shared with countdowns drawn without a Cooldown frame (Modules/Misc/
+-- Totems.lua), so they format and colour exactly like this text.
+E.FormatCooldownRemain = FormatRemain
+
 local activeTimers = {}
 local timerHandle
 

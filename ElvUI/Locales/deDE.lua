@@ -253,6 +253,7 @@ L["Realm Time:"] = "Realmzeit:"
 
 --Misc
 L["Loot / Alert Frames"] = "Beute-/Alarmfenster"
+L["Totem Tracker"] = "Totem-Tracker"
 
 --Mail
 L["Open All"] = "Alle öffnen"

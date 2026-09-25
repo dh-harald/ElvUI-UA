@@ -116,6 +116,18 @@ P.general = {
 			battlefield = { position = "BOTTOMRIGHT", scale = 1, xOffset = 3, yOffset = 0 },
 		},
 	},
+	-- Totem tracker (Modules/Misc/Totems.lua). Real ElvUI's keys and
+	-- defaults; `tickTimer` and `twistTimer` are this project's additions.
+	totems = {
+		growthDirection = "VERTICAL",
+		sortDirection = "ASCENDING",
+		size = 40,
+		height = 40,
+		spacing = 4,
+		keepSizeRatio = true,
+		tickTimer = true,
+		twistTimer = true,
+	},
 }
 
 -- ---------------------------------------------------------------------

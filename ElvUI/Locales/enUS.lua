@@ -295,6 +295,7 @@ L["Realm Time:"] = true
 
 --Misc
 L["Loot / Alert Frames"] = true
+L["Totem Tracker"] = true
 
 --Mail
 L["Open All"] = true

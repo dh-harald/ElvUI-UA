@@ -71,6 +71,10 @@ Two addons ship together:
 - Solo loot and group loot rolls (Need/Greed/Pass bars, optional auto greed)
 - Raid marker ring (a key binding opens the eight raid target icons at the
   cursor; legacy client)
+- Totem tracker (shaman): one button per element with the active totem and
+  its time left, cleared when the totem is destroyed; optional pulse timer
+  (Tremor, Earthbind, Magma, ...) and Windfury twist timer. The client has
+  no totem API, so the state comes from your own casts and combat log
 - Tooltip: class/reaction-coloured unit tooltips, guild rank,
   level/classification line, target and "targeted by" info, movable anchor
   or cursor anchor, flat ElvUI skin, health bar with health text, sell

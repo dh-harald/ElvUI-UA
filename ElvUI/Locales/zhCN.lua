@@ -253,6 +253,7 @@ L["Realm Time:"] = "服务器时间:"
 
 --Misc
 L["Loot / Alert Frames"] = "拾取/提醒框"
+L["Totem Tracker"] = "图腾监视"
 
 --Mail
 L["Open All"] = "全部打开"

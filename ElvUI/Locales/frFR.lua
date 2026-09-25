@@ -253,6 +253,7 @@ L["Realm Time:"] = "Heure du royaume :"
 
 --Misc
 L["Loot / Alert Frames"] = "Cadres de butin / Alerte"
+L["Totem Tracker"] = "Suivi des totems"
 
 --Mail
 L["Open All"] = "Tout ouvrir"

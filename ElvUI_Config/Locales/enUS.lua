@@ -598,6 +598,18 @@ L["Time Info"] = true
 L["Mail"] = true
 L["PvP Queue"] = true
 
+--Totems
+L["Bar Direction"] = true
+L["Keep Size Ratio"] = true
+L["Button Width"] = true
+L["Button Height"] = true
+L["The size of the Totem buttons."] = true
+L["The width of the totem buttons."] = true
+L["Pulse Timer"] = true
+L["Show the time until the totem's next pulse, for totems that act at an interval (Tremor, Earthbind, Magma, Windfury, ...)."] = true
+L["Windfury Twist Timer"] = true
+L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."] = true
+
 --Mail
 L["Adds bulk handling to the native mailbox: open several mails at once, pick which ones with a checkbox, and send more than one item at a time."] = true
 L["With this off the mailbox is left to the Blizzard window skin instead. Requires /reload to take effect."] = true

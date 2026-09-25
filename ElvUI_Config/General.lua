@@ -374,6 +374,93 @@ E.Options.args.general = {
 				},
 			},
 		},
+		-- Real ElvUI's totem tracker group (current ElvUI keeps it under
+		-- general > blizzardImprovements; ElvUI-vanilla's commented-out copy
+		-- sits here, at order 5). Read by Modules/Misc/Totems.lua.
+		totems = {
+			order = 5,
+			type = "group",
+			name = L["Totem Tracker"],
+			get = function(info) return E.db.general.totems[ info[getn(info)] ] end,
+			set = function(info, value)
+				E.db.general.totems[ info[getn(info)] ] = value
+				E:GetModule("Misc"):PositionTotems()
+			end,
+			args = {
+				header = {
+					order = 0,
+					type = "header",
+					name = L["Totem Tracker"],
+				},
+				enable = {
+					order = 1,
+					type = "toggle",
+					name = L["Enable"],
+					desc = L["Requires /reload to take effect."],
+					get = function() return E.private.general.totemTracker end,
+					set = function(_, value)
+						E.private.general.totemTracker = value
+						E:RequestReload("private")
+					end,
+				},
+				sortDirection = {
+					order = 2,
+					type = "select",
+					name = L["Sort Direction"],
+					values = {
+						ASCENDING = L["Ascending"],
+						DESCENDING = L["Descending"],
+					},
+				},
+				growthDirection = {
+					order = 3,
+					type = "select",
+					name = L["Bar Direction"],
+					values = {
+						VERTICAL = L["Vertical"],
+						HORIZONTAL = L["Horizontal"],
+					},
+				},
+				keepSizeRatio = {
+					order = 4,
+					type = "toggle",
+					name = L["Keep Size Ratio"],
+				},
+				spacing = {
+					order = 5,
+					type = "range",
+					name = L["Button Spacing"],
+					min = 1, max = 10, step = 1,
+				},
+				size = {
+					order = 6,
+					type = "range",
+					name = function() return E.db.general.totems.keepSizeRatio and L["Button Size"] or L["Button Width"] end,
+					desc = function() return E.db.general.totems.keepSizeRatio and L["The size of the Totem buttons."] or L["The width of the totem buttons."] end,
+					min = 24, max = 60, step = 1,
+				},
+				height = {
+					order = 7,
+					type = "range",
+					name = L["Button Height"],
+					min = 24, max = 60, step = 1,
+					hidden = function() return E.db.general.totems.keepSizeRatio end,
+				},
+				-- Project additions (Modules/Misc/Totems.lua header).
+				tickTimer = {
+					order = 8,
+					type = "toggle",
+					name = L["Pulse Timer"],
+					desc = L["Show the time until the totem's next pulse, for totems that act at an interval (Tremor, Earthbind, Magma, Windfury, ...)."],
+				},
+				twistTimer = {
+					order = 9,
+					type = "toggle",
+					name = L["Windfury Twist Timer"],
+					desc = L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."],
+				},
+			},
+		},
 		cooldown = {
 			type = "group",
 			name = L["Cooldown Text"],

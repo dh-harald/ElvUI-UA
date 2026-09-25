@@ -253,6 +253,7 @@ L["Realm Time:"] = "Время сервера:"
 
 --Misc
 L["Loot / Alert Frames"] = "Розыгрыш/оповещения"
+L["Totem Tracker"] = "Отслеживание тотемов"
 
 --Mail
 L["Open All"] = "Открыть все"

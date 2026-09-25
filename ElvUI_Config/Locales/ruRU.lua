@@ -575,6 +575,18 @@ L["Time Info"] = "Информация о времени"
 L["Mail"] = "Письмо"
 L["PvP Queue"] = "PvP Queue"
 
+--Totems
+L["Bar Direction"] = "Направление панели"
+L["Keep Size Ratio"] = "Сохранять пропорции"
+L["Button Width"] = "Ширина кнопок"
+L["Button Height"] = "Высота кнопок"
+L["The size of the Totem buttons."] = "Размер кнопок тотемов."
+L["The width of the totem buttons."] = "Ширина кнопок тотемов."
+L["Pulse Timer"] = "Таймер импульса"
+L["Show the time until the totem's next pulse, for totems that act at an interval (Tremor, Earthbind, Magma, Windfury, ...)."] = "Показывает время до следующего импульса тотема для тотемов, действующих с интервалом (Трепет, Оковы земли, Магма, Неистовство ветра, ...)."
+L["Windfury Twist Timer"] = "Таймер твиста Неистовства ветра"
+L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."] = "После замены тотема Неистовства ветра другим тотемом воздуха кнопка воздуха отсчитывает остаток его 10-секундного окна, чтобы вовремя поставить следующий тотем Неистовства ветра."
+
 --Mail
 L["Adds bulk handling to the native mailbox: open several mails at once, pick which ones with a checkbox, and send more than one item at a time."] = "Добавляет массовые действия в стандартный почтовый ящик: открыть несколько писем сразу, выбрать нужные флажком и отправить несколько предметов за раз."
 L["With this off the mailbox is left to the Blizzard window skin instead. Requires /reload to take effect."] = "Если выключено, почтовый ящик оформляется скином окна Blizzard. Требуется /reload."

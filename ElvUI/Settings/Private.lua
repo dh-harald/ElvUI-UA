@@ -41,6 +41,8 @@ V.general = {
 	loot = true,
 	lootRoll = true,
 	lootUnderMouse = false,
+	-- Totem tracker switch (Modules/Misc/Totems.lua), real ElvUI's key.
+	totemTracker = true,
 	minimap = {
 		enable = true,
 		hideCalendar = true,

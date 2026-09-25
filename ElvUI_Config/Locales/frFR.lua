@@ -575,6 +575,18 @@ L["Time Info"] = "Info temps"
 L["Mail"] = "Courrier"
 L["PvP Queue"] = "PvP Queue"
 
+--Totems
+L["Bar Direction"] = "Direction de la barre"
+L["Keep Size Ratio"] = "Conserver les proportions"
+L["Button Width"] = "Largeur des boutons"
+L["Button Height"] = "Hauteur des boutons"
+L["The size of the Totem buttons."] = "La taille des boutons de totem."
+L["The width of the totem buttons."] = "La largeur des boutons de totem."
+L["Pulse Timer"] = "Minuteur d'impulsion"
+L["Show the time until the totem's next pulse, for totems that act at an interval (Tremor, Earthbind, Magma, Windfury, ...)."] = "Affiche le temps restant avant la prochaine impulsion du totem, pour les totems qui agissent à intervalles (Séisme, Lien terrestre, Magma, Furie-des-vents, ...)."
+L["Windfury Twist Timer"] = "Minuteur de twist Furie-des-vents"
+L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."] = "Après le remplacement du totem Furie-des-vents par un autre totem d'air, décompte le reste de sa fenêtre de 10 secondes sur le bouton d'air, pour placer le prochain Furie-des-vents au bon moment."
+
 --Mail
 L["Adds bulk handling to the native mailbox: open several mails at once, pick which ones with a checkbox, and send more than one item at a time."] = "Ajoute le traitement en masse à la boîte aux lettres native : ouvrir plusieurs courriers d'un coup, choisir lesquels avec une case à cocher, et envoyer plusieurs objets à la fois."
 L["With this off the mailbox is left to the Blizzard window skin instead. Requires /reload to take effect."] = "Désactivé, la boîte aux lettres est laissée au skin de fenêtre Blizzard. Nécessite /reload pour prendre effet."

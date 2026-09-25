@@ -5,4 +5,5 @@
 	<Script file="LootRoll.lua"/>
 	<Script file="ColorPicker.lua"/>
 	<Script file="InterruptAnnounce.lua"/>
+	<Script file="Totems.lua"/>
 </Ui>
