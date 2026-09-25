@@ -19,6 +19,7 @@
 	<Script file="Inspect.lua"/>
 	<Script file="Stable.lua"/>
 	<Script file="DressingRoom.lua"/>
+	<Script file="Misc.lua"/>
 	<Script file="Talent.lua"/>
 	<Script file="TradeSkill.lua"/>
 	<Script file="Craft.lua"/>

@@ -117,6 +117,7 @@ V.skins = {
 		inspect = true,
 		stable = true,
 		dressingroom = true,
+		misc = true,
 		talent = true,
 		tradeskill = true,
 		auctionhouse = true,

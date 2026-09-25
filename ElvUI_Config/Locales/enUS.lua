@@ -442,6 +442,7 @@ L["Taxi Frame"] = true
 L["Inspect"] = true
 L["Stable"] = true
 L["Dressing Room"] = true
+L["Misc Frames"] = true
 L["Talents"] = true
 L["Tradeskills"] = true
 L["Trainer Frame"] = true
