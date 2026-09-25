@@ -1,3 +1,19 @@
+# [0.8.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.7.0...v0.8.0) (2026-09-25)
+
+
+### Bug Fixes
+
+* **chat:** hide chat frames/panels correctly ([e0dd942](https://github.com/dh-harald/ElvUI-UA/commit/e0dd942f70502b9767457719021fd4c00bce0d4e))
+* **chat:** remove remaining texture from chat edit box ([aef75f2](https://github.com/dh-harald/ElvUI-UA/commit/aef75f2872bc232db8f8e3b18e0db8d7d27cd694))
+* **moveui:** workaround: unbind arrow buttons while moveui active ([c9b4511](https://github.com/dh-harald/ElvUI-UA/commit/c9b45112a1a6d138667582dace854bd4c1f5d389))
+
+
+### Features
+
+* **modules:** add shaman totem tracker module ([e2d4fdf](https://github.com/dh-harald/ElvUI-UA/commit/e2d4fdffe2d67432ea6761d83abb69f3565cc046))
+* **skin:** add dressing room ([75575f1](https://github.com/dh-harald/ElvUI-UA/commit/75575f1f1f09379c872ee255c0e77054fdf75c0e))
+* **skins:** add Misc/StackSplitFrame ([b2a8144](https://github.com/dh-harald/ElvUI-UA/commit/b2a814440e2d7ee64e41881d430ba2f8e99a2ae7))
+
 # [0.7.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.6.0...v0.7.0) (2026-09-20)
 
 
