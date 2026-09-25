@@ -607,12 +607,19 @@ function CH:SkinEditBox()
 	local editbox = ChatFrameEditBox
 	if not editbox or editbox.elvSkinned then return end
 
-	-- Best-effort region kill -- vanilla's classic edit box template names
-	-- its 3 border textures Left/Mid/Right; harmless no-op via pcall if
-	-- this guess is wrong on either client.
-	Kill(_G["ChatFrameEditBoxLeft"])
-	Kill(_G["ChatFrameEditBoxMid"])
-	Kill(_G["ChatFrameEditBoxRight"])
+	-- ChatFrameEditBoxTemplate has 3 border textures, but only Left/Right are
+	-- named -- the middle piece is anonymous, so it is only reachable through
+	-- GetRegions (real ElvUI kills regions 6-8 by index). Filtered by object
+	-- type: on UA the region objects carry no SetTexture field, and the one
+	-- FontString region is the channel header ("Say:"), which must stay.
+	local regions = { editbox:GetRegions() }
+	local i
+	for i = 1, table.getn(regions) do
+		local region = regions[i]
+		if region and region:GetObjectType() == "Texture" then
+			Kill(region)
+		end
+	end
 
 	-- NOT E:SetTemplate: this is a NATIVE frame, and that helper's contract is
 	-- our own CreateFrame'd frames only (on UA a native frame's <Backdrop> is a
