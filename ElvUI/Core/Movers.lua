@@ -383,6 +383,65 @@ local function CreateKeyFrame()
 	return frame
 end
 
+-- On Unreal Azeroth the key frame's OnKeyDown does not stop an arrow key from
+-- also running its key binding, so every nudge would move or turn the
+-- character too (UP/DOWN/LEFT/RIGHT are movement keys by default). The legacy
+-- client consumes the key in the frame and needs none of this.
+--
+-- The chords are unbound for the duration of move mode and rebound on exit.
+-- SaveBindings is never called, so the change stays in the live key map only
+-- and never reaches the player's saved binding set. The removed commands are
+-- recorded in `E.global.moverBindings` rather than a local, so a /reload or
+-- disconnect while move mode is open still gets them back at the next login
+-- (RestoreArrowBindings below, run as an initial module).
+local ARROW_CHORDS = {
+	"UP", "DOWN", "LEFT", "RIGHT",
+	"SHIFT-UP", "SHIFT-DOWN", "SHIFT-LEFT", "SHIFT-RIGHT",
+}
+
+local function SuppressArrowBindings()
+	if not Compat.isUA then return end
+	if type(GetBindingAction) ~= "function" or type(SetBinding) ~= "function" then return end
+	if not E.global then return end
+	E.global.moverBindings = E.global.moverBindings or {}
+	local store = E.global.moverBindings
+
+	local i
+	for i = 1, table.getn(ARROW_CHORDS) do
+		local chord = ARROW_CHORDS[i]
+		-- A chord already recorded is still unbound from an earlier unlock
+		-- that never got its matching lock; reading it again would record
+		-- "" and lose the real command.
+		if not store[chord] then
+			local ok, action = pcall(GetBindingAction, chord)
+			if ok and type(action) == "string" and action ~= "" then
+				store[chord] = action
+				pcall(SetBinding, chord)
+			end
+		end
+	end
+end
+
+-- Rebinds only chords that are still empty: if the client reloaded its saved
+-- binding set in the meantime, the chord already carries its command and is
+-- left alone.
+local function RestoreArrowBindings()
+	local store = E.global and E.global.moverBindings
+	if type(store) ~= "table" then return end
+	if type(GetBindingAction) ~= "function" or type(SetBinding) ~= "function" then return end
+
+	local chord, action
+	for chord, action in pairs(store) do
+		local ok, current = pcall(GetBindingAction, chord)
+		if ok and (current == nil or current == "") then
+			pcall(SetBinding, chord, action)
+		end
+	end
+	E.global.moverBindings = {}
+end
+
+E:RegisterInitialModule("MoverBindings", RestoreArrowBindings)
+
 -- ===========================================================================
 -- Mover control panel
 --
@@ -896,6 +955,7 @@ function E:UnlockMovers()
 	self.moversUnlocked = true
 	if not keyFrame then keyFrame = CreateKeyFrame() end
 	if keyFrame then pcall(keyFrame.Show, keyFrame) end
+	SuppressArrowBindings()
 	if not moverPanel then CreateMoverPanel() end
 	if moverPanel then
 		-- Re-applied on every unlock, not just at creation: a resolution or
@@ -923,6 +983,7 @@ function E:LockMovers()
 	self.moversUnlocked = false
 	self.activeMover = nil
 	if keyFrame then pcall(keyFrame.Hide, keyFrame) end
+	RestoreArrowBindings()
 	if moverPanel then pcall(moverPanel.Hide, moverPanel) end
 	HideGrid()
 

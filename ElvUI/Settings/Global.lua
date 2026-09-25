@@ -57,6 +57,11 @@ G.mail = {
 -- filled at runtime by Core/Movers.lua.
 G.moverPanel = {}
 
+-- Arrow-key bindings removed while `/moveui` is open on Unreal Azeroth, keyed
+-- by chord, so they are rebound even after a /reload inside move mode.
+-- Project-only UI state, filled and emptied at runtime by Core/Movers.lua.
+G.moverBindings = {}
+
 -- Whether the Lua error window (Core/DebugTools.lua) opens by itself on a new
 -- error; errors are recorded either way. Toggled with "/elvui errors on|off".
 -- Project-only UI state, so global rather than profile.
