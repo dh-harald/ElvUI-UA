@@ -65,14 +65,12 @@
 -- - `TalentFrameTalent1-20` (`TalentButtonTemplate`, inherits
 --   `ItemButtonTemplate`) carry the exact same extra NAMED
 --   `$parentSlot` ring (`UI-EmptySlot-White`, overhanging the button)
---   that `PetStableSlotTemplate` has -- same recipe as `Stable.lua`:
---   kill the ring by name first, then `Util.SkinItemButton` for the
---   icon crop/reposition/border. `$parentRankBorder`/`$parentRank` (the
---   small rank-count badge in the button's own bottom-right corner) are
---   left completely native, matching real ElvUI (only re-fonts the rank
---   text) -- they sit on the BUTTON's own OVERLAY layer, a leaf-widget
---   layering question, not the window-vs-panel one, so nothing here
---   can cover them.
+--   that `PetStableSlotTemplate` has -- killed by name, as in `Stable.lua`.
+--   The icon crop and 1px border are built from the button's own regions
+--   instead of `Util.SkinItemButton`'s backdrop frame (see
+--   `StyleTalentButton`). `$parentRankBorder`/`$parentRank` (the small
+--   rank-count badge in the button's own bottom-right corner) are left
+--   completely native, matching real ElvUI (only re-fonts the rank text).
 -- - `TalentFrameArrowFrame`/`TalentFrameBranch1-30`/`TalentFrameArrow1-30`
 --   (the tree's connector lines and prerequisite arrows) are never
 --   touched -- they live nested inside the ScrollChild, well below every
@@ -129,21 +127,45 @@ local function Named(suffix)
 	return _G[frameName .. suffix]
 end
 
+-- The border is built from the button's own regions (`S:CreateIconEdges`),
+-- not `Util.SkinItemButton`'s backdrop frame: the talent buttons live inside
+-- the scroll child, where on the legacy client a runtime-created frame draws
+-- over the button's regions whatever its frame level -- its fill hid every
+-- icon and the inner half of the rank badge. The edges sit on BACKGROUND so
+-- the rank badge (`$parentRankBorder`/`$parentRank`, native OVERLAY,
+-- overhanging the bottom-right corner) stays on top of them, as it does over
+-- real ElvUI's button backdrop.
 local function StyleTalentButton(index)
 	local talent = Named("Talent" .. index)
 	if not talent then return end
+	local okName, name = pcall(talent.GetName, talent)
+	if not okName or not name then return end
 
-	local okName, slotName = pcall(talent.GetName, talent)
-	local ring = (okName and slotName) and _G[slotName .. "Slot"] or nil
+	local ring = _G[name .. "Slot"]
 	if ring then
 		pcall(ring.SetTexture, ring, nil)
 		pcall(ring.Hide, ring)
 		ring.Show = E.noop
 	end
 
-	if ElvUI.Util and ElvUI.Util.SkinItemButton then
-		ElvUI.Util.SkinItemButton(talent)
+	-- Same pair as `Util.SkinItemButton`: an empty SetNormalTexture alone
+	-- leaves the native quickslot art drawing on UA.
+	pcall(talent.SetNormalTexture, talent, "")
+	local okNormal, normal = pcall(talent.GetNormalTexture, talent)
+	if okNormal and normal then
+		pcall(normal.SetAlpha, normal, 0)
+		pcall(normal.Hide, normal)
 	end
+
+	local icon = _G[name .. "IconTexture"]
+	if icon then
+		pcall(icon.SetTexCoord, icon, 0.08, 0.92, 0.08, 0.92)
+		pcall(icon.ClearAllPoints, icon)
+		pcall(icon.SetPoint, icon, "TOPLEFT", talent, "TOPLEFT", 1, -1)
+		pcall(icon.SetPoint, icon, "BOTTOMRIGHT", talent, "BOTTOMRIGHT", -1, 1)
+	end
+
+	S:CreateIconEdges(talent, "BACKGROUND")
 end
 
 local function ApplyTalentChrome(frame)
@@ -189,8 +211,14 @@ local function ApplyTalentChrome(frame)
 	local scrollBar = Named("ScrollFrameScrollBar")
 	if scrollBar then
 		S:HandleScrollBar(scrollBar)
+		-- `UIPanelScrollBarTemplate` declares a height of 0: the slider gets
+		-- its height only from the TOPLEFT/BOTTOMLEFT anchor pair, so both
+		-- must be re-set after ClearAllPoints. With one anchor the legacy
+		-- client collapses it to 0 -- the bar disappears, and the mouse
+		-- wheel (which steps by half the bar's height) stops scrolling.
 		pcall(scrollBar.ClearAllPoints, scrollBar)
 		pcall(scrollBar.SetPoint, scrollBar, "TOPLEFT", scrollFrame, "TOPRIGHT", 10, -16)
+		pcall(scrollBar.SetPoint, scrollBar, "BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 10, 16)
 	end
 
 	for i = 1, TALENT_BUTTON_COUNT do

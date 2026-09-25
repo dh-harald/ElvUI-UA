@@ -97,7 +97,7 @@ Two addons ship together:
   place (Character, Friends, SpellBook, Macro, Key Bindings, Main Menu,
   Interface/Video/Sound Options, Gossip/Greeting/Quest/QuestLog,
   Merchant, Trade, Taxi, Pet Stable, Talents, Trade Skills, Enchanting,
-  Trainer, Mail, Auction House, and more)
+  Trainer, Mail, Auction House, Dressing Room, and more)
 - Mailbox: open several mails at once (all of them, or the ones ticked with
   a checkbox), send the ticked ones back to their senders, stop a run in
   progress, Shift-click or Ctrl-click a row to take or return that one mail,

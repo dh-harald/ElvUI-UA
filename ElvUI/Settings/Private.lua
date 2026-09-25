@@ -116,6 +116,7 @@ V.skins = {
 		taxi = true,
 		inspect = true,
 		stable = true,
+		dressingroom = true,
 		talent = true,
 		tradeskill = true,
 		auctionhouse = true,

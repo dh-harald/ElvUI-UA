@@ -18,6 +18,7 @@
 	<Script file="Taxi.lua"/>
 	<Script file="Inspect.lua"/>
 	<Script file="Stable.lua"/>
+	<Script file="DressingRoom.lua"/>
 	<Script file="Talent.lua"/>
 	<Script file="TradeSkill.lua"/>
 	<Script file="Craft.lua"/>

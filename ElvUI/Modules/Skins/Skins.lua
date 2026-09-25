@@ -450,19 +450,24 @@ end
 -- above), and its fill hid the icon. The strips have no fill, so they cannot
 -- cover the icon whatever layer the NormalTexture is on. Crop the icon 1px in
 -- from the button's edges to sit inside them.
+--
+-- `layer` defaults to OVERLAY. Pass a lower one when the button carries its
+-- own OVERLAY art overhanging the edge that must stay on top (the talent
+-- buttons' rank badge); the cropped icon never overlaps the strips, so any
+-- layer keeps them visible.
 local ICON_EDGES = {
 	{ "TOPLEFT", "TOPRIGHT", 0, 1 },
 	{ "BOTTOMLEFT", "BOTTOMRIGHT", 0, 1 },
 	{ "TOPLEFT", "BOTTOMLEFT", 1, 0 },
 	{ "TOPRIGHT", "BOTTOMRIGHT", 1, 0 },
 }
-function S:CreateIconEdges(button)
+function S:CreateIconEdges(button, layer)
 	if not button or button.elvIconEdges then return end
 	local edges = {}
 	local i
 	for i = 1, table.getn(ICON_EDGES) do
 		local spec = ICON_EDGES[i]
-		local tex = SolidRegion(button, "OVERLAY", S.BORDER_COLOR)
+		local tex = SolidRegion(button, layer or "OVERLAY", S.BORDER_COLOR)
 		if tex then
 			pcall(tex.SetPoint, tex, spec[1], button, spec[1], 0, 0)
 			pcall(tex.SetPoint, tex, spec[2], button, spec[2], 0, 0)
