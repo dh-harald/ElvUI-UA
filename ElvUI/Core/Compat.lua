@@ -193,20 +193,8 @@ end
 local durabilityPattern
 local durabilityScanTooltip
 
-function Compat.GetInventoryItemDurability(slot)
-	if not GetInventoryItemTexture("player", slot) then return end
-
-	if not durabilityPattern then
-		durabilityPattern = string.gsub(DURABILITY_TEMPLATE, "%%d / %%d", "(%%d+) / (%%d+)")
-	end
-
-	if not durabilityScanTooltip then
-		local ok
-		ok, durabilityScanTooltip = pcall(CreateFrame, "GameTooltip", "ElvUICompat_DurabilityScanTooltip", nil, "ShoppingTooltipTemplate")
-		if not ok or not durabilityScanTooltip then return end
-		durabilityScanTooltip:SetOwner(UIParent, "ANCHOR_NONE")
-	end
-
+local function ScanDurability(slot)
+	durabilityScanTooltip:SetOwner(UIParent, "ANCHOR_NONE")
 	durabilityScanTooltip:ClearLines()
 	durabilityScanTooltip:SetInventoryItem("player", slot)
 
@@ -220,5 +208,33 @@ function Compat.GetInventoryItemDurability(slot)
 				return tonumber(current), tonumber(maximum)
 			end
 		end
+	end
+end
+
+-- SetInventoryItem shows the scan tooltip, and with ANCHOR_NONE it stays
+-- drawn at the bottom-left screen corner, so it is hidden after every scan.
+-- Hiding drops the owner and an unowned tooltip is not filled by its Set
+-- calls, hence the SetOwner inside ScanDurability on every call. The scan is
+-- pcall'd so the tooltip is hidden even when a Set call errors.
+function Compat.GetInventoryItemDurability(slot)
+	if not GetInventoryItemTexture("player", slot) then return end
+
+	if not durabilityPattern then
+		durabilityPattern = string.gsub(DURABILITY_TEMPLATE, "%%d / %%d", "(%%d+) / (%%d+)")
+	end
+
+	if not durabilityScanTooltip then
+		local ok
+		ok, durabilityScanTooltip = pcall(CreateFrame, "GameTooltip", "ElvUICompat_DurabilityScanTooltip", nil, "ShoppingTooltipTemplate")
+		if not ok or not durabilityScanTooltip then
+			durabilityScanTooltip = nil
+			return
+		end
+	end
+
+	local ok, current, maximum = pcall(ScanDurability, slot)
+	durabilityScanTooltip:Hide()
+	if ok then
+		return current, maximum
 	end
 end
