@@ -362,21 +362,11 @@ function DT:SetupObjectLDB(name, obj)
 		curFrame = self
 		LDB.RegisterCallback(DT, "LibDataBroker_AttributeChanged_"..name.."_text", textUpdate)
 		LDB.RegisterCallback(DT, "LibDataBroker_AttributeChanged_"..name.."_value", textUpdate)
-		-- This project's vendored LibDataBroker-1.1 (a different variant than
-		-- real ElvUI-vanilla's own, confirmed via a byte-for-byte diff) pairs
-		-- with a CallbackHandler-1.0 whose `Fire` signature is
-		-- `Fire(eventname, argCount, a1, a2, ...)` -- an explicit arg-count
-		-- style, matching what LibDataBroker-1.1.lua's own internal
-		-- `__newindex`-triggered fires already pass (`4, name, key, value,
-		-- self`). Real ElvUI's own manual Fire call here has no such count
-		-- because its OWN vendored LDB copy is the OTHER (standard
-		-- `Fire(eventname, ...)`) variant -- copying it verbatim breaks on
-		-- this project's variant: `argCount` lands on the STRING `name`
-		-- instead of a number, and `Dispatchers[argCount+1]` then throws
-		-- "attempt to perform arithmetic on a string value", swallowed by
-		-- the outer pcall in AssignPanelToDataText -- so `textUpdate` never
-		-- runs and the initial text never gets set.
-		LDB.callbacks:Fire("LibDataBroker_AttributeChanged_"..name.."_text", 4, name, nil, obj.text, obj)
+		-- LibDataBroker-1.1 (MINOR 5) and CallbackHandler-1.0 (MINOR 7) from
+		-- dh-harald/Ace3v fire upstream-style, `Fire(eventname, ...)` with no
+		-- argument count, so this is real ElvUI's call as it is. (The earlier
+		-- vanilla CallbackHandler, MINOR 6, took an explicit count here.)
+		LDB.callbacks:Fire("LibDataBroker_AttributeChanged_"..name.."_text", name, nil, obj.text, obj)
 	end
 
 	DT:RegisterDatatext(name, {"PLAYER_ENTERING_WORLD"}, OnEvent, nil, OnClick, OnEnter, OnLeave)
