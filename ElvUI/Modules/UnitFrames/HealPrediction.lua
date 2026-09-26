@@ -11,12 +11,23 @@
 -- to come from heal-over-time spells on it (getHotHeal). HealComm tracks players
 -- by name, so a unit that is not a player (a pet, an NPC) gets no prediction.
 -- The bar is redrawn on every unit frame update (UnitFrames.lua polls every
--- 0.2 s and on UNIT_HEALTH), which also follows the HoT ticks.
+-- 0.2 s and on UNIT_HEALTH), which also follows the HoT ticks, and at once
+-- whenever HealComm reports a heal or HoT starting or ending, so a heal that
+-- has landed does not linger as incoming until the next poll.
 
 local E, L, V, P, G = unpack(ElvUI)
 local UF = E:GetModule("UnitFrames")
 
 local HealComm = LibStub("LibHealComm-1.0", true)
+
+if HealComm then
+	local owner = {}
+	local function Redraw()
+		if UF.Frames then UF:UpdateAll() end
+	end
+	HealComm.RegisterCallback(owner, "HealComm_Healupdate", Redraw)
+	HealComm.RegisterCallback(owner, "HealComm_Hotupdate", Redraw)
+end
 
 -- ElvCharacterDB.healPrediction is no longer read; it is dropped from the
 -- SavedVariables once they are loaded.
