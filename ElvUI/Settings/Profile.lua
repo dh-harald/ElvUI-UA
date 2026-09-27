@@ -197,6 +197,7 @@ P.actionbar = {
 	hotkeyTextYOffset = -3,
 	macrotext = false,
 	lockActionBars = true,
+	noRangeColor = {r = 0.8, g = 0.1, b = 0.1},
 	font = "Homespun",
 	fontSize = 10,
 	fontOutline = "MONOCHROMEOUTLINE",

@@ -325,6 +325,67 @@ local function WireButtonDrag(button)
 	end)
 end
 
+-- The client's range dot ("●"), which it writes into the HotKey text of a
+-- button that has no key bound. M:Initialize saves it here and sets the
+-- global to "", like real ElvUI, which never shows the dot: the out-of-range
+-- icon tint below replaces it.
+local nativeRangeIndicator
+
+-- Out-of-range icon tint, real ElvUI's ButtonColoring (a tullaRange port):
+-- a usable action whose target is out of range gets `noRangeColor` on its
+-- icon. Every other state is left to the native ActionButton_UpdateUsable,
+-- whose colors (white / 0.5,0.5,1 / 0.4 gray) equal real ElvUI's
+-- usableColor/noPowerColor/notUsableColor defaults. Range changes fire no
+-- event, so this is polled at tullaRange's own 0.1s. The tint is re-applied
+-- on every tick while out of range, because the native function resets the
+-- icon to white on its own events (mana ticks, target changes); on leaving
+-- range the button is handed back to that native function.
+--
+-- IsActionInRange: 0 = out of range, 1 or true = in range (UA returns
+-- `true`), nil = no range check. UA returns 0 instead of nil for an action
+-- without a range (Life Tap), and 0 for any macro regardless of distance,
+-- so `== 0` only counts when ActionHasRange is true, as in tullaRange. A
+-- macro slot has no range there and is never tinted.
+local RANGE_UPDATE_DELAY = 0.1
+
+local function RestoreUsableColor(button, icon)
+	local restored
+	if type(_G.ActionButton_UpdateUsable) == "function" then
+		-- The native function reads its button from the `this` global; UA
+		-- does not restore `this` after a nested call.
+		local caller = this
+		this = button
+		restored = pcall(ActionButton_UpdateUsable)
+		this = caller
+	end
+	if not restored then
+		pcall(icon.SetVertexColor, icon, 1, 1, 1)
+	end
+end
+
+local function UpdateButtonRange(button)
+	local icon = _G[button:GetName().."Icon"]
+	if not icon then return end
+
+	local outOfRange = false
+	if button:IsVisible() then
+		local action = ActionButton_GetPagedID(button)
+		outOfRange = action and Compat.bool(HasAction(action))
+			and Compat.bool(ActionHasRange(action))
+			and Compat.bool(IsUsableAction(action))
+			and IsActionInRange(action) == 0
+	end
+
+	if outOfRange then
+		local c = E.db.actionbar.noRangeColor
+		icon:SetVertexColor(c.r, c.g, c.b)
+		button.elvOutOfRange = true
+	elseif button.elvOutOfRange then
+		button.elvOutOfRange = nil
+		RestoreUsableColor(button, icon)
+	end
+end
+
 -- Re-skins one native action button in place.
 local function StyleButton(button, showGrid)
 	if not button then return end
@@ -460,6 +521,15 @@ local function StyleButton(button, showGrid)
 		button.elvHotkeyMode = hotkeyState
 	end
 	ApplyFont(hotkey)
+
+	-- Text the native code wrote before M:Initialize blanked RANGE_INDICATOR;
+	-- only rewritten on UPDATE_BINDINGS / slot changes, so cleared here.
+	if hotkey and nativeRangeIndicator and nativeRangeIndicator ~= "" then
+		local okText, text = pcall(hotkey.GetText, hotkey)
+		if okText and text == nativeRangeIndicator then
+			pcall(hotkey.SetText, hotkey, "")
+		end
+	end
 
 	local macroName = _G[name.."Name"]
 	if macroName and button.elvMacroMode ~= E.db.actionbar.macrotext then
@@ -715,6 +785,9 @@ function M:Initialize()
 
 	HideChrome()
 
+	nativeRangeIndicator = _G.RANGE_INDICATOR
+	_G.RANGE_INDICATOR = ""
+
 	self.bars = {}
 	for _, barDef in ipairs(BAR_DEFS) do
 		self.bars[barDef.id] = self:CreateBar(barDef)
@@ -722,6 +795,7 @@ function M:Initialize()
 
 	self:PositionBars()
 	InstallActionButtonGetPagedID()
+	E:ScheduleRepeatingTimer(function() self:UpdateRangeColors() end, RANGE_UPDATE_DELAY)
 
 	-- Explicit both ways (matches real ElvUI's own
 	-- `LOCK_ACTIONBAR = (self.db.lockActionBars == true and "1" or "0")`,
@@ -859,6 +933,25 @@ function M:Initialize()
 	-- reload), and covers any OTHER native trigger for the same symptom
 	-- that hasn't surfaced yet.
 	E:ScheduleRepeatingTimer(ReassertDisabledBars, 0.5)
+end
+
+-- One pcall per button: a failing native call must not stop the others, and
+-- the timer keeps running after an error.
+function M:UpdateRangeColors()
+	if not self.bars then return end
+	local bd
+	for _, bd in ipairs(BAR_DEFS) do
+		local bar = self.bars[bd.id]
+		if bar then
+			local i
+			for i = 1, MAX_BUTTONS do
+				local button = bar.buttons[i]
+				if button then
+					pcall(UpdateButtonRange, button)
+				end
+			end
+		end
+	end
 end
 
 -- Public so ElvUI_Config/Core.lua's per-bar `set` functions can re-apply
