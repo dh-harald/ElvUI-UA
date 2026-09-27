@@ -35,7 +35,6 @@
 --     other units' debuffs) and no `seperateOwn` (every aura here is
 --     already the player's own by definition -- that field only means
 --     something for a raid-frame-style multi-caster aura list).
---   - No right-click-to-cancel (`CancelPlayerBuff`) -- not requested.
 -- Every one of these is a "nothing breaks, just less polish" cut, not a
 -- correctness risk -- can be revisited if asked for specifically.
 --

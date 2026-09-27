@@ -1414,6 +1414,22 @@ local function AuraIcon_OnLeave()
 	GameTooltip:Hide()
 end
 
+-- Right-click cancels one of the player's own buffs, as real ElvUI's
+-- Auras module and oUF's aura buttons do. The icon only carries the
+-- 1-based position in the filtered list, so the internal buff index is
+-- resolved at click time -- icons are re-sorted every refresh, so a
+-- cached index could point at a different aura. Only RightButtonUp is
+-- registered, so there is no button name to check. CancelPlayerBuff is
+-- not protected on either client; harmful auras are skipped because the
+-- client ignores them anyway.
+local function AuraIcon_OnClick(self)
+	if self.tooltipUnit ~= "player" or self.tooltipFilter ~= "HELPFUL" or not self.tooltipIndex then return end
+	local ok, buffIndex = pcall(GetPlayerBuff, self.tooltipIndex - 1, "HELPFUL")
+	if ok and buffIndex and buffIndex >= 0 then
+		pcall(CancelPlayerBuff, buffIndex)
+	end
+end
+
 -- Exposed as a UF: method (not local) -- the standalone Modules/Auras/
 -- Auras.lua module (real ElvUI's OWN separate player-buff/
 -- debuff display, see that file's own header comment) reuses this same
@@ -1481,6 +1497,8 @@ function UF:GetOrCreateAuraIcon(container, index, cooldownStyle)
 	-- real ElvUI's Modules/Auras/Auras.lua for the identical pattern).
 	icon:SetScript("OnEnter", function() AuraIcon_OnEnter(this) end)
 	icon:SetScript("OnLeave", function() AuraIcon_OnLeave(this) end)
+	pcall(icon.RegisterForClicks, icon, "RightButtonUp")
+	icon:SetScript("OnClick", function() AuraIcon_OnClick(this) end)
 
 	icon:Hide()
 	container.icons[index] = icon
