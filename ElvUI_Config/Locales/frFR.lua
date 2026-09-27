@@ -122,6 +122,10 @@ L["Raid Only"] = "Raid seulement"
 L["Emote"] = "Emote"
 L["Auto Repair"] ="Réparation automatique"
 L["Automatically repair using the following method when visiting a merchant."] = "Répare automatiquement votre équipement chez le marchand selon le mode de réparation sélectionné."
+L["Leave Shapeshift Form"] = "Quitter la forme de métamorphose"
+L["What happens when an action fails because you are in a Druid form: nothing, a button that leaves the form, or leaving it at once. Right-clicking a unit you can attack never leaves the form, and talking to an NPC in combat only shows the button."] = "Ce qui se passe quand une action échoue parce que vous êtes sous une forme de druide : rien, un bouton qui quitte la forme, ou la quitter immédiatement. Un clic droit sur une unité attaquable ne quitte jamais la forme, et parler à un PNJ en combat affiche seulement le bouton."
+L["Manual"] = "Manuel"
+L["Automatic"] = "Automatique"
 
 --Shared value labels
 L["None"] = "Aucun"

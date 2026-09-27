@@ -98,6 +98,8 @@ P.general = {
 	autoRepair = "NONE",
 	-- Read by Modules/Misc/InterruptAnnounce.lua.
 	interruptAnnounce = "NONE",
+	-- Read by Modules/Misc/CancelForm.lua: "NONE", "MANUAL" or "AUTO".
+	cancelForm = "AUTO",
 	autoRoll = false,
 	bottomPanel = true,
 

@@ -6,4 +6,5 @@
 	<Script file="ColorPicker.lua"/>
 	<Script file="InterruptAnnounce.lua"/>
 	<Script file="Totems.lua"/>
+	<Script file="CancelForm.lua"/>
 </Ui>

@@ -145,6 +145,10 @@ L["Raid Only"] = true
 L["Emote"] = true
 L["Auto Repair"] = true
 L["Automatically repair using the following method when visiting a merchant."] = true
+L["Leave Shapeshift Form"] = true
+L["What happens when an action fails because you are in a Druid form: nothing, a button that leaves the form, or leaving it at once. Right-clicking a unit you can attack never leaves the form, and talking to an NPC in combat only shows the button."] = true
+L["Manual"] = true
+L["Automatic"] = true
 
 --Shared value labels
 L["None"] = true

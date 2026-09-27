@@ -109,6 +109,7 @@ L["BoE"] = true
 --Misc
 L["Your items have been repaired for: "] = true
 L["You don't have enough money to repair."] = true
+L["Leave %s"] = true
 
 --Tooltip (fallbacks for a missing client global)
 L["Level"] = true

@@ -67,6 +67,7 @@ L["BoE"] = "BoE"
 --Misc
 L["Your items have been repaired for: "] = "装备已修复: "
 L["You don't have enough money to repair."] = "没有足够的资金来修复."
+L["Leave %s"] = "取消%s"
 
 --Tooltip (fallbacks for a missing client global)
 L["Level"] = "等级"

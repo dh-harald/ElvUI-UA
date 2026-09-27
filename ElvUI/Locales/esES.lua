@@ -67,6 +67,7 @@ L["BoE"] = "BoE"
 --Misc
 L["Your items have been repaired for: "] = "Tus objetos han sido reparados por:"
 L["You don't have enough money to repair."] = "No tienes suficiente dinero para reparaciones."
+L["Leave %s"] = "Salir de %s"
 
 --Tooltip (fallbacks for a missing client global)
 L["Level"] = "Level"

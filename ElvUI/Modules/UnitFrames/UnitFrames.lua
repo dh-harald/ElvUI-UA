@@ -274,8 +274,8 @@ end
 -- TargetTarget/Party had the exact same gap, just less noticed). Plain
 -- `TargetUnit(unit)` -- confirmed NOT protected on UA
 -- (UnrealAzeroth_LuaAPI/en/globals/Targetting.md has no
--- "Protected: yes" marker, unlike e.g. CastSpell/CastShapeshiftForm,
--- which do) -- so no SecureUnitButtonTemplate/secure-attribute
+-- "Protected: yes" marker, unlike e.g. CastSpell, which does) -- so no
+-- SecureUnitButtonTemplate/secure-attribute
 -- machinery is needed at all, avoiding the template-backed-CreateFrame
 -- UA risk entirely. `frame` is captured directly by the closure, not
 -- read via an implicit self/this argument, so this doesn't need the

@@ -202,6 +202,19 @@ E.Options.args.general = {
 						PLAYER = L["Player"],
 					},
 				},
+				-- Read by Modules/Misc/CancelForm.lua. Project feature, not
+				-- in real ElvUI; only has an effect on a Druid.
+				cancelForm = {
+					order = 5,
+					type = "select",
+					name = L["Leave Shapeshift Form"],
+					desc = L["What happens when an action fails because you are in a Druid form: nothing, a button that leaves the form, or leaving it at once. Right-clicking a unit you can attack never leaves the form, and talking to an NPC in combat only shows the button."],
+					values = {
+						NONE = L["None"],
+						MANUAL = L["Manual"],
+						AUTO = L["Automatic"],
+					},
+				},
 				autoRoll = {
 					order = 7,
 					type = "toggle",
