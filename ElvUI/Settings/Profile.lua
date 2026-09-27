@@ -168,6 +168,19 @@ P.cooldown = {
 	mmssThreshold = -1,
 	hhmmColor = { r = 1, g = 1, b = 1 },
 	mmssColor = { r = 1, g = 1, b = 1 },
+
+	-- Action button time left of the player's own aura on the target
+	-- (Modules/ActionBars/TargetAura.lua). Current real ElvUI's
+	-- P.cooldown.targetaura, reduced to the fields it reads there and here:
+	-- threshold in seconds, minDuration in milliseconds.
+	targetaura = {
+		enable = true,
+		threshold = 300,
+		minDuration = 1500,
+		colors = {
+			text = { r = 1, g = 0.6, b = 0, a = 1 },
+		},
+	},
 }
 
 -- ---------------------------------------------------------------------

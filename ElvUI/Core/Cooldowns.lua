@@ -198,6 +198,10 @@ local function ApplyCooldownFont(cd, text)
 	return true
 end
 
+-- Shared with other text drawn over a cooldown (Modules/ActionBars/
+-- TargetAura.lua), so it sizes like this text.
+E.ApplyCooldownFont = ApplyCooldownFont
+
 local function GetOrCreateText(cd)
 	if cd.elvCooldownText then return cd.elvCooldownText end
 	local ok, text = pcall(cd.CreateFontString, cd, nil, "OVERLAY", "GameFontNormal")
@@ -220,6 +224,17 @@ local function InstallCooldownHook()
 
 		if not E.private.cooldown.enable then return end
 		if not cd then return end
+
+		-- Opt-out flags set by addons that draw their own countdown on a
+		-- Cooldown frame: `noOCC` is real ElvUI's (E:OnSetCooldown),
+		-- `noCooldownCount` OmniCC's.
+		if cd.noOCC or cd.noCooldownCount then
+			if cd.elvCooldownText then
+				pcall(cd.elvCooldownText.SetText, cd.elvCooldownText, "")
+			end
+			activeTimers[cd] = nil
+			return
+		end
 
 		if start and start > 0 and duration and duration > MIN_DURATION and enable and enable > 0 then
 			local text = GetOrCreateText(cd)

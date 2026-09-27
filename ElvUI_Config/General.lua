@@ -540,6 +540,65 @@ E.Options.args.general = {
 					set = function(_, value) E.db.cooldown.hhmmThreshold = value end,
 				},
 				hhmmColor = CooldownColorArgs("hhmmColor", 13, "HH:MM", "Color when the text is in the H:MM format."),
+				-- Current real ElvUI's group (ElvUI_Options Cooldown.lua,
+				-- Classic flavours): same entry names, orders, labels and
+				-- slider ranges (real ElvUI's soft maximum, as LibConfig-1.0
+				-- has no softMax). Real ElvUI shows it on its Cooldown >
+				-- Action Bar page; this tree has only the one cooldown page.
+				targetAuraGroup = {
+					type = "group",
+					name = L["Target Aura"],
+					order = 14,
+					inline = true,
+					get = function(info) return E.db.cooldown.targetaura[ info[getn(info)] ] end,
+					set = function(info, value)
+						E.db.cooldown.targetaura[ info[getn(info)] ] = value
+						E.ActionBars:UpdateTargetAura()
+					end,
+					args = {
+						enable = {
+							type = "toggle",
+							name = L["Enable"],
+							desc = L["Show the time left of your own debuff on the target on the spell's action button, while the button has no cooldown longer than the global cooldown."],
+							order = 1,
+						},
+						text = {
+							type = "color",
+							name = L["Text Color"],
+							order = 2,
+							get = function()
+								local c = E.db.cooldown.targetaura.colors.text
+								return c.r, c.g, c.b
+							end,
+							set = function(_, r, g, b)
+								local c = E.db.cooldown.targetaura.colors.text
+								c.r, c.g, c.b = r, g, b
+								E.ActionBars:UpdateTargetAura()
+							end,
+						},
+						threshold = {
+							type = "range",
+							name = L["Threshold"],
+							desc = L["Abbreviation threshold (in seconds)."],
+							order = 3,
+							min = 0, max = 3600, step = 1,
+						},
+						-- Stored in milliseconds, shown in seconds, as in
+						-- real ElvUI.
+						minDuration = {
+							type = "range",
+							name = L["Minimum Duration"],
+							desc = L["Minimum countdown duration (in seconds)."],
+							order = 4,
+							min = 0, max = 60, step = 0.1,
+							get = function() return E.db.cooldown.targetaura.minDuration * 0.001 end,
+							set = function(_, value)
+								E.db.cooldown.targetaura.minDuration = value * 1000
+								E.ActionBars:UpdateTargetAura()
+							end,
+						},
+					},
+				},
 			},
 		},
 		mirrortimers = {

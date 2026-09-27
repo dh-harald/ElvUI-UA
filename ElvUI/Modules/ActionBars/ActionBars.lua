@@ -796,6 +796,7 @@ function M:Initialize()
 	self:PositionBars()
 	InstallActionButtonGetPagedID()
 	E:ScheduleRepeatingTimer(function() self:UpdateRangeColors() end, RANGE_UPDATE_DELAY)
+	self:InitTargetAura()
 
 	-- Explicit both ways (matches real ElvUI's own
 	-- `LOCK_ACTIONBAR = (self.db.lockActionBars == true and "1" or "0")`,

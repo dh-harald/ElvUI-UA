@@ -9,26 +9,18 @@
 -- tooltip-scan to recover the debuff's NAME (which native UnitDebuff
 -- doesn't return either -- only icon/stacks/dispelType).
 --
--- SCOPE CUT vs. the real libdebuff, deliberate, for this first pass:
--- real libdebuff also hooks `CastSpell`/`CastSpellByName`/`UseAction`
--- (via `hooksecurefunc`, which this project deliberately REMOVED as a
--- global polyfill -- relying on it again here would reintroduce exactly
--- the fragility that got it removed) and parses combat-log messages
--- (CHAT_MSG_SPELL_PERIODIC_*, locale-pattern-matched via pfUI's own
--- `cmatch`/`GetCaptures`/`SanitizePattern` trio) to timestamp a debuff
--- at the EXACT moment of application, giving accurate countdowns even
--- for a spell you didn't personally see get cast. This file ports only
--- the SIMPLER fallback path real libdebuff itself falls back to when
--- those don't apply: stamp a debuff's start time the first moment THIS
--- CLIENT observes it (via UNIT_AURA/polling), then count down locally.
--- Same accepted limitation UnrealUI's own aura system already has:
--- a duration that started before you looked will show as
--- "the full duration, starting now" rather than the true remaining
--- time, and multi-rank spells always assume max rank (no way to
--- recover which rank a spell was cast at from another unit's aura,
--- since UnitDebuff doesn't expose rank here either). Worth revisiting
--- with the full combat-log/cast-hook precision layer later if this
--- turns out not to be accurate enough in practice.
+-- Two sources write the start times in UF.debuffStamps:
+--   * the player's own casts, stamped exactly when they happen, with the
+--     cast's rank, combo points and talents (OwnAuras.lua, pfUI libdebuff's
+--     cast-hook layer; entries carry `mine = true`);
+--   * every other debuff: the start is stamped the first moment THIS
+--     CLIENT observes it (UF:GetDebuffTimeLeft), then counted down
+--     locally. Same accepted limitation UnrealUI's own aura system has: a
+--     duration that started before you looked shows as "the full
+--     duration, starting now", and multi-rank spells assume max rank
+--     (UnitDebuff exposes no rank for another caster's aura).
+-- Not ported: libdebuff's "X is afflicted by Y." combat-log stamping of
+-- other casters' debuffs.
 
 local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()

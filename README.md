@@ -36,6 +36,11 @@ Two addons ship together:
   ElvUI where practical)
 - Layout (screen panels, minimap panels, mover system)
 - ActionBars, PetBar/StanceBar, Cooldown text
+- Target aura time on action buttons (later ElvUI's "Target Aura"): a
+  spell's button (or a macro button with `/cast`) shows how long your own
+  debuff lasts on the target while the spell itself has no cooldown. Own
+  casts are timed when they happen,
+  so the target frame's debuff timers are exact for your own spells too
 - UnitFrames (player/target/pet/party/etc.), Auras
 - Estimated health of hostile mobs and players (LibMobHealth-4.0): the
   client only reports them in percent, so their real health is learned from
