@@ -552,6 +552,13 @@ L["Others"] = "Otros"
 L["Max Overflow"] = "Desbordamiento máximo"
 L["Max amount of overflow allowed to extend past the end of the health bar."] = "Cantidad máxima de desbordamiento que puede extenderse más allá del final de la barra de salud."
 L["Show an incoming heal prediction bar on the unitframe. Also display a slightly different colored bar for incoming overheals."] = "Muestra una barra de predicción de sanación entrante en el marco de unidad. También muestra una barra de un color ligeramente distinto para la sobresanación entrante."
+L["Combobar"] = "Barra de puntos de combo"
+L["Fill"] = "Llenar"
+L["Filled"] = "Lleno"
+L["Spaced"] = "Separadas"
+L["Auto-Hide"] = "Ocultar Automáticamente"
+L["Class Resources"] = "Recursos de Clase"
+L["Combo Point"] = "Punto de combo"
 
 --DataBars
 L["DataBars"] = "DataBars"

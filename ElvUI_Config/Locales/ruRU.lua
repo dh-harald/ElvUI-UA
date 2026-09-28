@@ -552,6 +552,13 @@ L["Others"] = "Чужое"
 L["Max Overflow"] = "Макс. переполнение"
 L["Max amount of overflow allowed to extend past the end of the health bar."] = "Максимальное значение переполнения, которое может отображаться за пределами полосы здоровья."
 L["Show an incoming heal prediction bar on the unitframe. Also display a slightly different colored bar for incoming overheals."] = "Отображать объем входящего исцеления на рамках. Также отображает немного иначе окрашенную полосу для избыточного исцеления."
+L["Combobar"] = "Полоса серии"
+L["Fill"] = "Заполнение"
+L["Filled"] = "По ширине рамки"
+L["Spaced"] = "Раздельно"
+L["Auto-Hide"] = "Автоматически скрывать"
+L["Class Resources"] = "Ресурсы класса"
+L["Combo Point"] = "Очко серии"
 
 --DataBars
 L["DataBars"] = "Инфо-полосы"

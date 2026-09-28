@@ -60,6 +60,7 @@ local function Construct_TargetFrame()
 	UF:Construct_Auras(frame, "debuff")
 	frame.InfoPanel = UF:Construct_InfoPanel(frame)
 	UF:Construct_CustomTexts(frame)
+	UF:Construct_ComboPoints(frame)
 
 	-- Same construction as the player bar (Units/Player.lua); the casts
 	-- come from the combat log (CastTracker.lua), not SPELLCAST_*. Starts

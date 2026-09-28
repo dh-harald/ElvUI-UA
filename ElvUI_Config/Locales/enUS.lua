@@ -575,6 +575,13 @@ L["Others"] = true
 L["Max Overflow"] = true
 L["Max amount of overflow allowed to extend past the end of the health bar."] = true
 L["Show an incoming heal prediction bar on the unitframe. Also display a slightly different colored bar for incoming overheals."] = true
+L["Combobar"] = true
+L["Fill"] = true
+L["Filled"] = true
+L["Spaced"] = true
+L["Auto-Hide"] = true
+L["Class Resources"] = true
+L["Combo Point"] = true
 
 --DataBars
 L["DataBars"] = true

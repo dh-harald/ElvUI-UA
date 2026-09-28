@@ -912,6 +912,54 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 		}
 	end
 
+	-- Target only, as in real ElvUI. Every field is read live by the poll
+	-- (ComboPoints.lua); real ElvUI's detach group is left out because the
+	-- bar cannot be detached.
+	if dbKey == "target" then
+		args.combobar = {
+			type = "group",
+			name = L["Combobar"],
+			order = 15,
+			get = function(info) return unitTable().combobar[ info[getn(info)] ] end,
+			set = function(info, value) unitTable().combobar[ info[getn(info)] ] = value end,
+			args = {
+				header = {
+					order = 1,
+					type = "header",
+					name = L["Combobar"],
+				},
+				enable = {
+					order = 2,
+					type = "toggle",
+					name = L["Enable"],
+				},
+				height = {
+					order = 3,
+					type = "range",
+					name = L["Height"],
+					min = 3, max = 30, step = 1,
+					disabled = function() return not unitTable().combobar.enable end,
+				},
+				fill = {
+					order = 4,
+					type = "select",
+					name = L["Fill"],
+					values = {
+						["fill"] = L["Filled"],
+						["spaced"] = L["Spaced"],
+					},
+					disabled = function() return not unitTable().combobar.enable end,
+				},
+				autoHide = {
+					order = 5,
+					type = "toggle",
+					name = L["Auto-Hide"],
+					disabled = function() return not unitTable().combobar.enable end,
+				},
+			},
+		}
+	end
+
 	if hasBuffs then
 		args.buffs = {
 			type = "group",
@@ -1407,6 +1455,59 @@ E.Options.args.unitframe = {
 							set = function(_, value) E.db.unitframe.colors.healPrediction.maxOverflow = value end,
 						},
 						},
+					},
+					-- Real ElvUI's group and keys (`combo1`..`combo5` store into
+					-- `comboPoints[1..5]`). Read live by ComboPoints.lua.
+					classResourceGroup = {
+						order = 7,
+						type = "group",
+						name = L["Class Resources"],
+						guiInline = true,
+						get = function(info)
+							local t = E.db.unitframe.colors.classResources[ info[getn(info)] ]
+							local d = P.unitframe.colors.classResources[ info[getn(info)] ]
+							return t.r, t.g, t.b, t.a, d.r, d.g, d.b
+						end,
+						set = function(info, r, g, b)
+							local t = E.db.unitframe.colors.classResources[ info[getn(info)] ]
+							t.r, t.g, t.b = r, g, b
+						end,
+						args = (function()
+							local colorArgs = {
+								-- Hidden for the same reason as healPrediction's header.
+								header = {
+									order = 0,
+									type = "header",
+									name = L["Class Resources"],
+									hidden = true,
+								},
+								bgColor = {
+									order = 1,
+									type = "color",
+									name = L["Backdrop Color"],
+									hasAlpha = false,
+								},
+							}
+							local i
+							for i = 1, 5 do
+								local index = i
+								colorArgs["combo"..index] = {
+									order = index + 2,
+									type = "color",
+									name = L["Combo Point"].." #"..index,
+									get = function()
+										local t = E.db.unitframe.colors.classResources.comboPoints[index]
+										local d = P.unitframe.colors.classResources.comboPoints[index]
+										return t.r, t.g, t.b, t.a, d.r, d.g, d.b
+									end,
+									set = function(_, r, g, b)
+										local t = E.db.unitframe.colors.classResources.comboPoints[index]
+										t.r, t.g, t.b = r, g, b
+									end,
+								}
+							end
+							return colorArgs
+						end)(),
 					},
 					},
 				},

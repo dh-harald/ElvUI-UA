@@ -552,6 +552,13 @@ L["Others"] = "Andere"
 L["Max Overflow"] = "Maximaler Overflow"
 L["Max amount of overflow allowed to extend past the end of the health bar."] = "Maximale Menge des erlaubten Overflows um das Ende der Gesundheitsleiste zu erweitern."
 L["Show an incoming heal prediction bar on the unitframe. Also display a slightly different colored bar for incoming overheals."] = "Zeige eingehende Heilung im Einheitenfenster. Zeigt eine etwas anders farbige Leiste für eingehende Überheilung."
+L["Combobar"] = "Kombopunkte Leiste"
+L["Fill"] = "Füllen"
+L["Filled"] = "Gefüllt"
+L["Spaced"] = "Abgetrennt"
+L["Auto-Hide"] = "Automatisch verstecken"
+L["Class Resources"] = "Klassenressourcen"
+L["Combo Point"] = "Kombopunkt"
 
 --DataBars
 L["DataBars"] = "Informationsleisten"

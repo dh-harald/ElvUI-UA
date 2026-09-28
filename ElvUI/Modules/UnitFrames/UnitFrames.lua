@@ -1824,6 +1824,8 @@ local function PowerToken(unit)
 	end
 	return "MANA"
 end
+-- Shared with ComboPoints.lua (the druid's Cat Form test).
+UF.PowerToken = PowerToken
 
 -- Real ElvUI's own health/power bar colors (Configure_HealthBar/
 -- PostUpdateHealth, Elements/Health.lua) minus the `isForced` test-mode
@@ -2083,8 +2085,17 @@ function UF:UpdateFrame(frame)
 		healthHeight = settings.height - settings.power.height - 1
 	end
 
+	-- Room the combo point bar takes at the top of the frame (ComboPoints.lua),
+	-- 0 while it is hidden. Guarded so a failure there costs only the bar.
+	local comboOffset = 0
+	if frame.ComboPoints and self.UpdateComboPoints then
+		local okCombo, offset = pcall(self.UpdateComboPoints, self, frame, settings, barLeft, barWidth)
+		if okCombo and tonumber(offset) then comboOffset = offset end
+	end
+	healthHeight = healthHeight - comboOffset
+
 	frame.Health:ClearAllPoints()
-	frame.Health:SetPoint("TOPLEFT", frame, "TOPLEFT", barLeft, -INSET)
+	frame.Health:SetPoint("TOPLEFT", frame, "TOPLEFT", barLeft, -INSET - comboOffset)
 	frame.Health:SetWidth(barWidth)
 	frame.Health:SetHeight(healthHeight)
 

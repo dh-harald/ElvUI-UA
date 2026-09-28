@@ -51,6 +51,8 @@ Two addons ship together:
   other players') and the rest of Rejuvenation, Renew and Regrowth — is shown
   on the health bar in two colours (yours, others'), extending past its end
   for the overheal
+- Combo point bar on the target frame (rogue, and druid in Cat Form):
+  filled or spaced, auto-hides at 0 points, colours per point
 - Resurrection icon on the party, target and your own player frame while
   someone running HealComm is resurrecting that player
 - Target castbar: the 1.12 client reports no casts of other units, so the

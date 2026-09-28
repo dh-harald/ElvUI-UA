@@ -770,6 +770,18 @@ P.unitframe.colors = {
 		others = {r = 0, g = 1, b = 0, a = 0.25},
 		maxOverflow = 0,
 	},
+	-- Read by Modules/UnitFrames/ComboPoints.lua: segment background and the
+	-- colour of each combo point.
+	classResources = {
+		bgColor = {r = 0.1, g = 0.1, b = 0.1, a = 1},
+		comboPoints = {
+			[1] = {r = 0.69, g = 0.31, b = 0.31},
+			[2] = {r = 0.69, g = 0.31, b = 0.31},
+			[3] = {r = 0.65, g = 0.63, b = 0.35},
+			[4] = {r = 0.65, g = 0.63, b = 0.35},
+			[5] = {r = 0.33, g = 0.59, b = 0.33},
+		},
+	},
 }
 
 P.unitframe.units = {}
@@ -1055,6 +1067,26 @@ P.unitframe.units.target = {
 		icon = true,
 		format = "REMAINING",
 		spark = true,
+	},
+	-- Real ElvUI's table verbatim. Read by Modules/UnitFrames/ComboPoints.lua:
+	-- enable, fill, height, autoHide. The detach/strata keys are kept for
+	-- profile compatibility; the bar always stays on the frame.
+	combobar = {
+		enable = true,
+		fill = "fill",
+		height = 10,
+		autoHide = true,
+		detachFromFrame = false,
+		detachedWidth = 250,
+		parent = "FRAME",
+		orientation = "HORIZONTAL",
+		spacing = 5,
+		strataAndLevel = {
+			useCustomStrata = false,
+			frameStrata = "LOW",
+			useCustomLevel = false,
+			frameLevel = 1,
+		},
 	},
 }
 

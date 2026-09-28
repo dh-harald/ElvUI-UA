@@ -552,6 +552,13 @@ L["Others"] = "他人的"
 L["Max Overflow"] = "最大治疗吸收盾"
 L["Max amount of overflow allowed to extend past the end of the health bar."] = "显示在生命值条末端的治疗吸收盾的最大量"
 L["Show an incoming heal prediction bar on the unitframe. Also display a slightly different colored bar for incoming overheals."] = "在单位框架中显示即将回复的的预估治疗量, 过量治疗则以不同颜色显示"
+L["Combobar"] = "连击点"
+L["Fill"] = "填充"
+L["Filled"] = "全长"
+L["Spaced"] = "留空"
+L["Auto-Hide"] = "自动隐藏"
+L["Class Resources"] = "职业能量"
+L["Combo Point"] = "连击点"
 
 --DataBars
 L["DataBars"] = "数据条"
