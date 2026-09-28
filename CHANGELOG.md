@@ -1,3 +1,21 @@
+# [0.9.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.8.0...v0.9.0) (2026-09-28)
+
+
+### Bug Fixes
+
+* **actionbars:** fix button visibility after patch 2380 ([0ccab1b](https://github.com/dh-harald/ElvUI-UA/commit/0ccab1b54f9f4250506e236933a8ad55d115537c))
+* **actionbars:** tint buttons to red if out or fange ([2bae1ac](https://github.com/dh-harald/ElvUI-UA/commit/2bae1ac9a9edb7d949ba171260ac6de744bf08d3))
+* **auras:** add CancelPlayerBuff (remove own buffs) ([1edc2c2](https://github.com/dh-harald/ElvUI-UA/commit/1edc2c29514b5297ece4fa0f1a51fb4d64626a26))
+* **datatext:** hide possible visible tooltip ([3270b4e](https://github.com/dh-harald/ElvUI-UA/commit/3270b4e3d41b56b628ed4d32a4c64f9f80afb8b3))
+* **unitframes:** better heal prediction ([eecf20d](https://github.com/dh-harald/ElvUI-UA/commit/eecf20d5573010effa071bdb0fed5a907e499b4e))
+
+
+### Features
+
+* **actionbars:** TargetAura: add debuffduration to spells ([34f74ef](https://github.com/dh-harald/ElvUI-UA/commit/34f74ef9001398e12360cdb295bab053f5d8295c))
+* **modules:** add misc/CancelForm: automatic/manual cancel druid forms ([1511171](https://github.com/dh-harald/ElvUI-UA/commit/15111711cb9258814b3d19aa6fed05113cc2bc40))
+* **unitframes:** Add combo points / combobar ([d41056d](https://github.com/dh-harald/ElvUI-UA/commit/d41056dabd37b862205b1a65e0b65347b36453e9))
+
 # [0.8.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.7.0...v0.8.0) (2026-09-25)
 
 
