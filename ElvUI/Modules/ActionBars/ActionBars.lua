@@ -184,6 +184,16 @@ local CHROME_TO_HIDE = {
 	"MainMenuBarPerformanceBar",
 }
 
+-- The XML parents of buttons this module (and PetBar/StanceBar) reparent
+-- onto their own holders: ActionButton1..12, PetActionButton1..10 and
+-- ShapeshiftButton1..10. Hidden, but their alpha must stay 1 -- see
+-- HideFrame.
+local BUTTON_PARENTS = {
+	MainMenuBarArtFrame = true,
+	PetActionBarFrame = true,
+	ShapeshiftBarFrame = true,
+}
+
 -- Blizzard's own layout manager (UIParent_ManageFramePositions, run on
 -- various events) re-applies position/visibility for anything still
 -- registered here -- clearing these entries stops it from undoing our
@@ -210,13 +220,22 @@ local MANAGED_FRAME_KEYS = {
 -- SetNormalTexture below. Doesn't matter what mechanism (event, OnUpdate,
 -- or anything else) tries to re-show the frame afterward; Show() itself
 -- can't do anything anymore.
-local function HideFrame(frame)
+--
+-- `keepAlpha` skips the SetAlpha(0): on UA a button reparented off its
+-- XML-declared parent still takes its alpha from that ORIGINAL parent
+-- (GetParent() reports our holder, yet MainMenuBarArtFrame:SetAlpha(0)
+-- makes ActionButton1 invisible and SetAlpha(1) brings it back), while
+-- that parent's Hide() does not reach it. Hide() alone still removes the
+-- parent's own art.
+local function HideFrame(frame, keepAlpha)
 	if not frame then return end
 	pcall(frame.UnregisterAllEvents, frame)
 	pcall(frame.SetScript, frame, "OnEvent", nil)
 	pcall(frame.SetScript, frame, "OnUpdate", nil)
 	pcall(frame.Hide, frame)
-	pcall(frame.SetAlpha, frame, 0)
+	if not keepAlpha then
+		pcall(frame.SetAlpha, frame, 0)
+	end
 	if frame.EnableMouse then pcall(frame.EnableMouse, frame, false) end
 	if frame.Show then
 		frame.Show = E.noop
@@ -237,7 +256,7 @@ end
 
 local function HideChrome()
 	for _, name in ipairs(CHROME_TO_HIDE) do
-		HideFrame(_G[name])
+		HideFrame(_G[name], BUTTON_PARENTS[name])
 	end
 
 	if type(_G.UIPARENT_MANAGED_FRAME_POSITIONS) == "table" then
