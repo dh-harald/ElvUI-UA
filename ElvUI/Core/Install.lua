@@ -656,27 +656,36 @@ local function SetupChat()
 	ShowStepComplete(L["Chat Set"])
 end
 
--- Ported from real ElvUI's own SetupAuras
--- (ElvUI-vanilla/.../install.lua:632-682) -- unit-frame-attached
--- buff/debuff ICONS only (`Modules/UnitFrames/UnitFrames.lua`'s own
--- `Construct_Auras`/`UpdateAuras`), NOT the separate standalone Auras
--- module (a native BuffFrame replacement near the minimap) -- real
--- ElvUI's own page offers "Icons Only"
--- vs "Aura Bar & Icons"; this project has no aura-BAR style at all, so
--- only the icons choice exists, matching a single-button page like
--- Welcome/Complete/CVars. Real ElvUI also sets `buffs.attachTo`/
--- `debuffs.attachTo` -- this project's own schema has no `attachTo`
--- field (fixed attachment, not configurable), so those two lines are
--- dropped, not silently kept as dead writes.
---
--- Already fully live with no extra call needed: `Construct_Auras`
--- (UnitFrames.lua) builds `frame.Buffs`/`Debuffs` UNCONDITIONALLY at
--- construction regardless of `enable`, and `UF:UpdateAuras` reads
--- `auraSettings.enable` fresh on every periodic poll tick -- flipping
--- the DB field alone is enough.
-local function SetupAuras()
-	E.db.unitframe.units.player.buffs.enable = true
-	E.db.unitframe.units.target.debuffs.enable = true
+-- Real ElvUI's SetupAuras (retail ElvUI General/Install.lua): the player's
+-- and the target's buffs, debuffs and aura bars go back to their defaults;
+-- "Aura Bars & Icons" (`bars` true) keeps them so, "Icons Only" turns the
+-- aura bars off, shows the player's buffs on the frame and stacks the
+-- debuffs on top of them. Unit frame-attached auras only, not the
+-- standalone Auras module. All of it is read on every unit frame poll
+-- pass, so it applies without a reload.
+local function ResetTable(live, defaults)
+	if not live or not defaults then return end
+	local k
+	for k in pairs(live) do live[k] = nil end
+	ElvUI.Util.MergeTable(live, defaults)
+end
+
+local function SetupAuras(bars)
+	local units = E.db.unitframe.units
+	for _, unit in ipairs({ "player", "target" }) do
+		for _, key in ipairs({ "buffs", "debuffs", "aurabar" }) do
+			ResetTable(units[unit][key], P.unitframe.units[unit][key])
+		end
+	end
+
+	if not bars then
+		units.player.buffs.enable = true
+		units.player.buffs.attachTo = "FRAME"
+		units.player.debuffs.attachTo = "BUFFS"
+		units.player.aurabar.enable = false
+		units.target.debuffs.enable = true
+		units.target.aurabar.enable = false
+	end
 	ShowStepComplete(L["Auras Set"])
 end
 
@@ -826,15 +835,17 @@ SetPage = function(frame, pageNum)
 	elseif pageNum == 7 then
 		pcall(frame.SubTitle.SetText, frame.SubTitle, L["Auras"])
 		pcall(frame.Desc1.SetText, frame.Desc1,
-			L["Select the aura style for your unit frames."])
-		pcall(frame.Desc2.SetText, frame.Desc2,
-			L["This project only has icon-style auras -- there is no aura bar style to choose between."])
+			L["Select the type of aura system you want to use with ElvUI's unitframes. Set to Aura Bar & Icons to use both aura bars and icons, set to icons only to only see icons."])
+		pcall(frame.Desc2.SetText, frame.Desc2, "")
 		pcall(frame.Desc3.SetText, frame.Desc3, L["Importance: Medium"])
 
-		PositionOptionButtons(frame, 1)
-		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, L["Icons Only"])
-		frame.OptionButton1:SetScript("OnClick", SetupAuras)
+		PositionOptionButtons(frame, 2)
+		pcall(frame.OptionButton1.label.SetText, frame.OptionButton1.label, L["Aura Bars & Icons"])
+		frame.OptionButton1:SetScript("OnClick", function() SetupAuras(true) end)
 		pcall(frame.OptionButton1.Show, frame.OptionButton1)
+		pcall(frame.OptionButton2.label.SetText, frame.OptionButton2.label, L["Icons Only"])
+		frame.OptionButton2:SetScript("OnClick", function() SetupAuras() end)
+		pcall(frame.OptionButton2.Show, frame.OptionButton2)
 	elseif pageNum == MAX_PAGE then
 		pcall(frame.SubTitle.SetText, frame.SubTitle, L["Setup Complete"])
 		pcall(frame.Desc1.SetText, frame.Desc1,

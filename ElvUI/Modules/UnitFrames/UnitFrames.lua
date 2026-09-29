@@ -2070,6 +2070,7 @@ function UF:UpdateFrame(frame)
 		pcall(self.UpdateThreat, self, frame, unit, settings, okExists and ElvUI.Compat.bool(exists))
 	end
 	if (not okExists or not exists) and not E.moversUnlocked then
+		if self.HideAuraBars then pcall(self.HideAuraBars, self, frame) end
 		frame:Hide()
 		return
 	end
@@ -2336,6 +2337,12 @@ function UF:UpdateFrame(frame)
 
 	self:UpdateAuras(frame, "buff")
 	self:UpdateAuras(frame, "debuff")
+
+	-- After the icon grids: the aura bars may hang off one of them
+	-- (AuraBars.lua).
+	if self.UpdateAuraBars then
+		pcall(self.UpdateAuraBars, self, frame, unit, settings)
+	end
 end
 
 function UF:UpdateAll()

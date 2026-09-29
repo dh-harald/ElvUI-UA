@@ -770,6 +770,11 @@ P.unitframe.colors = {
 		others = {r = 0, g = 1, b = 0, a = 0.25},
 		maxOverflow = 0,
 	},
+	-- Read by Modules/UnitFrames/AuraBars.lua: bar colour of a buff and of a
+	-- debuff; `auraBarByType` colours a debuff by its dispel type instead.
+	auraBarBuff = {r = 0.31, g = 0.31, b = 0.31},
+	auraBarDebuff = {r = 0.8, g = 0.1, b = 0.1},
+	auraBarByType = true,
 	-- Read by Modules/UnitFrames/ComboPoints.lua: segment background and the
 	-- colour of each combo point.
 	classResources = {
@@ -821,6 +826,10 @@ P.unitframe.units = {}
 --                    Custom Text.
 --   customTexts      Real ElvUI schema: a plain table KEYED BY NAME, not
 --                    an array. Populated live via the config UI.
+--   aurabar          Player and target only. NOT in ElvUI-vanilla (it dropped
+--                    aura bars); keys and defaults from retail ElvUI's
+--                    UF_AuraBars (+ player/target maxDuration = 120), only
+--                    the subset Modules/UnitFrames/AuraBars.lua reads.
 --   threatStyle      Real ElvUI field/defaults. The 1.12 client has no
 --                    threat API: the only state shown is LibBanzai-1.0's
 --                    "this unit has aggro" (Modules/UnitFrames/Threat.lua).
@@ -933,6 +942,22 @@ P.unitframe.units.player = {
 		numrows = 1,
 		attachTo = "FRAME",
 		anchorPoint = "TOPLEFT",
+		clickThrough = false,
+	},
+	aurabar = {
+		enable = true,
+		anchorPoint = "ABOVE",
+		attachTo = "DEBUFFS",
+		height = 20,
+		maxBars = 6,
+		minDuration = 0,
+		maxDuration = 120,
+		sortMethod = "TIME_REMAINING",
+		sortDirection = "DESCENDING",
+		friendlyAuraType = "HELPFUL",
+		enemyAuraType = "HARMFUL",
+		spacing = 0,
+		yOffset = 0,
 		clickThrough = false,
 	},
 	infoPanel = {
@@ -1053,6 +1078,22 @@ P.unitframe.units.target = {
 		numrows = 1,
 		attachTo = "BUFFS",
 		anchorPoint = "TOPRIGHT",
+		clickThrough = false,
+	},
+	aurabar = {
+		enable = true,
+		anchorPoint = "ABOVE",
+		attachTo = "DEBUFFS",
+		height = 20,
+		maxBars = 6,
+		minDuration = 0,
+		maxDuration = 120,
+		sortMethod = "TIME_REMAINING",
+		sortDirection = "DESCENDING",
+		friendlyAuraType = "HELPFUL",
+		enemyAuraType = "HARMFUL",
+		spacing = 0,
+		yOffset = 0,
 		clickThrough = false,
 	},
 	infoPanel = {

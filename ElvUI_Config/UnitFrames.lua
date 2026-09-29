@@ -598,6 +598,98 @@ E.PopupDialogs["RESET_UF_UNIT"] = {
 	hideOnEscape = true,
 }
 
+-- Real ElvUI's aura bar options (retail ElvUI_Options GetOptionsTable_AuraBars):
+-- same keys, orders and nesting (generalGroup, legacyGroup = "Filters"), only
+-- the fields Modules/UnitFrames/AuraBars.lua reads. Sorting offers the methods
+-- that work without caster data (no PLAYER); attaching offers no DETACHED
+-- (there is no aura bar mover). Enemy Aura Type is hidden on the player, as
+-- upstream does. Every change shows on the next unit frame poll pass.
+local function AuraBarArgs(dbKey)
+	local function db() return E.db.unitframe.units[dbKey].aurabar end
+	return {
+		type = "group",
+		name = L["Aura Bars"],
+		order = 16,
+		get = function(info) return db()[ info[getn(info)] ] end,
+		set = function(info, value) db()[ info[getn(info)] ] = value end,
+		args = {
+			intro = {
+				type = "description",
+				order = 1,
+				name = L["The client reports no caster and no time for another unit's auras: bars show the player's own auras, timed from the player's casts (buffs) or LibVanillaDurations-1.0 (debuffs). The player's own buffs and debuffs use their exact time left."],
+			},
+			enable = { type = "toggle", name = L["Enable"], order = 2 },
+			generalGroup = {
+				type = "group",
+				name = L["General"],
+				order = 5,
+				guiInline = true,
+				args = {
+					clickThrough = { type = "toggle", name = L["Click Through"], desc = L["Ignore mouse events."], order = 3 },
+					anchorPoint = {
+						type = "select", name = L["Anchor Point"], order = 6,
+						desc = L["What point to anchor to the frame you set to attach to."],
+						values = { ABOVE = L["Above"], BELOW = L["Below"] },
+					},
+					attachTo = {
+						type = "select", name = L["Attach To"], order = 7,
+						desc = L["The object you want to attach to."],
+						values = { FRAME = L["Frame"], DEBUFFS = L["Debuffs"], BUFFS = L["Buffs"] },
+					},
+					height = { type = "range", name = L["Height"], order = 8, min = 5, max = 40, step = 1 },
+					maxBars = { type = "range", name = L["Max Bars"], order = 10, min = 1, max = 40, step = 1 },
+					sortMethod = {
+						type = "select", name = L["Sort By"], order = 11,
+						desc = L["Method to sort by."],
+						values = {
+							TIME_REMAINING = L["Time Remaining"],
+							DURATION = L["Duration"],
+							NAME = L["Name"],
+							INDEX = L["Index"],
+						},
+					},
+					sortDirection = {
+						type = "select", name = L["Sort Direction"], order = 12,
+						desc = L["Ascending or Descending order."],
+						values = { ASCENDING = L["Ascending"], DESCENDING = L["Descending"] },
+					},
+					friendlyAuraType = {
+						type = "select", name = L["Friendly Aura Type"], order = 13,
+						desc = L["Set the type of auras to show when a unit is friendly."],
+						values = { HARMFUL = L["Debuffs"], HELPFUL = L["Buffs"] },
+					},
+					enemyAuraType = {
+						type = "select", name = L["Enemy Aura Type"], order = 14,
+						desc = L["Set the type of auras to show when a unit is a foe."],
+						values = { HARMFUL = L["Debuffs"], HELPFUL = L["Buffs"] },
+						hidden = dbKey == "player",
+					},
+					yOffset = { type = "range", name = L["Y Offset"], order = 15, min = 0, max = 100, step = 1 },
+					spacing = { type = "range", name = L["Spacing"], order = 16, min = 0, max = 20, step = 1 },
+				},
+			},
+			legacyGroup = {
+				type = "group",
+				name = L["Filters"],
+				order = 60,
+				guiInline = true,
+				args = {
+					minDuration = {
+						type = "range", name = L["Minimum Duration"], order = 1,
+						desc = L["Don't display auras that are shorter than this duration (in seconds). Set to zero to disable."],
+						min = 0, max = 10800, step = 1,
+					},
+					maxDuration = {
+						type = "range", name = L["Maximum Duration"], order = 2,
+						desc = L["Don't display auras that are longer than this duration (in seconds). Set to zero to disable."],
+						min = 0, max = 10800, step = 1,
+					},
+				},
+			},
+		},
+	}
+end
+
 local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappiness, hasCastbar, hasRaidIcon)
 	local function unitTable() return E.db.unitframe.units[dbKey] end
 
@@ -1149,6 +1241,10 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 		}
 	end
 
+	if P.unitframe.units[dbKey] and P.unitframe.units[dbKey].aurabar then
+		args.aurabar = AuraBarArgs(dbKey)
+	end
+
 	return args
 end
 
@@ -1483,6 +1579,50 @@ E.Options.args.unitframe = {
 							get = function() return E.db.unitframe.colors.healPrediction.maxOverflow end,
 							set = function(_, value) E.db.unitframe.colors.healPrediction.maxOverflow = value end,
 						},
+						},
+					},
+					-- Retail ElvUI's Colors.auraBars keys (the three that
+					-- ElvUI-vanilla's profile also carries). Read by AuraBars.lua.
+					auraBars = {
+						order = 8,
+						type = "group",
+						name = L["Aura Bars"],
+						guiInline = true,
+						get = function(info)
+							local key = info[getn(info)]
+							local t = E.db.unitframe.colors[key]
+							if type(t) ~= "table" then return t end
+							local d = P.unitframe.colors[key]
+							return t.r, t.g, t.b, t.a, d.r, d.g, d.b
+						end,
+						set = function(info, r, g, b)
+							local key = info[getn(info)]
+							local t = E.db.unitframe.colors[key]
+							if type(t) ~= "table" then
+								E.db.unitframe.colors[key] = r
+								return
+							end
+							t.r, t.g, t.b = r, g, b
+						end,
+						args = {
+							auraBarByType = {
+								order = 3,
+								type = "toggle",
+								name = L["By Type"],
+								desc = L["Color aurabar debuffs by type."],
+							},
+							auraBarBuff = {
+								order = 10,
+								type = "color",
+								name = L["Buffs"],
+								hasAlpha = false,
+							},
+							auraBarDebuff = {
+								order = 11,
+								type = "color",
+								name = L["Debuffs"],
+								hasAlpha = false,
+							},
 						},
 					},
 					-- Real ElvUI's group and keys (`combo1`..`combo5` store into
