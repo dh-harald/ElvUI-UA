@@ -231,13 +231,15 @@ IconTags["happiness:icon"] = function(unit)
 	end
 end
 
--- The first icon tag in `formatStr`: its start, end and name.
+-- The first icon tag in `formatStr`: its start, end, name, prefix and
+-- suffix (`[prefix>tag<suffix]`, see ApplyTags in UnitFrames.lua).
 local function FindIconTag(formatStr)
 	local pos = 1
 	while true do
-		local s, e, name = string.find(formatStr, "%[([^%]]+)%]", pos)
+		local s, e, inner = string.find(formatStr, "%[([^%]]+)%]", pos)
 		if not s then return nil end
-		if IconTags[name] then return s, e, name end
+		local name, prefix, suffix = UF.SplitTag(inner)
+		if IconTags[name] then return s, e, name, prefix, suffix end
 		pos = e + 1
 	end
 end
@@ -275,9 +277,9 @@ end
 -- used when the font cannot be read back.
 function UF:SetTagText(fontString, formatStr, tags, unit, fontSize)
 	local icon = fontString.elvTagIcon
-	local s, e, name, texture, coords
+	local s, e, name, prefix, suffix, texture, coords
 	if formatStr and formatStr ~= "" then
-		s, e, name = FindIconTag(formatStr)
+		s, e, name, prefix, suffix = FindIconTag(formatStr)
 		if s then
 			texture, coords = IconTags[name](unit)
 		end
@@ -290,8 +292,9 @@ function UF:SetTagText(fontString, formatStr, tags, unit, fontSize)
 		return
 	end
 
-	local before = UF.ApplyTags(string.sub(formatStr, 1, s - 1), tags)
-	local after = UF.ApplyTags(string.sub(formatStr, e + 1), tags)
+	-- The icon's prefix/suffix go through ApplyTags for their '||' escapes.
+	local before = UF.ApplyTags(string.sub(formatStr, 1, s - 1) .. prefix, tags)
+	local after = UF.ApplyTags(suffix .. string.sub(formatStr, e + 1), tags)
 	local size = FontSize(fontString, fontSize)
 	local spaceWidth = SpaceWidth(fontString, size)
 	local count = math.ceil(size / spaceWidth)

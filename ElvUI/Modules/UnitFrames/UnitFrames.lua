@@ -98,14 +98,46 @@ local function PercentFormat()
 	return "%." .. math.floor(dec) .. "f%%"
 end
 
+-- `text_format` follows oUF's tag syntax (real ElvUI's tag engine):
+--   [tag]                the tag's value; an unknown or empty tag gives "".
+--   [prefix>tag<suffix]  prefix and suffix are shown only when the tag is
+--                        not empty. The name runs from after the last '>'
+--                        to before the first '<' that follows it. A tag
+--                        whose own name contains '>' or '<' still wins.
+--   ||c ... ||r          ElvUI stores escape sequences with a doubled pipe;
+--                        '||' before one of TCRAtncra becomes a live escape,
+--                        any other '||' stays a literal pipe (as in oUF).
+-- Not supported: [mouseover] and {custom args} (both resolve to "").
+
+-- The tag name of a bracket's inner text, and its prefix and suffix.
+local function SplitTag(inner)
+	local _, _, prefix, rest = string.find(inner, "^(.*)>(.*)$")
+	if not prefix then rest = inner end
+	local _, _, name, suffix = string.find(rest, "^(.-)<(.*)$")
+	if not name then name = rest end
+	return name, prefix or "", suffix or ""
+end
+
+local function ResolveTag(inner, tags)
+	local value = tags[inner]
+	if value then return value end
+	local name, prefix, suffix = SplitTag(inner)
+	if name == inner then return "" end
+	value = tags[name]
+	if not value or value == "" then return "" end
+	return prefix .. value .. suffix
+end
+
 local function ApplyTags(formatStr, tags)
 	if not formatStr or formatStr == "" then return "" end
-	return (string.gsub(formatStr, "%[([^%]]+)%]", function(tag)
-		return tags[tag] or ""
+	formatStr = string.gsub(formatStr, "||([TCRAtncra])", "|%1")
+	return (string.gsub(formatStr, "%[([^%]]+)%]", function(inner)
+		return ResolveTag(inner, tags)
 	end))
 end
--- Shared with Tags.lua (UF:SetTagText).
+-- Shared with Tags.lua (UF:SetTagText, FindIconTag).
 UF.ApplyTags = ApplyTags
+UF.SplitTag = SplitTag
 
 -- ---------------------------------------------------------------------
 -- Shared visual construction -- the pieces every per-unit Construct_*
