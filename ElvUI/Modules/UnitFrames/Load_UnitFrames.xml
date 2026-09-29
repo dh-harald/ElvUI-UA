@@ -3,7 +3,6 @@
 	<Script file="HealPrediction.lua"/>
 	<Script file="PortraitUA.lua"/>
 	<Script file="PortraitLegacy.lua"/>
-	<Script file="DebuffDurations.lua"/>
 	<Script file="OwnAuras.lua"/>
 	<Script file="CastTracker.lua"/>
 	<Script file="ComboPoints.lua"/>

@@ -991,7 +991,7 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 					order = 1,
 					name = dbKey == "player"
 						and L["Real, exact duration -- read directly from the native GetPlayerBuff* API. Positioned below the frame."]
-						or L["Duration is an APPROXIMATION (ported from pfUI's own libdebuff data + a stamp-on-first-observation timer, not the real vanilla application moment) -- see DebuffDurations.lua's own header comment. Positioned below the frame."],
+						or L["Duration from pfUI's spell data (LibVanillaDurations-1.0). The start is exact for your own casts and for debuffs seen landing, otherwise it is counted from when the debuff was first seen. Positioned below the frame."],
 				}
 				return debuffArgs
 			end)(),

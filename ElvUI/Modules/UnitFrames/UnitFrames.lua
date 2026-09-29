@@ -67,6 +67,7 @@ E.UnitFrames = UF
 -- upvalue), no shared helper exists project-wide so this is its own
 -- local copy, matching the established per-module convention.
 local LSM = LibStub("LibSharedMedia-3.0", true)
+local LVD = LibStub("LibVanillaDurations-1.0", true)
 local function GetBarTexture()
 	local path = LSM and LSM:Fetch("statusbar", E.db.unitframe.statusbar)
 	return path or "Interface\\Buttons\\WHITE8x8"
@@ -1352,11 +1353,12 @@ end
 --      all. This turns out to cover debuffs too (same function
 --      family, `"HARMFUL"` filter), so Player needs neither the pfUI
 --      approximation NOR to go without a debuff timer.
---   2. Any OTHER unit's debuffs (Target/TargetTarget/Pet so far): the
---      pfUI/libdebuff-ported approximation (DebuffDurations.lua) --
---      real duration DATA, but an approximated START time (stamped on
---      first observation, not the true application moment). See that
---      file's own header comment for the full reasoning.
+--   2. Any OTHER unit's debuffs (Target/TargetTarget/Pet so far):
+--      LibVanillaDurations-1.0 (pfUI libdebuff's duration table and
+--      tooltip name scan) -- real duration DATA, the START time exact when
+--      the debuff was seen landing or cast by the player (OwnAuras.lua),
+--      otherwise stamped on first observation. Estimated times are shown
+--      too.
 --   3. Any OTHER unit's buffs: no duration source exists at all (no
 --      per-unit equivalent of GetPlayerBuff, and libdebuff's own table
 --      is debuffs-only) -- icon + stack count only, same as the
@@ -1531,6 +1533,13 @@ function UF:GetAuraInfo(unit, auraType, index)
 	return texture, count, nil, false
 end
 
+-- Aura time text in the cooldown text's format (E:GetTimeInfo /
+-- E.TimeFormats, Core/Cooldowns.lua).
+function UF:FormatDebuffTimeLeft(seconds)
+	local timerValue, formatId = E:GetTimeInfo(seconds, 4)
+	return string.format(E.TimeFormats[formatId][2], timerValue)
+end
+
 -- `dbKey`/`unit` split matches UpdateFrame's own (Party's 4 frames
 -- share one settings table but each has its own unit token).
 function UF:UpdateAuras(frame, auraType)
@@ -1574,9 +1583,9 @@ function UF:UpdateAuras(frame, auraType)
 
 		-- Debuff-only approximated duration (tier 2 above) -- only when
 		-- the real API (tier 1, player-only) didn't already answer.
-		if not hasRealDuration and auraType == "debuff" then
-			local name = self:GetDebuffName(unit, i)
-			timeLeft = self:GetDebuffTimeLeft(unit, name)
+		if not hasRealDuration and auraType == "debuff" and LVD then
+			local _
+			_, timeLeft = LVD:GetDebuff(unit, i)
 		end
 
 		-- minDuration/maxDuration (real ElvUI fields, `0` = no filter on

@@ -1,9 +1,8 @@
--- Exact start times for the auras the player applies, the precision layer
--- of pfUI's libdebuff (Shagu, MIT) that DebuffDurations.lua on its own does
--- not have. That file stamps an aura the first time it is seen, so a
--- re-cast before expiry keeps the old start and another player's copy of
--- the same spell looks like ours. Here the player's own casts are caught
--- when they happen:
+-- Exact start times for the auras the player applies, the cast-hook layer
+-- of pfUI's libdebuff (Shagu, MIT). LibVanillaDurations-1.0 on its own
+-- stamps a debuff when a scan finds it, so a re-cast before expiry keeps
+-- the old start and another player's copy of the same spell looks like
+-- ours. Here the player's own casts are caught when they happen:
 --   * wrappers around UseAction / CastSpell / CastSpellByName queue the
 --     spell, its rank, the target's name and the duration (rank, combo
 --     points and talents applied) BEFORE the cast leaves the client;
@@ -12,9 +11,12 @@
 --     sends only SPELLCAST_FAILED);
 --   * a miss/resist/immune line of the player's own combat log drops a
 --     queued cast, or puts back the stamp a just committed cast replaced.
--- A commit writes into UF.debuffStamps (DebuffDurations.lua) with
--- `mine = true`, so the target frame's aura timers use the exact start as
--- well. Only spells with an entry in UF.DebuffDurations are tracked.
+-- A commit is kept here (UF:GetOwnAuraTimeLeft, buffs and debuffs alike)
+-- and also stamped into LibVanillaDurations-1.0 with `mine`, so the target
+-- frame's debuff timers use the exact start as well. The library drops a
+-- stamp whose debuff a scan no longer finds, which is also why the own
+-- table exists: buffs are never in its scans. Only spells with a duration
+-- in the library's table are tracked.
 --
 -- Limits:
 --   * Stamps are keyed by the target's NAME (no GUID on 1.12): same-named
@@ -25,8 +27,7 @@
 --     (UF:TargetHasAura).
 --   * A spell cast by clicking a unit after picking it (spell cursor) is
 --     not tracked.
---   * Duration table and talent names are English only, like
---     DebuffDurations.lua.
+--   * Duration table and talent names are English only.
 
 local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
@@ -34,6 +35,7 @@ local UF = E.UnitFrames
 
 local Compat = ElvUI.Compat
 local Deformat = LibStub("LibDeformat-2.0", true)
+local LVD = LibStub("LibVanillaDurations-1.0", true)
 
 local find = string.find
 
@@ -72,9 +74,16 @@ local FAIL_TEMPLATES = {
 
 local queued      -- pressed, not yet started or stopped
 local casting     -- confirmed by SPELLCAST_START, waiting for SPELLCAST_STOP
-local lastCommit  -- { target, effect, time, previous }
+local lastCommit  -- { target, effect, time, previous, libPrevious }
 
+-- ownStamps[unitName][effect] = { start, duration }
+local ownStamps = {}
 local maxRanks = {}
+
+-- Seconds, or nil for a spell without a known duration.
+local function KnownDuration(effect, rank)
+	return effect and LVD and LVD:GetDuration(effect, rank)
+end
 
 local function RankNumber(text)
 	if type(text) ~= "string" then return nil end
@@ -124,12 +133,8 @@ end
 
 -- Unknown rank falls back to the table's rank 0 entry, then its highest.
 local function Duration(effect, rank)
-	local ranks = UF.DebuffDurations and UF.DebuffDurations[effect]
-	if not ranks then return 0 end
-	local duration = rank and ranks[rank]
-	if not duration then duration = ranks[0] end
-	if not duration then duration = UF:GetDebuffDuration(effect) end
-	duration = duration or 0
+	local duration = KnownDuration(effect, rank)
+	if not duration then return 0 end
 
 	local mod = MODIFIERS[effect]
 	if mod then
@@ -148,8 +153,7 @@ local function Duration(effect, rank)
 end
 
 local function Queue(effect, rank, onSelf)
-	if not effect then return end
-	if not (UF.DebuffDurations and UF.DebuffDurations[effect]) then return end
+	if not KnownDuration(effect) then return end
 	rank = rank or MaxKnownRank(effect)
 	local duration = Duration(effect, rank)
 	if duration <= 0 then return end
@@ -166,19 +170,40 @@ local function Queue(effect, rank, onSelf)
 end
 
 local function Commit(entry)
-	local stamps = UF.debuffStamps[entry.target]
+	local stamps = ownStamps[entry.target]
 	if not stamps then
 		stamps = {}
-		UF.debuffStamps[entry.target] = stamps
+		ownStamps[entry.target] = stamps
 	end
 	local now = GetTime()
+	local libPrevious
+	if LVD then
+		local start, duration, mine, estimated = LVD:GetStamp(entry.target, entry.effect)
+		if start then
+			libPrevious = { start = start, duration = duration, mine = mine, estimated = estimated }
+		end
+		LVD:SetStamp(entry.target, entry.effect, now, entry.duration, true)
+	end
 	lastCommit = {
 		target = entry.target,
 		effect = entry.effect,
 		time = now,
 		previous = stamps[entry.effect],
+		libPrevious = libPrevious,
 	}
-	stamps[entry.effect] = { start = now, duration = entry.duration, mine = true }
+	stamps[entry.effect] = { start = now, duration = entry.duration }
+end
+
+-- A resisted cast: the own stamp goes back to what it was. The library's
+-- stamp is put back only when there was one; a new stamp whose debuff
+-- never lands is dropped by the library's next scan.
+local function Revert(commit)
+	local stamps = ownStamps[commit.target]
+	if stamps then stamps[commit.effect] = commit.previous end
+	local p = commit.libPrevious
+	if LVD and p then
+		LVD:SetStamp(commit.target, commit.effect, p.start, p.duration, p.mine, p.estimated)
+	end
 end
 
 -- Scan tooltip, one for every lookup here: action slots and unit auras.
@@ -187,17 +212,19 @@ local function ScanTip()
 	if scanTip then return scanTip end
 	local ok, tip = pcall(CreateFrame, "GameTooltip", "ElvUIOwnAuraScanTooltip", nil, "GameTooltipTemplate")
 	if not ok or not tip then return nil end
-	tip:SetOwner(UIParent, "ANCHOR_NONE")
 	scanTip = tip
 	return tip
 end
 
 -- Calls tip[method](tip, a1, a2) and returns the first line's left and
 -- right text. The tooltip is hidden again: a filled GameTooltip stays
--- visible on screen otherwise.
+-- visible on screen otherwise. Hiding drops the owner, and on the 1.12
+-- client an unowned tooltip is not filled by its Set calls, so the owner
+-- is set again on every scan.
 local function ScanLine(method, a1, a2)
 	local tip = ScanTip()
 	if not tip then return nil end
+	tip:SetOwner(UIParent, "ANCHOR_NONE")
 	tip:ClearLines()
 	local ok = pcall(tip[method], tip, a1, a2)
 	local left, right
@@ -240,12 +267,12 @@ local function MacroSpell(body)
 		local _, _, cmd, rest = find(line, "^%s*(/%S+)%s+(.-)%s*$")
 		if cmd and commands[string.lower(cmd)] then
 			local name = StripRank(rest)
-			if UF.DebuffDurations[name] then return name end
+			if KnownDuration(name) then return name end
 		end
 		local quoted
 		for quoted in Compat.gmatch(line, "CastSpellByName%(%s*[\"']([^\"']+)[\"']") do
 			local name = StripRank(quoted)
-			if UF.DebuffDurations[name] then return name end
+			if KnownDuration(name) then return name end
 		end
 	end
 	return nil
@@ -350,8 +377,7 @@ local function OnFailLine(text)
 					casting = nil
 				elseif lastCommit and (a == lastCommit.effect or b == lastCommit.effect)
 					and now - lastCommit.time <= REVERT_WINDOW then
-					local stamps = UF.debuffStamps[lastCommit.target]
-					if stamps then stamps[lastCommit.effect] = lastCommit.previous end
+					Revert(lastCommit)
 					lastCommit = nil
 				end
 				return
@@ -360,47 +386,64 @@ local function OnFailLine(text)
 	end
 end
 
--- Target aura names, read through the scan tooltip: 1.12's UnitDebuff and
--- UnitBuff return no name. Hostile targets are read for debuffs, friendly
--- ones for buffs, as real ElvUI's target aura filter does.
-local targetAuras = {}
-local targetDirty = true
+-- Target aura names: 1.12's UnitDebuff and UnitBuff return no name.
+-- Hostile targets are read for debuffs, friendly ones for buffs, as real
+-- ElvUI's target aura filter does. Debuff names come from
+-- LibVanillaDurations-1.0 (its scan cache is shared with the target
+-- frame); buff names from the scan tooltip here.
+local targetBuffs = {}
+local buffsDirty = true
 local lastScan = 0
 
-local function ScanTargetAuras()
-	targetDirty = false
+local function ScanTargetBuffs()
+	buffsDirty = false
 	lastScan = GetTime()
 	local k
-	for k in pairs(targetAuras) do targetAuras[k] = nil end
+	for k in pairs(targetBuffs) do targetBuffs[k] = nil end
 	if not Compat.bool(UnitExists("target")) then return end
 
-	local friendly = Compat.bool(UnitIsFriend("player", "target"))
-	local query = friendly and UnitBuff or UnitDebuff
-	local method = friendly and "SetUnitBuff" or "SetUnitDebuff"
 	local i
 	for i = 1, MAX_AURAS do
-		local ok, texture = pcall(query, "target", i)
+		local ok, texture = pcall(UnitBuff, "target", i)
 		if not ok or not texture then break end
-		local name = ScanLine(method, "target", i)
-		if name and name ~= "" then targetAuras[name] = true end
+		local name = ScanLine("SetUnitBuff", "target", i)
+		if name and name ~= "" then targetBuffs[name] = true end
 	end
 end
 
-function UF:TargetHasAura(effect)
-	if targetDirty or GetTime() - lastScan > SCAN_INTERVAL then
-		ScanTargetAuras()
+-- Every debuff slot is checked: on Unreal Azeroth a debuff can follow an
+-- empty slot.
+local function TargetHasDebuff(effect)
+	if not LVD then return false end
+	local i
+	for i = 1, MAX_AURAS do
+		if LVD:GetDebuffName("target", i) == effect then return true end
 	end
-	return targetAuras[effect] == true
+	return false
+end
+
+function UF:TargetHasAura(effect)
+	if not Compat.bool(UnitExists("target")) then return false end
+	if not Compat.bool(UnitIsFriend("player", "target")) then
+		return TargetHasDebuff(effect)
+	end
+	if buffsDirty or GetTime() - lastScan > SCAN_INTERVAL then
+		ScanTargetBuffs()
+	end
+	return targetBuffs[effect] == true
 end
 
 -- Seconds left and total duration of the player's own `effect` on the unit
 -- named `unitName`; nil when there is no such stamp or it has run out.
 function UF:GetOwnAuraTimeLeft(unitName, effect)
-	local stamps = unitName and UF.debuffStamps[unitName]
+	local stamps = unitName and ownStamps[unitName]
 	local stamp = stamps and stamps[effect]
-	if not stamp or not stamp.mine then return nil end
+	if not stamp then return nil end
 	local left = stamp.start + stamp.duration - GetTime()
-	if left <= 0 then return nil end
+	if left <= 0 then
+		stamps[effect] = nil
+		return nil
+	end
 	return left, stamp.duration
 end
 
@@ -424,7 +467,7 @@ local function OnEvent()
 		end
 		casting = nil
 		queued = nil
-		targetDirty = true
+		buffsDirty = true
 	elseif event == "SPELLCAST_FAILED" then
 		-- A failed press while a cast is running belongs to the press, not
 		-- to the running cast.
@@ -435,9 +478,9 @@ local function OnEvent()
 	elseif event == "CHAT_MSG_SPELL_SELF_DAMAGE" then
 		if type(arg1) == "string" then OnFailLine(arg1) end
 	elseif event == "UNIT_AURA" then
-		if arg1 == "target" then targetDirty = true end
+		if arg1 == "target" then buffsDirty = true end
 	elseif event == "PLAYER_TARGET_CHANGED" then
-		targetDirty = true
+		buffsDirty = true
 	elseif event == "SPELLS_CHANGED" or event == "LEARNED_SPELL_IN_TAB" then
 		local k
 		for k in pairs(maxRanks) do maxRanks[k] = nil end

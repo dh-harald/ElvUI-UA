@@ -31,7 +31,7 @@
 --   - `sortMethod`/`sortDir` ARE implemented (INDEX/TIME, matching real
 --     ElvUI's own two most useful values and default "TIME"/"-"); NO
 --     "NAME" sort (no cheap per-aura name lookup for the player's own
---     buffs the way DebuffDurations.lua's tooltip-scan gets one for
+--     buffs the way LibVanillaDurations-1.0's tooltip scan gets one for
 --     other units' debuffs) and no `seperateOwn` (every aura here is
 --     already the player's own by definition -- that field only means
 --     something for a raid-frame-style multi-caster aura list).

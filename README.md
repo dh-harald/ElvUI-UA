@@ -41,7 +41,8 @@ Two addons ship together:
   debuff lasts on the target while the spell itself has no cooldown. Own
   casts are timed when they happen,
   so the target frame's debuff timers are exact for your own spells too
-- UnitFrames (player/target/pet/party/etc.), Auras
+- UnitFrames (player/target/pet/party/etc.), Auras; debuff timers on other
+  units through LibVanillaDurations-1.0 (pfUI's spell duration data)
 - Estimated health of hostile mobs and players (LibMobHealth-4.0): the
   client only reports them in percent, so their real health is learned from
   the damage dealt to your target and saved account-wide; shown on the unit
