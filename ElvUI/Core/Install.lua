@@ -400,7 +400,8 @@ end
 -- project's own party frames are per-index-numbered, `ElvUF_Party1..N`,
 -- and are NOT repositioned by this feature -- no single group anchor to
 -- move). Rewritten small: only the 4 single-instance unitframe movers
--- that exist here (player/target/pet/targettarget), the player castbar
+-- that exist here (player/target/pet/targettarget), the five action bar
+-- movers (reset, then bar3/bar5 beside bar1 for healer), the player castbar
 -- for healer/caster (real ElvUI widens and moves it for exactly those
 -- two roles), one `E.db.actionbar.bar2.enabled` flip for healer (real
 -- ElvUI's own click-heal extra bar), and a datatext-panel swap limited
@@ -427,6 +428,11 @@ local LAYOUT_PRESETS = {
 		targettarget = "BOTTOM,UIParent,BOTTOM,0,145",
 		pet = "BOTTOM,UIParent,BOTTOM,0,186",
 		castbar = { width = 436, height = 28, mover = "BOTTOM,UIParent,BOTTOM,-2,81" },
+		-- bar3/bar5 grown to 12 buttons (two rows of six) on both sides of bar1.
+		bars = {
+			ElvAB_3 = "BOTTOM,UIParent,BOTTOM,332,4",
+			ElvAB_5 = "BOTTOM,UIParent,BOTTOM,-332,4",
+		},
 		datatextRight = "Avoidance",
 	},
 	dpsMelee = {
@@ -477,6 +483,17 @@ function E:SetupLayout(role)
 	if E.ActionBars and E.ActionBars.UpdateBar then
 		E.ActionBars:UpdateBar(3)
 		E.ActionBars:UpdateBar(5)
+	end
+
+	-- Real ElvUI resets every mover first (E:ResetMovers("")); here only the
+	-- action bars', so every role starts from the bars' own default places
+	-- (bar2/3/5 around bar1, bar4 at the right edge) and the healer preset
+	-- then moves bar3/bar5.
+	local id
+	for id = 1, 5 do
+		local name = "ElvAB_"..id
+		E.db.movers[name] = preset.bars and preset.bars[name] or nil
+		E:ApplyMoverPosition(name)
 	end
 
 	E.db.movers.ElvUF_Player = preset.player

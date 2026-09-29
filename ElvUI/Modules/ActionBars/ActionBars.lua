@@ -15,9 +15,8 @@
 -- ActionButton1..12, bars 2-5 = the four native MultiBars, matching real
 -- ElvUI's own barDefaults mapping (MultiBarBottomRight/Right/Left/
 -- BottomLeft). Each bar is its own independent mover (see
--- DEFAULT_Y_OFFSET/CreateBar() below and Core/Movers.lua) -- stacked
--- vertically above bar1 only as a FIRST-RUN starting arrangement, freely
--- draggable/nudgeable afterward via /moveui.
+-- DEFAULT_POSITIONS/CreateBar() below and Core/Movers.lua), starting where
+-- real ElvUI puts it, freely draggable/nudgeable afterward via /moveui.
 --
 -- Other native actionbar-adjacent chrome (stance bar, pet bar, the
 -- default bar's background art, the latency indicator) is hidden so only
@@ -109,11 +108,10 @@ local BAR_DEFS = {
 -- INDEPENDENT bars' default relative starting position.
 local ROW_GAP = 0
 
--- First-run-only starting positions. Each bar is its own independent
--- E:CreateMover (see Core/Movers.lua and CreateBar() below) -- these
--- offsets only matter the FIRST time a bar is ever created (no
--- E.db.movers["ElvAB_"..id] entry yet); after that, the mover system owns
--- each bar's position and these are never consulted again. Assumes the
+-- Fallback starting positions, used only for a bar whose DEFAULT_POSITIONS
+-- anchor (bar1's holder) does not exist. Like every starting position they
+-- matter only while the bar has no E.db.movers["ElvAB_"..id] entry, and
+-- are the target of a mover reset. Assumes the
 -- default single-row 32px-button/8px-container-padding layout (~40px
 -- tall, matching PositionOneBar's own `size*rows + spacing*(rows-1) + 8`
 -- formula for a single row) stacked with ROW_GAP between -- just a
@@ -127,6 +125,34 @@ do
 	for i = 1, 5 do
 		DEFAULT_Y_OFFSET[i] = 4 + (i - 1) * (DEFAULT_BAR_HEIGHT + ROW_GAP)
 	end
+end
+
+-- Real ElvUI's starting positions (AB.barDefaults): bar2 on top of bar1,
+-- bar3 to its right, bar5 to its left, bar4 a column at the right screen
+-- edge. Bars 2/3/5 are anchored to bar1's holder, so they follow bar1 until
+-- they are moved themselves (a drag saves a UIParent-relative position).
+-- When bar1 is disabled its holder does not exist, and those three fall
+-- back to the stacked DEFAULT_Y_OFFSET positions above.
+local BAR1_HOLDER = "ElvUIActionBarHolder1"
+local DEFAULT_POSITIONS = {
+	[1] = { "BOTTOM", "UIParent", "BOTTOM", 0, 4 },
+	[2] = { "BOTTOM", BAR1_HOLDER, "TOP", 0, 2 },
+	[3] = { "LEFT", BAR1_HOLDER, "RIGHT", 4, 0 },
+	[4] = { "RIGHT", "UIParent", "RIGHT", -4, 0 },
+	[5] = { "RIGHT", BAR1_HOLDER, "LEFT", -4, 0 },
+}
+
+-- Sets the bar's starting point and returns it as a mover position string.
+-- The string becomes the mover's reset target directly: on the 1.12.1
+-- client a GetPoint read this early in the login can return the Y offset
+-- with the wrong sign, which is what E:CreateMover would capture.
+local function SetDefaultPosition(bar, id)
+	local pos = DEFAULT_POSITIONS[id]
+	if not (pos and _G[pos[2]]) then
+		pos = { "BOTTOM", "UIParent", "BOTTOM", 0, DEFAULT_Y_OFFSET[id] or 4 }
+	end
+	bar:SetPoint(pos[1], _G[pos[2]], pos[3], pos[4], pos[5])
+	return string.format("%s,%s,%s,%d,%d", pos[1], pos[2], pos[3], pos[4], pos[5])
 end
 -- Every bar always reparents/styles all 12 possible buttons regardless of
 -- the `buttons` config value -- matching real ElvUI's own
@@ -597,8 +623,9 @@ function M:CreateBar(barDef)
 	-- whatever's here as its reset default, then owns the bar's actual
 	-- position from here on (drag/nudge via /moveui, persisted in
 	-- E.db.movers["ElvAB_"..id], real-ElvUI-format -- see Core/Movers.lua).
-	bar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, DEFAULT_Y_OFFSET[barDef.id] or 4)
-	E:CreateMover(bar, "ElvAB_"..barDef.id, L["Bar "]..barDef.id)
+	local default = SetDefaultPosition(bar, barDef.id)
+	local mover = E:CreateMover(bar, "ElvAB_"..barDef.id, L["Bar "]..barDef.id)
+	if mover then mover.default = default end
 
 	bar.buttons = {}
 	local i
