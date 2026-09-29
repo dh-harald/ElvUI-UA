@@ -104,6 +104,8 @@ local function ApplyTags(formatStr, tags)
 		return tags[tag] or ""
 	end))
 end
+-- Shared with Tags.lua (UF:SetTagText).
+UF.ApplyTags = ApplyTags
 
 -- ---------------------------------------------------------------------
 -- Shared visual construction -- the pieces every per-unit Construct_*
@@ -619,101 +621,23 @@ function UF:EnableUnitClick(frame)
 end
 
 -- ---------------------------------------------------------------------
--- Pet Happiness -- HUNTER-pet-only loyalty indicator: only Hunter pets
--- have it, e.g. a Warlock pet doesn't. Checked real ElvUI's own Elements/Happiness.lua first:
--- it uses `HasPetUI()`'s SECOND return value (`isHunterPet`) to gate
--- this exactly -- confirmed on UA too (UnrealAzeroth_LuaAPI/en/
--- globals/Pet.md: "The default stable UI treats the second return as
--- isHunterPet", real booleans on this client, not 1/nil). A narrow
--- VERTICAL bar, real ElvUI field names verbatim (`happiness = {enable,
--- autoHide, width}`, default width 10, Settings/Profile.lua:1593) --
--- real ElvUI reflows Health/Power's own width to make room for it
--- (`frame.HAPPINESS_WIDTH`); this project skips that pixel-perfect
--- layout math (matches this project's own established simplification
--- pattern elsewhere, e.g. `orientation` stored-but-not-read) and instead
--- just sticks it out past Health's own left edge.
-function UF:Construct_Happiness(frame)
-	local bar = ElvUI.Util.CreateStatusBar(frame, {
-		orientation = "VERTICAL",
-		background = {0.1, 0.1, 0.1, 1},
-		texture = GetBarTexture(),
-	})
-	bar:SetWidth(10)
-	local ok, frameLevel = pcall(frame.GetFrameLevel, frame)
-	if ok and tonumber(frameLevel) then
-		pcall(bar.SetFrameLevel, bar, frameLevel + 2)
-	end
-	bar:Hide()
-	frame.HappinessIndicator = bar
-	return bar
-end
-
--- 33/66/100 + red/yellow/green, matching real ElvUI's own
--- HappinessOverride exactly (damagePercentage 75/100/125 ->
--- Unhappy/Content/Happy, the actual vanilla 3-tier system --
--- GetPetHappiness's own docs confirm this shape on UA too). Sized/
--- positioned to Health's own height, stuck out past its left edge (see
--- this section's own header comment for why, vs. real ElvUI's width-
--- reflow).
-function UF:UpdateHappiness(frame)
-	local bar = frame.HappinessIndicator
-	if not bar then return end
-	ElvUI.Util.SetStatusBarTexture(bar, GetBarTexture())
-
-	local settings = E.db.unitframe.units[frame.unitDBKey or frame.unit]
-	local happinessDB = settings and settings.happiness
-	if not happinessDB or not happinessDB.enable then
-		bar:Hide()
-		return
-	end
-
+-- Pet happiness: 1 unhappy, 2 content, 3 happy -- or nil unless `unit` is
+-- the player's own hunter pet. `HasPetUI()`'s second return is
+-- `isHunterPet` (a Warlock's pet has no happiness); GetPetHappiness's
+-- FIRST return is the 1/2/3 index on both clients, while its second
+-- (damage percentage) is not reliably 75/100/125 on Unreal Azeroth.
+-- Used by the `colorHappiness` health colour and the happiness tags.
+-- ---------------------------------------------------------------------
+function UF.PetHappiness(unit)
+	if unit ~= "pet" then return nil end
 	local okUI, hasPetUI, isHunterPet = pcall(HasPetUI)
-	if not okUI or not hasPetUI or not isHunterPet then
-		bar:Hide()
-		return
+	if not okUI or not ElvUI.Compat.bool(hasPetUI) or not ElvUI.Compat.bool(isHunterPet) then return nil end
+	local ok, happiness = pcall(GetPetHappiness)
+	happiness = ok and tonumber(happiness)
+	if happiness and happiness >= 1 and happiness <= 3 then
+		return happiness
 	end
-
-	local okHappy, happinessIndex = pcall(GetPetHappiness)
-	if not okHappy or not happinessIndex then
-		bar:Hide()
-		return
-	end
-
-	-- Branches on `happinessIndex` (the FIRST return, 1/2/3 =
-	-- unhappy/content/happy), NOT `damagePercentage` (the second):
-	-- GetPetHappiness can report 3 (happy) while the bar shows yellow
-	-- (content color) if branching on `damagePercentage == 75/125` (real
-	-- vanilla's own documented value shape for Unhappy/Happy) -- that
-	-- doesn't hold exactly on UA, so if damagePercentage never actually
-	-- equals 75 or 125 there, EVERY happiness state silently falls into
-	-- the `else` (content/yellow) branch regardless of the pet's real
-	-- state. `happinessIndex` itself
-	-- is the one value UA's own docs explicitly confirm as 1/2/3
-	-- (UnrealAzeroth_LuaAPI/en/globals/Pet.md), confirmed directly
-	-- by live testing -- branching on that instead is strictly safer, not
-	-- a guess.
-	local value, r, g, b
-	if happinessIndex == 1 then
-		value, r, g, b = 33, 0.8, 0.2, 0.1
-	elseif happinessIndex == 3 then
-		value, r, g, b = 100, 0, 0.8, 0
-	else
-		value, r, g, b = 66, 1, 1, 0
-	end
-
-	bar:SetWidth(happinessDB.width or 10)
-	bar:ClearAllPoints()
-	bar:SetPoint("TOPRIGHT", frame.Health, "TOPLEFT", -2, 0)
-	bar:SetPoint("BOTTOMRIGHT", frame.Health, "BOTTOMLEFT", -2, 0)
-	bar:SetMinMaxValues(0, 100)
-	bar:SetValue(value)
-	ElvUI.Util.SetStatusBarColor(bar, r, g, b)
-
-	if happinessIndex == 3 and happinessDB.autoHide then
-		bar:Hide()
-	else
-		bar:Show()
-	end
+	return nil
 end
 
 -- ---------------------------------------------------------------------
@@ -1308,6 +1232,7 @@ function UF:UpdateCustomTexts(frame, tags)
 	for objectName, object in pairs(frame.customTexts) do
 		if not customTexts or not customTexts[objectName] then
 			object:Hide()
+			self:HideTagIcon(object)
 			frame.customTexts[objectName] = nil
 		end
 	end
@@ -1339,10 +1264,11 @@ function UF:UpdateCustomTexts(frame, tags)
 			fontString:ClearAllPoints()
 			fontString:SetPoint(justify, anchor, justify, objectDB.xOffset or 0, objectDB.yOffset or 0)
 
-			fontString:SetText(ApplyTags(objectDB.text_format, tags))
+			self:SetTagText(fontString, objectDB.text_format, tags, frame.unit, objectDB.size or E.db.unitframe.fontSize)
 			fontString:Show()
 		else
 			fontString:Hide()
+			self:HideTagIcon(fontString)
 		end
 	end
 end
@@ -1908,6 +1834,16 @@ local function ResolveHealthColor(unit, percent, isDead, dbKey, isOffline)
 		r, g, b = c.r, c.g, c.b
 	end
 
+	-- Retail ElvUI's `colorHappiness` (Classic): a hunter's pet by its
+	-- happiness, ahead of the class/gradient/flat colours above.
+	if settings.health and settings.health.colorHappiness then
+		local happiness = UF.PetHappiness(unit)
+		local c = happiness and colors.happiness and colors.happiness[happiness]
+		if c then
+			r, g, b = c.r, c.g, c.b
+		end
+	end
+
 	if isOffline then
 		local c = colors.disconnected
 		r, g, b = c.r, c.g, c.b
@@ -2266,16 +2202,18 @@ function UF:UpdateFrame(frame)
 	tags["level"] = (okLevel and level and level > 0) and tostring(level) or "??"
 	self:ExtendTags(tags, unit)
 
+	-- UF:SetTagText (Tags.lua): ApplyTags plus the icon tags.
+	local fontSize = E.db.unitframe.fontSize
 	if settings.health then
-		frame.Health.text:SetText(ApplyTags(settings.health.text_format, tags))
+		self:SetTagText(frame.Health.text, settings.health.text_format, tags, unit, fontSize)
 		ApplyTextPosition(frame.Health.text, ResolveTextAnchor(frame, settings.health.attachTextTo), settings.health.position, settings.health.xOffset, settings.health.yOffset)
 	end
 	if frame.Power and settings.power then
-		frame.Power.text:SetText(ApplyTags(settings.power.text_format, tags))
+		self:SetTagText(frame.Power.text, settings.power.text_format, tags, unit, fontSize)
 		ApplyTextPosition(frame.Power.text, ResolveTextAnchor(frame, settings.power.attachTextTo), settings.power.position, settings.power.xOffset, settings.power.yOffset)
 	end
 	if frame.Name and settings.name then
-		frame.Name:SetText(ApplyTags(settings.name.text_format, tags))
+		self:SetTagText(frame.Name, settings.name.text_format, tags, unit, fontSize)
 		ApplyTextPosition(frame.Name, ResolveTextAnchor(frame, settings.name.attachTextTo), settings.name.position, settings.name.xOffset, settings.name.yOffset)
 	end
 
@@ -2307,11 +2245,6 @@ function UF:UpdateFrame(frame)
 	-- SAME `tags` table just built above for Health/Power/Name, so a
 	-- Custom Text's own tags always match this tick's values.
 	self:UpdateCustomTexts(frame, tags)
-
-	-- Pet Happiness -- see Construct_Happiness's own comment. Only Pet
-	-- ever builds frame.HappinessIndicator, so this is naturally a no-op
-	-- for every other unit, same gating pattern as RestingIndicator below.
-	self:UpdateHappiness(frame)
 
 	-- Resting/combat state icons. RestIcon is PLAYER-ONLY -- `IsResting()`
 	-- takes no unit argument, it's inherently about the player character

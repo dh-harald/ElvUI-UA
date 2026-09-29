@@ -15,6 +15,7 @@
 -- profile uses (the `:shortvalue` forms, `classcolor`).
 
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local UF = E.UnitFrames
 local Compat = ElvUI.Compat
 
@@ -147,6 +148,37 @@ Methods["pvptimer"] = function(unit)
 	return label
 end
 
+-- Hunter pet tags (retail ElvUI's Classic set). All of them are empty on any
+-- unit but the player's own hunter pet (UF.PetHappiness). `happiness:icon` is
+-- an icon tag (below); retail's `happiness:discord` is left out, it needs
+-- ElvUI's chat emoji textures.
+Methods["happiness:full"] = function(unit)
+	local happiness = UF.PetHappiness(unit)
+	return happiness and _G["PET_HAPPINESS" .. happiness] or ""
+end
+
+Methods["happiness:color"] = function(unit)
+	local happiness = UF.PetHappiness(unit)
+	local c = happiness and E.db.unitframe.colors.happiness[happiness]
+	return c and Hex(c.r, c.g, c.b) or ""
+end
+
+-- The digit of GetPetLoyalty()'s "(Loyalty Level 6) Best Friend"; a text
+-- without one is shown whole.
+Methods["loyalty"] = function(unit)
+	if not UF.PetHappiness(unit) then return "" end
+	local ok, loyalty = pcall(GetPetLoyalty)
+	if not ok or type(loyalty) ~= "string" then return "" end
+	return (string.gsub(loyalty, ".-(%d).*", "%1"))
+end
+
+-- The first food type the pet eats, as retail's tag shows it.
+Methods["diet"] = function(unit)
+	if not UF.PetHappiness(unit) then return "" end
+	local ok, food = pcall(GetPetFoodTypes)
+	return (ok and type(food) == "string") and food or ""
+end
+
 -- A table key no [tag] can reach: the unit the table was built for.
 local UNIT_KEY = {}
 
@@ -166,6 +198,129 @@ function UF:ExtendTags(tags, unit)
 	return setmetatable(tags, TAGS_META)
 end
 
+-- ---------------------------------------------------------------------
+-- Icon tags
+-- ---------------------------------------------------------------------
+-- Retail draws an icon tag as a texture escape inside the text (`|T...|t`),
+-- which neither client renders. Here the tag's place in the text becomes a
+-- gap of spaces, and a real texture is laid over that gap: the text before
+-- the tag is measured (GetStringWidth), and the texture is anchored to the
+-- FontString's left edge by that width. Unit frame texts are anchored by a
+-- single point, so the FontString is exactly as wide as its text and its
+-- left edge is where the text starts, whatever the justification. Only the
+-- first icon tag of a text becomes an icon; the icon is as tall as the font.
+--
+-- An icon tag answers the texture path and its {left, right, top, bottom}
+-- crop, or nil to show nothing (the gap is left out too).
+
+local IconTags = {}
+UF.IconTags = IconTags
+
+-- Retail's crops of the 128x64 sheet: unhappy, content, happy.
+local HAPPINESS_TEXTURE = "Interface\\PetPaperDollFrame\\UI-PetHappiness"
+local HAPPINESS_COORDS = {
+	{ 48 / 128, 72 / 128, 0, 23 / 64 },
+	{ 24 / 128, 48 / 128, 0, 23 / 64 },
+	{ 0, 24 / 128, 0, 23 / 64 },
+}
+
+IconTags["happiness:icon"] = function(unit)
+	local happiness = UF.PetHappiness(unit)
+	if happiness then
+		return HAPPINESS_TEXTURE, HAPPINESS_COORDS[happiness]
+	end
+end
+
+-- The first icon tag in `formatStr`: its start, end and name.
+local function FindIconTag(formatStr)
+	local pos = 1
+	while true do
+		local s, e, name = string.find(formatStr, "%[([^%]]+)%]", pos)
+		if not s then return nil end
+		if IconTags[name] then return s, e, name end
+		pos = e + 1
+	end
+end
+
+local function StringWidth(fontString, text)
+	fontString:SetText(text)
+	local ok, width = pcall(fontString.GetStringWidth, fontString)
+	return (ok and tonumber(width)) or 0
+end
+
+local function FontSize(fontString, fallback)
+	local ok, _, size = pcall(fontString.GetFont, fontString)
+	size = ok and tonumber(size)
+	if size and size > 0 then return size end
+	return fallback or 12
+end
+
+-- Width of one space in this FontString's font, measured between two
+-- letters (a text of spaces alone may be measured as empty), cached per font.
+local spaceWidths = {}
+local function SpaceWidth(fontString, size)
+	local ok, path, _, flags = pcall(fontString.GetFont, fontString)
+	local key = tostring(ok and path) .. size .. tostring(ok and flags)
+	local width = spaceWidths[key]
+	if not width then
+		width = StringWidth(fontString, "i i") - StringWidth(fontString, "ii")
+		if width <= 0 then width = size * 0.3 end
+		spaceWidths[key] = width
+	end
+	return width
+end
+
+-- Sets `fontString` to `formatStr` with `tags` substituted, drawing the
+-- first icon tag as a texture. `fontSize` is the size the text was given,
+-- used when the font cannot be read back.
+function UF:SetTagText(fontString, formatStr, tags, unit, fontSize)
+	local icon = fontString.elvTagIcon
+	local s, e, name, texture, coords
+	if formatStr and formatStr ~= "" then
+		s, e, name = FindIconTag(formatStr)
+		if s then
+			texture, coords = IconTags[name](unit)
+		end
+	end
+
+	if not texture then
+		if icon then icon:Hide() end
+		-- An icon tag with nothing to show resolves to "" like any unknown tag.
+		fontString:SetText(UF.ApplyTags(formatStr, tags))
+		return
+	end
+
+	local before = UF.ApplyTags(string.sub(formatStr, 1, s - 1), tags)
+	local after = UF.ApplyTags(string.sub(formatStr, e + 1), tags)
+	local size = FontSize(fontString, fontSize)
+	local spaceWidth = SpaceWidth(fontString, size)
+	local count = math.ceil(size / spaceWidth)
+	local beforeWidth = (before ~= "") and StringWidth(fontString, before) or 0
+
+	fontString:SetText(before .. string.rep(" ", count) .. after)
+
+	if not icon then
+		local okParent, parent = pcall(fontString.GetParent, fontString)
+		if not okParent or not parent then return end
+		icon = parent:CreateTexture(nil, "OVERLAY")
+		fontString.elvTagIcon = icon
+	end
+	icon:SetTexture(texture)
+	icon:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+	icon:SetWidth(size)
+	icon:SetHeight(size)
+	icon:ClearAllPoints()
+	icon:SetPoint("LEFT", fontString, "LEFT", beforeWidth + (count * spaceWidth - size) / 2, 0)
+	icon:Show()
+end
+
+-- Hides a FontString's icon together with it (the texture is not its child).
+function UF:HideTagIcon(fontString)
+	if fontString.elvTagIcon then
+		fontString.elvTagIcon:Hide()
+	end
+end
+
 -- The tags UF:UpdateFrame fills itself.
 local BASE_TAGS = {
 	"health:current", "health:current-percent", "health:percent", "health:deficit",
@@ -182,6 +337,9 @@ function UF:GetTagNames()
 	end
 	local name
 	for name in pairs(Methods) do
+		table.insert(names, name)
+	end
+	for name in pairs(IconTags) do
 		table.insert(names, name)
 	end
 	table.sort(names)

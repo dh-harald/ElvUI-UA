@@ -564,10 +564,6 @@ end
 -- now build both containers, so both flags are set everywhere; an earlier
 -- version of this comment said "only Player has real buffs", which stopped
 -- being true once the missing containers were added.
--- `hasHappiness`: Pet-only, same "don't show controls that do nothing"
--- reasoning as hasRestIcon -- `HasPetUI()`'s own isHunterPet return only
--- ever means anything for the "pet" unit specifically (see UnitFrames.lua's
--- own Construct_Happiness comment).
 -- `hasCastbar`: player and target, the units with a bar
 -- (UnitFrames.lua's Castbar section: the player's from SPELLCAST_*, the
 -- target's rebuilt from the combat log).
@@ -698,7 +694,7 @@ local function AuraBarArgs(dbKey)
 	}
 end
 
-local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappiness, hasCastbar, hasRaidIcon)
+local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasCastbar, hasRaidIcon)
 	local function unitTable() return E.db.unitframe.units[dbKey] end
 
 	local args = {
@@ -819,6 +815,18 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 					get = function() return unitTable().health.bgUseBarTexture end,
 					set = function(_, value) unitTable().health.bgUseBarTexture = value end,
 				}
+				-- Retail ElvUI's key and order; like there, offered to a hunter
+				-- only (no other class has a pet with happiness).
+				if dbKey == "pet" then
+					args.colorHappiness = {
+						type = "toggle",
+						name = L["Color by Happiness"],
+						order = 3,
+						hidden = function() return E.myclass ~= "HUNTER" end,
+						get = function() return unitTable().health.colorHappiness end,
+						set = function(_, value) unitTable().health.colorHappiness = value end,
+					}
+				end
 				return args
 			end)(),
 		},
@@ -1095,43 +1103,6 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 				}
 				return debuffArgs
 			end)(),
-		}
-	end
-
-	if hasHappiness then
-		args.happiness = {
-			type = "group",
-			name = L["Happiness"],
-			order = 12,
-			args = {
-				intro = {
-					type = "description",
-					order = 1,
-					name = L["Hunter-pet-only loyalty indicator (HasPetUI()'s own isHunterPet flag) -- stays hidden for any other pet, e.g. a Warlock's. A narrow bar stuck out past Health's own left edge -- see UnitFrames.lua's own Construct_Happiness comment for why this doesn't reflow Health/Power's width the way real ElvUI does."],
-				},
-				enable = {
-					type = "toggle",
-					name = L["Enable"],
-					order = 2,
-					get = function() return unitTable().happiness.enable end,
-					set = function(_, value) unitTable().happiness.enable = value end,
-				},
-				autoHide = {
-					type = "toggle",
-					name = L["Auto Hide When Happy"],
-					order = 3,
-					get = function() return unitTable().happiness.autoHide end,
-					set = function(_, value) unitTable().happiness.autoHide = value end,
-				},
-				width = {
-					type = "range",
-					name = L["Width"],
-					order = 4,
-					min = 4, max = 30, step = 1,
-					get = function() return unitTable().happiness.width end,
-					set = function(_, value) unitTable().happiness.width = value end,
-				},
-			},
 		}
 	end
 
@@ -1686,6 +1657,29 @@ E.Options.args.unitframe = {
 							return colorArgs
 						end)(),
 					},
+					-- Retail ElvUI's Classic group (`colors.happiness[1..3]`,
+					-- entries keyed "1".."3"). Read by the pet health bar
+					-- (`colorHappiness`) and the `[happiness:color]` tag.
+					happiness = {
+						order = 9,
+						type = "group",
+						name = L["Pet Happiness"],
+						guiInline = true,
+						get = function(info)
+							local n = tonumber(info[getn(info)])
+							local t, d = E.db.unitframe.colors.happiness[n], P.unitframe.colors.happiness[n]
+							return t.r, t.g, t.b, t.a, d.r, d.g, d.b
+						end,
+						set = function(info, r, g, b)
+							local t = E.db.unitframe.colors.happiness[tonumber(info[getn(info)])]
+							t.r, t.g, t.b = r, g, b
+						end,
+						args = {
+							["1"] = { order = 1, type = "color", name = L["Unhappy"] },
+							["2"] = { order = 2, type = "color", name = L["Content"] },
+							["3"] = { order = 3, type = "color", name = L["Happy"] },
+						},
+					},
 					},
 				},
 			},
@@ -1695,28 +1689,28 @@ E.Options.args.unitframe = {
 			name = L["Player"],
 			order = 2,
 			childGroups = "tab",
-			args = UnitFrameArgs("player", true, true, true, nil, true, true),
+			args = UnitFrameArgs("player", true, true, true, true, true),
 		},
 		target = {
 			type = "group",
 			name = L["Target"],
 			order = 3,
 			childGroups = "tab",
-			args = UnitFrameArgs("target", nil, true, true, nil, true, true),
+			args = UnitFrameArgs("target", nil, true, true, true, true),
 		},
 		pet = {
 			type = "group",
 			name = L["Pet"],
 			order = 4,
 			childGroups = "tab",
-			args = UnitFrameArgs("pet", nil, true, true, true),
+			args = UnitFrameArgs("pet", nil, true, true),
 		},
 		targettarget = {
 			type = "group",
 			name = L["Target of Target"],
 			order = 5,
 			childGroups = "tab",
-			args = UnitFrameArgs("targettarget", nil, true, true, nil, nil, true),
+			args = UnitFrameArgs("targettarget", nil, true, true, nil, true),
 		},
 		pettarget = {
 			type = "group",
@@ -1730,7 +1724,7 @@ E.Options.args.unitframe = {
 			name = L["Party"],
 			order = 7,
 			childGroups = "tab",
-			args = UnitFrameArgs("party", nil, true, true, nil, nil, true),
+			args = UnitFrameArgs("party", nil, true, true, nil, true),
 		},
 	},
 }

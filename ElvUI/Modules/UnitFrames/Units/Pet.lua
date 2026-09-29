@@ -49,7 +49,6 @@ local function Construct_PetFrame()
 	UF:Construct_Auras(frame, "debuff")
 	frame.InfoPanel = UF:Construct_InfoPanel(frame)
 	UF:Construct_CustomTexts(frame)
-	UF:Construct_Happiness(frame)
 
 	HideNativePetFrame()
 	UF:EnableUnitMouse(frame)

@@ -775,6 +775,14 @@ P.unitframe.colors = {
 	auraBarBuff = {r = 0.31, g = 0.31, b = 0.31},
 	auraBarDebuff = {r = 0.8, g = 0.1, b = 0.1},
 	auraBarByType = true,
+	-- Hunter pet health bar by GetPetHappiness() (1 unhappy, 2 content,
+	-- 3 happy) when `units.pet.health.colorHappiness` is on; also the
+	-- `[happiness:color]` tag. Retail ElvUI's Classic key and values.
+	happiness = {
+		{r = 0.69, g = 0.31, b = 0.31, a = 1},
+		{r = 0.65, g = 0.63, b = 0.35, a = 1},
+		{r = 0.33, g = 0.59, b = 0.33, a = 1},
+	},
 	-- Read by Modules/UnitFrames/ComboPoints.lua: segment background and the
 	-- colour of each combo point.
 	classResources = {
@@ -1240,6 +1248,11 @@ P.unitframe.units.pet = {
 		position = "RIGHT",
 		xOffset = -2,
 		yOffset = 0,
+		-- Retail ElvUI's Classic replacement for the separate happiness bar
+		-- ElvUI-vanilla had (`pet.happiness`, migrated away by
+		-- E:MigrateProfileData): a hunter's pet health bar takes the
+		-- `colors.happiness` colour.
+		colorHappiness = true,
 	},
 	power = {
 		enable = true,
@@ -1306,15 +1319,6 @@ P.unitframe.units.pet = {
 		transparent = false,
 	},
 	customTexts = {},
-	-- Real ElvUI field/default verbatim (Settings/Profile.lua:1593),
-	-- `enable = false` included. Hunter-only at runtime -- see
-	-- UnitFrames.lua's Construct_Happiness. `autoHide` is a project
-	-- addition.
-	happiness = {
-		enable = false,
-		autoHide = false,
-		width = 10,
-	},
 }
 
 -- `enable = true` deviates from real ElvUI's own `false` (whitelisted).

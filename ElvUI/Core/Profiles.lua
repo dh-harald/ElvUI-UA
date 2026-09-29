@@ -171,6 +171,34 @@ function E:DeleteProfile(key)
 	return true
 end
 
+-- Profile data written by earlier versions of this addon, or by ElvUI-vanilla,
+-- moved onto the current keys. Runs on the live profile at login (Init.lua)
+-- and on every imported profile before it is cleaned (E:ImportProfile).
+--
+-- Each step is triggered by a key that no longer has a default. A stored
+-- profile carries every default too (Init.lua merges them in and saves the
+-- result), so only an old key's presence marks an old profile, and removing
+-- it makes the step run once.
+function E:MigrateProfileData(profile)
+	if type(profile) ~= "table" then return end
+	local units = type(profile.unitframe) == "table" and profile.unitframe.units
+	local pet = type(units) == "table" and units.pet
+
+	-- ElvUI-vanilla's separate pet happiness bar -> retail's happiness colour
+	-- on the pet health bar. An enabled bar keeps happiness shown; a disabled
+	-- one cannot be told apart from the untouched default, so it leaves
+	-- retail's default (on). `autoHide` and `width` have no counterpart.
+	if type(pet) == "table" and pet.happiness ~= nil then
+		if type(pet.happiness) == "table" and pet.happiness.enable == true then
+			if pet.health == nil then pet.health = {} end
+			if type(pet.health) == "table" then
+				pet.health.colorHappiness = true
+			end
+		end
+		pet.happiness = nil
+	end
+end
+
 -- Export / Import
 --
 -- Two formats, both ending in real ElvUI's "::type::key" / "::type" suffix
@@ -460,6 +488,9 @@ function E:ImportProfile(text)
 		return
 	end
 
+	if dataType == "profile" then
+		self:MigrateProfileData(data)
+	end
 	local clean, dropped = CleanTable(data, DEFAULTS[dataType], GENERATED[dataType], BLACKLIST[dataType])
 	local count = CountLeaves(clean)
 
