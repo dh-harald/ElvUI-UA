@@ -141,6 +141,7 @@ function AddOn:OnInitialize()
 
 	self.db = Merge({}, self.DF.profile)
 	if ElvDB.profiles[profileKey] then
+		self:MigrateStoredProfile(ElvDB.profiles[profileKey])
 		Merge(self.db, ElvDB.profiles[profileKey])
 	end
 	ElvDB.profiles[profileKey] = self.db

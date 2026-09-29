@@ -343,6 +343,48 @@ function E:MigrateProfileData(profile)
 	end
 end
 
+-- Migrations that must look at a profile as it was STORED, before Init.lua
+-- merges the defaults in (after the merge every key is present and the
+-- steps below could no longer tell an old profile from a new one).
+--
+-- Unit frame aura bars arrived with `aurabar.enable = true` (real ElvUI's
+-- default), and at the same time `attachTo = "BUFFS"/"DEBUFFS"` started to
+-- stack the aura grids; before, those values drew on the frame. A profile
+-- from before would therefore change its look on first load. It gets what
+-- the installer's "Icons Only" sets instead (without resetting the rest).
+--
+-- Such a profile is recognised by Init.lua's full save: it carries the
+-- player's complete buff table but no `aurabar`. An imported profile holds
+-- only what differs from the defaults and lacks those keys.
+local function IsPreAuraBarProfile(stored)
+	local unitframe = type(stored) == "table" and stored.unitframe
+	local units = type(unitframe) == "table" and unitframe.units
+	local player = type(units) == "table" and units.player
+	if type(player) ~= "table" or player.aurabar ~= nil then return false end
+	local buffs = player.buffs
+	return type(buffs) == "table" and buffs.enable ~= nil and buffs.attachTo ~= nil
+		and buffs.anchorPoint ~= nil and buffs.perrow ~= nil
+end
+
+function E:MigrateStoredProfile(stored)
+	if not IsPreAuraBarProfile(stored) then return end
+	local units = stored.unitframe.units
+	local player = units.player
+	player.aurabar = { enable = false }
+	player.buffs.enable = true
+	player.buffs.attachTo = "FRAME"
+	if type(player.debuffs) ~= "table" then player.debuffs = {} end
+	player.debuffs.attachTo = "BUFFS"
+	if type(units.target) ~= "table" then units.target = {} end
+	local target = units.target
+	target.aurabar = { enable = false }
+	if type(target.buffs) ~= "table" then target.buffs = {} end
+	target.buffs.attachTo = "FRAME"
+	if type(target.debuffs) ~= "table" then target.debuffs = {} end
+	target.debuffs.enable = true
+	target.debuffs.attachTo = "BUFFS"
+end
+
 -- Export / Import
 --
 -- Two formats, both ending in real ElvUI's "::type::key" / "::type" suffix
