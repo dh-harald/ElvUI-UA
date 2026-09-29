@@ -158,15 +158,34 @@ function M:PositionBar()
 	end
 end
 
+-- Each button is shown or hidden on its own, one per known form, as real
+-- ElvUI's BarShapeShift.lua and the native ShapeshiftBar_Update do: that
+-- native function is what shows the buttons, and it no longer runs once
+-- HideChrome() strips ShapeshiftBarFrame's OnEvent (on the 1.12.1 client
+-- the buttons then stay hidden). The holder's Hide alone would not do on
+-- Unreal Azeroth either, where a parent's Hide does not hide its children.
 local function UpdateVisibility()
 	local bar = M.bar
 	if not bar then return end
 	local settings = E.db.actionbar.barShapeShift
 	local okForms, numForms = pcall(GetNumShapeshiftForms)
-	if settings.enabled and okForms and numForms and numForms > 0 then
+	numForms = (settings.enabled and okForms and tonumber(numForms)) or 0
+	if numForms > 0 then
 		pcall(bar.Show, bar)
 	else
 		pcall(bar.Hide, bar)
+	end
+
+	local i
+	for i = 1, NUM_SHAPESHIFT_SLOTS do
+		local button = bar.buttons[i]
+		if button then
+			if i <= numForms then
+				pcall(button.Show, button)
+			else
+				pcall(button.Hide, button)
+			end
+		end
 	end
 end
 
