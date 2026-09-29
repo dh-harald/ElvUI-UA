@@ -56,6 +56,7 @@ function M:Initialize()
 	self:LoadInterruptAnnounce()
 	self:LoadTotems()
 	self:LoadCancelForm()
+	self:LoadAutoTrackReputation()
 
 	-- AceEvent passes no event arguments on UA; none are needed.
 	self:RegisterEvent("MERCHANT_SHOW", function() M:AutoRepair() end)

@@ -8,7 +8,8 @@
 -- foreign string leaves out from here, so the import looks as it did at the
 -- source. Values are already in this addon's value space. Font faces are
 -- left out (what the string sets stays, the rest is ours), and so are a few
--- keys this addon cannot follow (data bar geometry, nameplates, sounds).
+-- keys this addon cannot follow (data bar orientation, ElvUI-vanilla's
+-- vertical data bar size, nameplates, sounds).
 
 local E = unpack(ElvUI)
 
@@ -84,8 +85,13 @@ E.ImportDefaults = {
 				numAllowedCombatRepeat = 5,
 			},
 			databars = {
+				experience = {
+					height = 10,
+					width = 348,
+				},
 				reputation = {
 					enable = false,
+					width = 222,
 				},
 			},
 			datatexts = {

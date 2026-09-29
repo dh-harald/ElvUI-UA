@@ -457,6 +457,8 @@ function E:SetupLayout(role)
 	if not preset then return end
 
 	E.db.layoutSet = role
+	-- Retail ElvUI's installer layout turns this on (E:LayoutNormal).
+	E.db.general.autoTrackReputation = true
 
 	-- Reset first, then override for healer -- matches real ElvUI's own
 	-- SetupLayout exactly (install.lua:378-393/453-462): a healer gets a

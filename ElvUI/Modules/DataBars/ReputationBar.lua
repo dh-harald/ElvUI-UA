@@ -246,7 +246,7 @@ end
 -- GetWatchedFactionInfo's `reaction` IS "the same standing id as
 -- GetFactionInfo", and real 1.12.1's own FrameXML uses it that way too
 -- (ReputationFrame.lua, FACTION_BAR_COLORS[reaction]).
-function M:UpdateReputation()
+local function UpdateReputationBar(self)
 	local bar = self.repBar
 	if not bar then return end
 
@@ -338,6 +338,19 @@ function M:UpdateReputation()
 	bar.text:SetText(text)
 end
 
+-- The minimap datatext panels make room for the bar at its default place
+-- whenever it shows or hides (Layout.lua LO:UpdateMinimapStack).
+local function UpdateMinimapStack()
+	if E.Layout and E.Layout.UpdateMinimapStack then
+		pcall(E.Layout.UpdateMinimapStack, E.Layout)
+	end
+end
+
+function M:UpdateReputation()
+	UpdateReputationBar(self)
+	UpdateMinimapStack()
+end
+
 function M:UpdateReputationDimensions()
 	local bar = self.repBar
 	if not bar then return end
@@ -362,6 +375,7 @@ function M:UpdateReputationDimensions()
 	else
 		M:SetBarAlpha(bar, 1)
 	end
+	UpdateMinimapStack()
 end
 
 -- Real ElvUI's own name kept for parity; the IMPLEMENTATION differs the
@@ -407,11 +421,12 @@ function M:LoadReputationBar()
 		end
 	end
 
-	-- First-run-only position: directly BELOW the XP bar (which sits at
-	-- BOTTOM y=250 with a default height of 14), so the two read as one
-	-- stack out of the box. E:CreateMover owns the position from here on
-	-- (drag/nudge via /moveui), independently of the XP bar -- matching
-	-- real ElvUI, where these are two fully separate movable bars.
+	-- Starting position when there is no minimap to sit under (the Minimap
+	-- module disabled): directly BELOW the XP bar (BOTTOM y=250). Otherwise
+	-- the Layout module moves an unmoved bar under the minimap and makes
+	-- that its reset target (Layout.lua LO:UpdateMinimapStack). A saved
+	-- mover position always wins -- matching real ElvUI, where these are
+	-- two fully separate movable bars.
 	bar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 232)
 	E:CreateMover(bar, "ReputationBarMover", L["Reputation Bar"])
 

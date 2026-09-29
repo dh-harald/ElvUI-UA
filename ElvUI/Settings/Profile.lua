@@ -100,6 +100,9 @@ P.general = {
 	interruptAnnounce = "NONE",
 	-- Read by Modules/Misc/CancelForm.lua: "NONE", "MANUAL" or "AUTO".
 	cancelForm = "AUTO",
+	-- Read by Modules/Misc/AutoTrackReputation.lua (retail ElvUI's key and
+	-- default; its installer turns it on).
+	autoTrackReputation = false,
 	autoRoll = false,
 	bottomPanel = true,
 
@@ -575,10 +578,14 @@ P.databars = {
 		hideAtMaxLevel = true,
 		hideInCombat = false,
 	},
+	-- The reputation bar's default place is under the minimap, above its two
+	-- datatext panels (Layout.lua `LO:UpdateMinimapStack`); there it spans the
+	-- minimap holder, and `width` (the holder's width at the default minimap
+	-- size, 176 + 8) only applies once the bar is moved. Height is retail's.
 	reputation = {
 		enable = true,
-		width = 200,
-		height = 14,
+		width = 184,
+		height = 10,
 		textFormat = "NONE",
 		textSize = 11,
 		font = "PT Sans Narrow",

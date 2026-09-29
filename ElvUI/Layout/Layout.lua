@@ -212,6 +212,8 @@ function LO:CreateMinimapPanels()
 		rminipanel:Hide()
 	end
 
+	self:UpdateMinimapStack()
+
 	-- DT:LoadDataTexts() already ran at the end of the DataTexts module's own
 	-- Initialize, which is in the FIRST init tier -- so these two panels
 	-- registered too late to be handed a widget. Re-running it is what fills
@@ -220,6 +222,53 @@ function LO:CreateMinimapPanels()
 	if DT and DT.LoadDataTexts then
 		DT:LoadDataTexts()
 	end
+end
+
+-- The reputation bar's default place is between the minimap and its two
+-- datatext panels, which then sit below the bar. It is there while the bar
+-- is enabled and its mover has no saved position -- also while the bar is
+-- momentarily hidden (no watched faction, hidden in combat), so the panels
+-- do not jump; a bar the user moved or turned off leaves the panels right
+-- under the minimap. The bar's mover
+-- reset target is this place too. Re-run by the reputation bar on every
+-- update (DataBars/ReputationBar.lua), which also covers move mode being
+-- locked again; not while movers are unlocked, so a drag is never fought.
+local REP_BAR_MOVER = "ReputationBarMover"
+local REP_BAR_POINT = "TOP,ElvUIMinimapHolder,BOTTOM,0,-"..MINI_PANEL_GAP
+local stackOffset
+
+function LO:UpdateMinimapStack()
+	local holder = E.Minimap and E.Minimap.holder
+	local lminipanel, rminipanel = _G.LeftMiniPanel, _G.RightMiniPanel
+	if not holder or not lminipanel or not rminipanel then return end
+	if E.moversUnlocked then return end
+
+	local bar = E.DataBars and E.DataBars.repBar
+	local mover = E.movers and E.movers[REP_BAR_MOVER]
+	if mover then mover.default = REP_BAR_POINT end
+
+	local offset = MINI_PANEL_GAP
+	local repDB = E.db.databars and E.db.databars.reputation
+	if bar and repDB and repDB.enable and not E.db.movers[REP_BAR_MOVER] then
+		-- At the default width it spans the holder, whatever the minimap size;
+		-- a width the user set is kept, centred under the minimap.
+		bar:ClearAllPoints()
+		if repDB.width == P.databars.reputation.width then
+			bar:SetPoint("TOPLEFT", holder, "BOTTOMLEFT", 0, -MINI_PANEL_GAP)
+			bar:SetPoint("TOPRIGHT", holder, "BOTTOMRIGHT", 0, -MINI_PANEL_GAP)
+		else
+			pcall(bar.SetWidth, bar, repDB.width)
+			bar:SetPoint("TOP", holder, "BOTTOM", 0, -MINI_PANEL_GAP)
+		end
+		offset = MINI_PANEL_GAP + (tonumber(repDB.height) or 0) + MINI_PANEL_GAP
+	end
+
+	if offset == stackOffset then return end
+	stackOffset = offset
+	lminipanel:ClearAllPoints()
+	lminipanel:SetPoint("TOPLEFT", holder, "BOTTOMLEFT", 0, -offset)
+	rminipanel:ClearAllPoints()
+	rminipanel:SetPoint("TOPRIGHT", holder, "BOTTOMRIGHT", 0, -offset)
 end
 
 -- ---------------------------------------------------------------------------

@@ -98,6 +98,8 @@ Two addons ship together:
   because you are shapeshifted, leaves the form at once or shows a big
   button for it (General → General → Leave Shapeshift Form: None / Manual /
   Automatic); right-clicking a mob you can attack never leaves the form
+- Auto track reputation: the reputation bar switches to the faction you
+  just gained reputation with (General → General → Auto Track Reputation)
 - Tooltip: class/reaction-coloured unit tooltips, guild rank,
   level/classification line, target and "targeted by" info, movable anchor
   or cursor anchor, flat ElvUI skin, health bar with health text, sell

@@ -215,6 +215,13 @@ E.Options.args.general = {
 						AUTO = L["Automatic"],
 					},
 				},
+				-- Read by Modules/Misc/AutoTrackReputation.lua. Retail ElvUI's
+				-- toggle (its General > Automation group); ElvUI-vanilla has none.
+				autoTrackReputation = {
+					order = 6,
+					type = "toggle",
+					name = L["Auto Track Reputation"],
+				},
 				autoRoll = {
 					order = 7,
 					type = "toggle",

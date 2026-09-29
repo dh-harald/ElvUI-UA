@@ -366,7 +366,23 @@ local function IsPreAuraBarProfile(stored)
 		and buffs.anchorPoint ~= nil and buffs.perrow ~= nil
 end
 
+-- The reputation bar's default place moved under the minimap, with a new
+-- default size to fit it (184 x 10, was 200 x 14). A stored profile still at
+-- the old size whose bar was never moved takes the new size, so the bar that
+-- now sits under the minimap fits there; a moved bar or another size is the
+-- user's choice and stays.
+local function MigrateReputationBarSize(stored)
+	local databars = type(stored) == "table" and stored.databars
+	local rep = type(databars) == "table" and databars.reputation
+	if type(rep) ~= "table" or rep.width ~= 200 or rep.height ~= 14 then return end
+	local movers = stored.movers
+	if type(movers) == "table" and movers.ReputationBarMover ~= nil then return end
+	rep.width = nil
+	rep.height = nil
+end
+
 function E:MigrateStoredProfile(stored)
+	MigrateReputationBarSize(stored)
 	if not IsPreAuraBarProfile(stored) then return end
 	local units = stored.unitframe.units
 	local player = units.player
