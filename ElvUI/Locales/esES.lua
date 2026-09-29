@@ -93,6 +93,7 @@ L["Some windows could not be restyled and keep their default look."] = "Algunas 
 
 --UnitFrames
 L["Ghost"] = "Fantasma"
+L["PvP"] = "JcJ"
 L["Offline"] = "Fuera de Línea"
 L["Failed"] = "Fallido"
 L["Interrupted"] = "Interrumpido"

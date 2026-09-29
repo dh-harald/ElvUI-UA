@@ -482,7 +482,7 @@ L["Use Default"] = true
 L["Force Class Color On"] = true
 L["Force Class Color Off"] = true
 L["Text Format"] = true
-L["Tag substitution (not the full real-ElvUI tag DSL): [healthcolor] [powercolor] [health:current] [health:max] [health:current-percent] [health:percent] [power:current] [power:max] [power:percent] [name] [level], plus any plain text. Empty = no text."] = true
+L["Tag substitution (not the full real-ElvUI tag DSL): %s, plus any plain text. Empty = no text."] = true
 L["Position"] = true
 L["X Offset"] = true
 L["Y Offset"] = true
@@ -516,7 +516,7 @@ L["Real, exact duration -- read directly from the native GetPlayerBuff* API. Pos
 L["Icon + stack count only, no duration text -- no per-unit equivalent of the native GetPlayerBuff* API exists (that family only ever describes the player's own buffs). Positioned above the frame."] = true
 L["Real, exact duration -- read directly from the native GetPlayerBuff* API. Positioned below the frame."] = true
 L["Duration from pfUI's spell data (LibVanillaDurations-1.0). The start is exact for your own casts and for debuffs seen landing, otherwise it is counted from when the debuff was first seen. Positioned below the frame."] = true
-L["Extra text elements, each independently positioned/attached. Uses this addon's own tag list (same as Health/Power/Name's own Text Format field: [healthcolor] [powercolor] [health:current] [health:max] [health:current-percent] [health:percent] [power:current] [power:max] [power:percent] [name] [level]) -- NOT real ElvUI's full tag DSL."] = true
+L["Extra text elements, each independently positioned/attached. Uses this addon's own tag list (same as Health/Power/Name's own Text Format field: %s) -- NOT real ElvUI's full tag DSL."] = true
 L["Delete"] = true
 L["Attach To"] = true
 L["Justify"] = true

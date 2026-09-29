@@ -90,6 +90,14 @@ end
 -- live `%` arithmetic operator, so this is Lua-5.0-parse-safe (see
 -- Core/Compat.lua's own header note on that distinction).
 -- ---------------------------------------------------------------------
+-- The percent in a tag, with as many decimals as `general.decimalLength`
+-- (real ElvUI's E:GetFormattedText does the same).
+local function PercentFormat()
+	local dec = tonumber(E.db.general.decimalLength) or 1
+	if dec < 0 then dec = 0 end
+	return "%." .. math.floor(dec) .. "f%%"
+end
+
 local function ApplyTags(formatStr, tags)
 	if not formatStr or formatStr == "" then return "" end
 	return (string.gsub(formatStr, "%[([^%]]+)%]", function(tag)
@@ -1821,6 +1829,8 @@ local function UnitColor(unit, forceReaction)
 	end
 	return ReactionColor(unit)
 end
+-- Shared with Tags.lua (the `classcolor` tag).
+UF.UnitColor = UnitColor
 
 local function PowerToken(unit)
 	local ok, token = pcall(UnitPowerType, unit)
@@ -2203,26 +2213,38 @@ function UF:UpdateFrame(frame)
 		ElvUI.Util.SetStatusBarTexture(frame.Power, GetBarTexture())
 	end
 
-	-- Text -- tag substitution (ApplyTags above), a small subset of real
-	-- ElvUI's own tag DSL. See this file's header comment for the exact
-	-- list.
+	-- Text -- tag substitution (ApplyTags above), a subset of real ElvUI's
+	-- own tag DSL. The tags that need this update's health/power values
+	-- are filled here; every other tag is computed on first use by
+	-- Tags.lua (UF:ExtendTags), which also lists them all.
 	local tags = {}
 	if offline then
 		tags["health:current"] = L["Offline"]
 		tags["health:current-percent"] = L["Offline"]
 		tags["health:percent"] = L["Offline"]
+		tags["health:deficit"] = L["Offline"]
 	elseif dead then
 		local statusText = (okGhost and isGhost) and L["Ghost"] or L["Dead"]
 		tags["health:current"] = statusText
 		tags["health:current-percent"] = statusText
 		tags["health:percent"] = statusText
+		tags["health:deficit"] = statusText
 	else
 		-- `E:ShortValue` (Core/Util.lua), not a bare "%d": the profile decides
 		-- whether 1700 reads as "1700" or "1.7K", via
 		-- E.db.general.numberPrefixStyle / decimalLength.
 		tags["health:current"] = E:ShortValue(health)
-		tags["health:current-percent"] = string.format("%s - %.1f%%", E:ShortValue(health), healthPercent * 100)
-		tags["health:percent"] = string.format("%.1f%%", healthPercent * 100)
+		-- Real ElvUI's CURRENT_PERCENT style (E:GetFormattedText): at full
+		-- health only the current value, the percent is left off.
+		if health >= healthMax then
+			tags["health:current-percent"] = E:ShortValue(health)
+		else
+			tags["health:current-percent"] = E:ShortValue(health) .. " - " .. string.format(PercentFormat(), healthPercent * 100)
+		end
+		tags["health:percent"] = string.format(PercentFormat(), healthPercent * 100)
+		-- Empty at full health (real ElvUI's "DEFICIT" text style).
+		local deficit = healthMax - health
+		tags["health:deficit"] = (deficit > 0) and ("-" .. E:ShortValue(deficit)) or ""
 	end
 	local hr, hg, hb = E:ColorGradient(healthPercent, 0.69, 0.31, 0.31, 0.65, 0.63, 0.35, 0.33, 0.59, 0.33)
 	tags["healthcolor"] = E:RGBToHex(hr, hg, hb)
@@ -2234,7 +2256,7 @@ function UF:UpdateFrame(frame)
 	tags["health:max"] = E:ShortValue(healthMax)
 	tags["power:current"] = E:ShortValue(power)
 	tags["power:max"] = E:ShortValue(powerMax)
-	tags["power:percent"] = string.format("%.1f%%", (powerMax > 0) and (power / powerMax * 100) or 0)
+	tags["power:percent"] = string.format(PercentFormat(), (powerMax > 0) and (power / powerMax * 100) or 0)
 	local powerColors = E.db.unitframe.colors.power
 	local pcTag = powerColors[powerToken] or powerColors.MANA
 	tags["powercolor"] = E:RGBToHex(pcTag.r, pcTag.g, pcTag.b)
@@ -2242,6 +2264,7 @@ function UF:UpdateFrame(frame)
 	tags["name"] = (okName and name) or unit
 	local okLevel, level = pcall(UnitLevel, unit)
 	tags["level"] = (okLevel and level and level > 0) and tostring(level) or "??"
+	self:ExtendTags(tags, unit)
 
 	if settings.health then
 		frame.Health.text:SetText(ApplyTags(settings.health.text_format, tags))

@@ -136,12 +136,25 @@ function M:CreateBar()
 	pcall(bar.SetBackdropColor, bar, 0.1, 0.1, 0.1, 1)
 	pcall(bar.SetBackdropBorderColor, bar, 0, 0, 0, 1)
 
+	-- The native pet buttons keep their own DIALOG strata through the
+	-- reparent, so any frame between the holder's strata and DIALOG (an
+	-- options window at HIGH) drew between the bar's backdrop and its
+	-- buttons. They take the holder's strata, one level above it.
+	local okStrata, strata = pcall(bar.GetFrameStrata, bar)
+	local okLevel, level = pcall(bar.GetFrameLevel, bar)
+
 	bar.buttons = {}
 	local i
 	for i = 1, NUM_PET_ACTION_SLOTS do
 		local button = _G[PREFIX..i]
 		if button then
 			pcall(button.SetParent, button, bar)
+			if okStrata and strata then
+				pcall(button.SetFrameStrata, button, strata)
+			end
+			if okLevel and tonumber(level) then
+				pcall(button.SetFrameLevel, button, level + 1)
+			end
 			bar.buttons[i] = button
 			StyleButton(button)
 		end

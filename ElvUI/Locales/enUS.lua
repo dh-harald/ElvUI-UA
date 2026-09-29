@@ -135,6 +135,7 @@ L["Some windows could not be restyled and keep their default look."] = true
 
 --UnitFrames
 L["Ghost"] = true
+L["PvP"] = true
 L["Offline"] = true
 L["Failed"] = true
 L["Interrupted"] = true

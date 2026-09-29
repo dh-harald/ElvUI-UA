@@ -4,6 +4,14 @@ local getn = ElvUI.Compat.getn
 -- Lua chunk, so a file-local cannot be seen from another file.
 local Shared = E.ConfigShared
 
+-- Every tag the unit frames answer, as "[a] [b] ..." (UF:GetTagNames in
+-- Modules/UnitFrames/Tags.lua), so the help text follows the code.
+local function TagListText()
+	local UF = E.UnitFrames
+	if not (UF and UF.GetTagNames) then return "" end
+	return "[" .. table.concat(UF:GetTagNames(), "] [") .. "]"
+end
+
 -- Shared text_format/position/xOffset/yOffset arg set -- Health/Power/
 -- Name tabs of the "UnitFrames" category all have this same 4-field
 -- shape (matches real ElvUI's own field names for each). `getTable`
@@ -16,7 +24,7 @@ local function UnitTextArgs(getTable, order)
 		text_format = {
 			type = "input",
 			name = L["Text Format"],
-			desc = L["Tag substitution (not the full real-ElvUI tag DSL): [healthcolor] [powercolor] [health:current] [health:max] [health:current-percent] [health:percent] [power:current] [power:max] [power:percent] [name] [level], plus any plain text. Empty = no text."],
+			desc = string.format(L["Tag substitution (not the full real-ElvUI tag DSL): %s, plus any plain text. Empty = no text."], TagListText()),
 			order = order,
 			width = "full",
 			get = function() return getTable().text_format end,
@@ -366,7 +374,7 @@ local function CustomTextArgs(dbKey)
 		intro = {
 			type = "description",
 			order = 1,
-			name = L["Extra text elements, each independently positioned/attached. Uses this addon's own tag list (same as Health/Power/Name's own Text Format field: [healthcolor] [powercolor] [health:current] [health:max] [health:current-percent] [health:percent] [power:current] [power:max] [power:percent] [name] [level]) -- NOT real ElvUI's full tag DSL."],
+			name = string.format(L["Extra text elements, each independently positioned/attached. Uses this addon's own tag list (same as Health/Power/Name's own Text Format field: %s) -- NOT real ElvUI's full tag DSL."], TagListText()),
 		},
 	}
 

@@ -171,6 +171,37 @@ function E:ShortValue(v)
 	return string.format("%.0f", v)
 end
 
+-- The first `numChars` CHARACTERS of `str` (UTF-8 aware: a multi-byte
+-- character is never cut in half), plus "..." when `dots` is set and
+-- something was cut. Real ElvUI's own E:ShortenString (ElvUI-vanilla
+-- Core/math.lua); the name tags use it.
+function E:ShortenString(str, numChars, dots)
+	if type(str) ~= "string" then return "" end
+	local bytes = string.len(str)
+	if bytes <= numChars then return str end
+
+	local count, pos = 0, 1
+	while pos <= bytes do
+		count = count + 1
+		local c = string.byte(str, pos)
+		if c >= 240 then
+			pos = pos + 4
+		elseif c >= 224 then
+			pos = pos + 3
+		elseif c >= 192 then
+			pos = pos + 2
+		else
+			pos = pos + 1
+		end
+		if count == numChars then break end
+	end
+
+	if count == numChars and pos <= bytes then
+		return string.sub(str, 1, pos - 1) .. (dots and "..." or "")
+	end
+	return str
+end
+
 -- Current and maximum health of `unit`. The client reports hostile units only
 -- in percent (UnitHealthMax == 100); LibMobHealth-4.0 replaces that with an
 -- estimate learned from the damage dealt to the target, and passes every
