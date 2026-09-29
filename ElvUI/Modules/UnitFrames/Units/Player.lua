@@ -43,6 +43,7 @@ local function Construct_PlayerFrame()
 	frame:SetHeight(settings.height)
 	frame:SetPoint("CENTER", UIParent, "CENTER", -300, -150)
 	frame:SetFrameStrata("LOW")
+	UF:SetUnitFrameLevel(frame, "player")
 	frame.unit = "player"
 
 	local healthHeight = settings.height
@@ -84,13 +85,13 @@ local function Construct_PlayerFrame()
 		-- screen-center-ish, roughly between where Player and Target
 		-- frames are. Previously anchored to `frame`'s own bottom edge.
 		castbar:SetPoint("CENTER", UIParent, "CENTER", 0, -150)
-		E:CreateMover(castbar, "ElvUF_PlayerCastbar", L["Player Castbar"])
+		E:CreateMover(castbar, "ElvUF_PlayerCastbarMover", L["Player Castbar"])
 		UF:InitializeCastbar()
 	end
 
 	UF:EnableUnitMouse(frame)
 	HideNativePlayerFrame()
-	E:CreateMover(frame, "ElvUF_Player", L["Player Frame"])
+	E:CreateMover(frame, "ElvUF_PlayerMover", L["Player Frame"])
 
 	return frame
 end

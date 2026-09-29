@@ -728,9 +728,11 @@ P.unitframe = {
 -- background to cover only the UNFILLED portion
 -- (Elements/Health.lua's `ToggleTransparentStatusBar`) -- per-texture
 -- control this project's hand-rolled Util.CreateStatusBar doesn't have.
--- Here they reduce alpha uniformly on background AND fill instead: same
--- practical purpose (let an overlay portrait show through), simpler
--- mechanism.
+-- transparentHealth reduces alpha uniformly on background AND fill instead:
+-- same practical purpose (let an overlay portrait show through), simpler
+-- mechanism. transparentPower takes real ElvUI's colours (fill at 58% on
+-- the translucent backdrop alpha, background at 35%, opaque): no portrait
+-- lies behind a power bar, so a see-through one would only show the world.
 P.unitframe.colors = {
 	power = {
 		MANA = {r = 0.31, g = 0.45, b = 0.63},

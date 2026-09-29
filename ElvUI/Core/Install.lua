@@ -307,10 +307,10 @@ end
 -- project, real ElvUI's own low-res number (200) would make them BIGGER
 -- here, so only their position changes, not their size) -- reverted to
 -- this project's own P defaults by "High Resolution", not recomputed from
--- E.PixelMode (which doesn't exist). Mover names have NO "Mover" suffix
--- in this project (`ElvUF_Player`, not real ElvUI's `ElvUF_PlayerMover`)
--- and are relative to `UIParent` (this project has no `ElvUIParent`) --
--- see Core/Movers.lua's own ApplyPositionString comment.
+-- E.PixelMode (which doesn't exist). Mover names are real ElvUI's
+-- (`ElvUF_PlayerMover`); positions are relative to `UIParent` (this project
+-- has no `ElvUIParent`) -- see Core/Movers.lua's own ApplyPositionString
+-- comment.
 --
 -- Live-refresh calls below are the SAME ones ElvUI_Config's own sliders
 -- for these exact fields already use (Bags.lua/ActionBars.lua/Chat.lua),
@@ -334,10 +334,10 @@ local function ApplyResolutionLiveRefresh()
 		E.UnitFrames:ResizeUnit("player", E.db.unitframe.units.player.width)
 		E.UnitFrames:ResizeUnit("target", E.db.unitframe.units.target.width)
 	end
-	E:ApplyMoverPosition("ElvUF_Player")
-	E:ApplyMoverPosition("ElvUF_Target")
-	E:ApplyMoverPosition("ElvUF_Pet")
-	E:ApplyMoverPosition("ElvUF_TargetTarget")
+	E:ApplyMoverPosition("ElvUF_PlayerMover")
+	E:ApplyMoverPosition("ElvUF_TargetMover")
+	E:ApplyMoverPosition("ElvUF_PetMover")
+	E:ApplyMoverPosition("ElvUF_TargetTargetMover")
 end
 
 local function SetupResolutionLow()
@@ -359,10 +359,10 @@ local function SetupResolutionLow()
 	-- 62px below its Player/Target movers) scaled to this project's own
 	-- chosen offsets above -- a first-pass position, adjust live if it
 	-- doesn't look right.
-	E.db.movers.ElvUF_Player = "BOTTOM,UIParent,BOTTOM,-102,142"
-	E.db.movers.ElvUF_Target = "BOTTOM,UIParent,BOTTOM,102,142"
-	E.db.movers.ElvUF_Pet = "BOTTOM,UIParent,BOTTOM,-102,100"
-	E.db.movers.ElvUF_TargetTarget = "BOTTOM,UIParent,BOTTOM,102,100"
+	E.db.movers.ElvUF_PlayerMover = "BOTTOM,UIParent,BOTTOM,-102,142"
+	E.db.movers.ElvUF_TargetMover = "BOTTOM,UIParent,BOTTOM,102,142"
+	E.db.movers.ElvUF_PetMover = "BOTTOM,UIParent,BOTTOM,-102,100"
+	E.db.movers.ElvUF_TargetTargetMover = "BOTTOM,UIParent,BOTTOM,102,100"
 
 	E.db.lowresolutionset = true
 	ApplyResolutionLiveRefresh()
@@ -383,10 +383,10 @@ local function SetupResolutionHigh()
 	E.db.unitframe.units.player.width = 270
 	E.db.unitframe.units.target.width = 270
 
-	E.db.movers.ElvUF_Player = nil
-	E.db.movers.ElvUF_Target = nil
-	E.db.movers.ElvUF_Pet = nil
-	E.db.movers.ElvUF_TargetTarget = nil
+	E.db.movers.ElvUF_PlayerMover = nil
+	E.db.movers.ElvUF_TargetMover = nil
+	E.db.movers.ElvUF_PetMover = nil
+	E.db.movers.ElvUF_TargetTargetMover = nil
 
 	E.db.lowresolutionset = false
 	ApplyResolutionLiveRefresh()
@@ -496,29 +496,29 @@ function E:SetupLayout(role)
 		E:ApplyMoverPosition(name)
 	end
 
-	E.db.movers.ElvUF_Player = preset.player
-	E.db.movers.ElvUF_Target = preset.target
-	E.db.movers.ElvUF_TargetTarget = preset.targettarget
-	E.db.movers.ElvUF_Pet = preset.pet
-	E:ApplyMoverPosition("ElvUF_Player")
-	E:ApplyMoverPosition("ElvUF_Target")
-	E:ApplyMoverPosition("ElvUF_TargetTarget")
-	E:ApplyMoverPosition("ElvUF_Pet")
+	E.db.movers.ElvUF_PlayerMover = preset.player
+	E.db.movers.ElvUF_TargetMover = preset.target
+	E.db.movers.ElvUF_TargetTargetMover = preset.targettarget
+	E.db.movers.ElvUF_PetMover = preset.pet
+	E:ApplyMoverPosition("ElvUF_PlayerMover")
+	E:ApplyMoverPosition("ElvUF_TargetMover")
+	E:ApplyMoverPosition("ElvUF_TargetTargetMover")
+	E:ApplyMoverPosition("ElvUF_PetMover")
 
 	local castbarSettings = E.db.unitframe.units.player.castbar
 	if preset.castbar then
 		castbarSettings.width = preset.castbar.width
 		castbarSettings.height = preset.castbar.height
-		E.db.movers.ElvUF_PlayerCastbar = preset.castbar.mover
+		E.db.movers.ElvUF_PlayerCastbarMover = preset.castbar.mover
 	else
 		-- Reset to this project's own default -- otherwise switching
 		-- FROM healer/caster TO tank/phys-dps would leave the widened
 		-- castbar behind.
 		castbarSettings.width = P.unitframe.units.player.castbar.width
 		castbarSettings.height = P.unitframe.units.player.castbar.height
-		E.db.movers.ElvUF_PlayerCastbar = nil
+		E.db.movers.ElvUF_PlayerCastbarMover = nil
 	end
-	E:ApplyMoverPosition("ElvUF_PlayerCastbar")
+	E:ApplyMoverPosition("ElvUF_PlayerCastbarMover")
 	if E.UnitFrames and E.UnitFrames.ResizeCastbar then
 		E.UnitFrames:ResizeCastbar(castbarSettings.width, castbarSettings.height)
 	end

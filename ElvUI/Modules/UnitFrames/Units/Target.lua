@@ -36,6 +36,7 @@ local function Construct_TargetFrame()
 	-- don't default-overlap.
 	frame:SetPoint("CENTER", UIParent, "CENTER", 300, -150)
 	frame:SetFrameStrata("LOW")
+	UF:SetUnitFrameLevel(frame, "target")
 	frame.unit = "target"
 
 	local healthHeight = settings.height
@@ -71,13 +72,13 @@ local function Construct_TargetFrame()
 		castbar:SetWidth(castSettings.width)
 		castbar:SetHeight(castSettings.height)
 		castbar:SetPoint("CENTER", UIParent, "CENTER", 300, -190)
-		E:CreateMover(castbar, "ElvUF_TargetCastbar", L["Target Castbar"])
+		E:CreateMover(castbar, "ElvUF_TargetCastbarMover", L["Target Castbar"])
 		UF:InitializeTargetCastbar()
 	end
 
 	HideNativeTargetFrame()
 	UF:EnableUnitMouse(frame)
-	E:CreateMover(frame, "ElvUF_Target", L["Target Frame"])
+	E:CreateMover(frame, "ElvUF_TargetMover", L["Target Frame"])
 
 	return frame
 end

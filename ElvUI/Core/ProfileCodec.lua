@@ -614,6 +614,9 @@ function Codec.Decode(text)
 	if type(data) ~= "table" then return nil, "cbor" end
 
 	local suffix = strsub(payload, nextPos)
+	-- Strings shared online (wago.io) can come without any suffix; the data
+	-- is then taken as a profile with no name of its own.
+	if suffix == "" then return "profile", nil, data end
 	local _, _, dataType, key = strfind(suffix, "^::([^:]*)::(.*)$")
 	if not dataType then
 		_, _, dataType = strfind(suffix, "^::([^:]*)$")

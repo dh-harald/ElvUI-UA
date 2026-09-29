@@ -171,17 +171,161 @@ function E:DeleteProfile(key)
 	return true
 end
 
--- Profile data written by earlier versions of this addon, or by ElvUI-vanilla,
--- moved onto the current keys. Runs on the live profile at login (Init.lua)
--- and on every imported profile before it is cleaned (E:ImportProfile).
+-- Profile data written by earlier versions of this addon, by ElvUI-vanilla or
+-- by retail ElvUI, moved onto the current keys. Runs on the live profile at
+-- login (Init.lua) and on every imported profile before it is cleaned
+-- (E:ImportProfile).
 --
--- Each step is triggered by a key that no longer has a default. A stored
--- profile carries every default too (Init.lua merges them in and saves the
--- result), so only an old key's presence marks an old profile, and removing
--- it makes the step run once.
+-- Each step is triggered by something our defaults never contain: an old key
+-- of ours, another ElvUI's name for one of our keys, or another ElvUI's
+-- value or table shape for one of them. A stored profile carries every
+-- default too (Init.lua merges them in and saves the result), so only such a
+-- key or value marks data to migrate, and replacing it makes the step run
+-- once.
+
+-- Copies every value of `src` into `dst`, descending into tables both sides
+-- have, so keys only `dst` has survive.
+local function MergeInto(dst, src)
+	local k, v
+	for k, v in pairs(src) do
+		if type(v) == "table" and type(dst[k]) == "table" then
+			MergeInto(dst[k], v)
+		else
+			dst[k] = v
+		end
+	end
+end
+
+-- Moves t[from] to t[to]. A present `from` always wins: nothing here writes
+-- it any more, so it holds what the user chose (in another ElvUI) or sees
+-- now (under this addon's earlier name), while t[to] may be no more than a
+-- merged-in default. A table is merged key by key rather than replaced: a
+-- saved or exported table holds only the values that differ from its own
+-- defaults, and the defaults already merged into t[to] must stay.
+local function RenameKey(t, from, to)
+	local value = t[from]
+	if value == nil then return end
+	if type(value) == "table" and type(t[to]) == "table" then
+		MergeInto(t[to], value)
+	else
+		t[to] = value
+	end
+	t[from] = nil
+end
+
+local ACTIONBAR_RENAMES = {
+	buttonSize = "buttonsize",
+	buttonSpacing = "buttonspacing",
+}
+
+-- Mover keys: the names this addon used before it took real ElvUI's, and
+-- retail's pet bar name (ElvUI-vanilla, and this addon, use "ElvBar_Pet").
+local MOVER_RENAMES = {
+	ElvUF_Player = "ElvUF_PlayerMover",
+	ElvUF_Target = "ElvUF_TargetMover",
+	ElvUF_TargetTarget = "ElvUF_TargetTargetMover",
+	ElvUF_Pet = "ElvUF_PetMover",
+	ElvUF_PetTarget = "ElvUF_PetTargetMover",
+	ElvUF_PlayerCastbar = "ElvUF_PlayerCastbarMover",
+	ElvUF_TargetCastbar = "ElvUF_TargetCastbarMover",
+	ElvBar_StanceBar = "ShiftAB",
+	PetAB = "ElvBar_Pet",
+}
+
+-- Retail's "SHADOW" (no outline, drop shadow) and "SHADOWOUTLINE" are not
+-- font flags this addon can draw; every key named *outline gets the nearest
+-- flag it can.
+local OUTLINE_VALUES = { SHADOW = "NONE", SHADOWOUTLINE = "OUTLINE" }
+
+local function TranslateOutlines(t)
+	local k, v
+	for k, v in pairs(t) do
+		if type(v) == "table" then
+			TranslateOutlines(v)
+		elseif type(k) == "string" and OUTLINE_VALUES[v] and string.find(string.lower(k), "outline$") then
+			t[k] = OUTLINE_VALUES[v]
+		end
+	end
+end
+
+-- Retail names the tooltip visibility modes SHOW / HIDE, ElvUI-vanilla (and
+-- this addon) NONE / ALL; the modifier modes are the same on both.
+local VISIBILITY_VALUES = { SHOW = "NONE", HIDE = "ALL" }
+
+-- Retail keeps these as tables where this addon keeps a single value. A
+-- retail table carries only what differs from retail's own defaults, so a
+-- missing field is read as retail's default.
+local function ConvertHealPrediction(units)
+	local unit, db
+	for unit, db in pairs(units) do
+		if type(db) == "table" and type(db.healPrediction) == "table" then
+			local enable = db.healPrediction.enable
+			if type(enable) ~= "boolean" then
+				local default = P.unitframe.units[unit]
+				enable = type(default) == "table" and default.healPrediction or nil
+			end
+			db.healPrediction = enable
+		end
+	end
+end
+
+local function ConvertItemCount(tooltip)
+	local count = tooltip.itemCount
+	if type(count) ~= "table" then return end
+	local bags, bank = count.bags ~= false, count.bank == true
+	if bags and bank then
+		tooltip.itemCount = "BOTH"
+	elseif bags then
+		tooltip.itemCount = "BAGS_ONLY"
+	elseif bank then
+		tooltip.itemCount = "BANK_ONLY"
+	else
+		tooltip.itemCount = "NONE"
+	end
+end
+
 function E:MigrateProfileData(profile)
 	if type(profile) ~= "table" then return end
+
+	TranslateOutlines(profile)
+
+	local tooltip = profile.tooltip
+	if type(tooltip) == "table" then
+		if type(tooltip.visibility) == "table" then
+			local k, v
+			for k, v in pairs(tooltip.visibility) do
+				if VISIBILITY_VALUES[v] then tooltip.visibility[k] = VISIBILITY_VALUES[v] end
+			end
+		end
+		ConvertItemCount(tooltip)
+	end
+
+	-- Retail ElvUI's stance bar table and camel-case action bar keys ->
+	-- ElvUI-vanilla's (ours). Every bar table is visited, so bars without a
+	-- counterpart here are renamed too and left for the import cleaner to
+	-- drop.
+	local actionbar = profile.actionbar
+	if type(actionbar) == "table" then
+		RenameKey(actionbar, "stanceBar", "barShapeShift")
+		local _, bar, from, to
+		for _, bar in pairs(actionbar) do
+			if type(bar) == "table" then
+				for from, to in pairs(ACTIONBAR_RENAMES) do
+					RenameKey(bar, from, to)
+				end
+			end
+		end
+	end
+
+	if type(profile.movers) == "table" then
+		local from, to
+		for from, to in pairs(MOVER_RENAMES) do
+			RenameKey(profile.movers, from, to)
+		end
+	end
+
 	local units = type(profile.unitframe) == "table" and profile.unitframe.units
+	if type(units) == "table" then ConvertHealPrediction(units) end
 	local pet = type(units) == "table" and units.pet
 
 	-- ElvUI-vanilla's separate pet happiness bar -> retail's happiness colour
@@ -218,9 +362,12 @@ end
 -- relative to OUR defaults, and its version lets an older copy of the addon
 -- refuse it. A string without the marker came from another ElvUI.
 --
--- An import is cleaned against our defaults before it is stored: unknown
--- keys and values of the wrong type are dropped and counted. Init.lua merges
--- the defaults back in at the next load, which is why every import ends in a
+-- An import is migrated (E:MigrateProfileData), then a string from another
+-- ElvUI has the keys it left at that ElvUI's defaults filled with those
+-- defaults (E.ImportDefaults, Settings/ImportDefaults.lua), then everything
+-- is cleaned against our defaults before it is stored: unknown keys and
+-- values of the wrong type are dropped and counted. Init.lua merges our
+-- defaults back in at the next load, which is why every import ends in a
 -- reload request.
 
 local Codec = ElvUI.ProfileCodec
@@ -385,17 +532,54 @@ local function DecodeTable(text)
 	return dataType or "profile", key, data
 end
 
+-- Retail ElvUI writes these into a profile itself (its data conversions and
+-- camel-case action bar keys); ElvUI-vanilla has none of them.
+local function LooksRetail(data)
+	if data.dbConverted ~= nil or data.convertPages ~= nil then return true end
+	local actionbar = data.actionbar
+	if type(actionbar) ~= "table" then return false end
+	if actionbar.stanceBar ~= nil then return true end
+	local _, bar
+	for _, bar in pairs(actionbar) do
+		if type(bar) == "table" and (bar.buttonSize ~= nil or bar.buttonSpacing ~= nil) then
+			return true
+		end
+	end
+	return false
+end
+
+-- Sets every value of `defaults` that `data` leaves out; returns how many.
+local function FillMissing(data, defaults)
+	local n, k, v = 0
+	for k, v in pairs(defaults) do
+		local current = data[k]
+		if type(v) == "table" then
+			if current == nil then
+				current = {}
+				data[k] = current
+			end
+			if type(current) == "table" then n = n + FillMissing(current, v) end
+		elseif current == nil then
+			data[k] = v
+			n = n + 1
+		end
+	end
+	return n
+end
+
 -- Decodes an import string without storing anything. Returns dataType, key
--- (nil for a type without one, or a bare table), data, and the exporting
--- version of this addon (nil for a string from another ElvUI); or nil and a
--- message for the player.
+-- (nil for a type without one, or a bare table), data, the exporting version
+-- of this addon (nil for a string from another ElvUI), and the other ElvUI
+-- it came from ("retail" or "vanilla", a key of E.ImportDefaults; nil for
+-- this addon's own); or nil and a message for the player.
 function E:DecodeProfileString(text)
 	if type(text) ~= "string" then return nil, L["Error decoding data. Import string may be corrupted!"] end
 	local _, _, body = string.find(text, "^%s*(.-)%s*$")
 
-	local dataType, key, data
+	local dataType, key, data, source
 	local first = string.sub(body, 1, 1)
 	if first == "!" then
+		source = "retail"
 		dataType, key, data = Codec.Decode(body)
 		if not dataType then
 			if key == "old" then
@@ -410,6 +594,7 @@ function E:DecodeProfileString(text)
 		end
 	else
 		-- ElvUI-vanilla's "text" export: bare Base64, no prefix.
+		source = "vanilla"
 		dataType, key, data = Codec.DecodeVanilla(body)
 		if not dataType then
 			return nil, L["Error decoding data. Import string may be corrupted!"]
@@ -421,8 +606,11 @@ function E:DecodeProfileString(text)
 	local version
 	if type(marker) == "table" then
 		version = tostring(marker.version or "unknown")
+		source = nil
+	elseif first == "{" then
+		source = LooksRetail(data) and "retail" or "vanilla"
 	end
-	return dataType, key, data, version
+	return dataType, key, data, version, source
 end
 
 -- An unused profile name "<base> (2)", "<base> (3)", ...
@@ -441,11 +629,30 @@ end
 -- import: a profile import must not reset the character's module switches.
 -- From here the two keys may differ, which Init.lua supports (it resolves
 -- each through its own `profileKeys`).
-local function StoreProfile(key, data, count, dropped)
+-- The reload request after an import carries the import's summary: chat
+-- output does not survive the reload, the popup is read before it.
+E.PopupDialogs["IMPORT_RL"] = {
+	button1 = E.PopupAccept,
+	button2 = E.PopupCancel,
+	OnAccept = ReloadUI,
+	timeout = 0,
+	whileDead = 1,
+	hideOnEscape = false,
+}
+
+-- `notes`: lines to show before the summary ("" for none).
+local function RequestImportReload(notes, summary, reloadText)
+	E:Print(summary)
+	E.PopupDialogs["IMPORT_RL"].text = notes .. summary .. "\n\n" .. reloadText
+	E:StaticPopup_Show("IMPORT_RL")
+end
+
+local function StoreProfile(key, data, count, dropped, notes)
 	ElvDB.profiles[key] = data
 	ElvDB.profileKeys[CharKey()] = key
-	E:Print(string.format(L["Imported profile '%s': %d settings, %d unknown settings skipped."], key, count, dropped))
-	E:RequestReload()
+	RequestImportReload(notes or "",
+		string.format(L["Imported profile '%s': %d settings, %d unknown settings skipped."], key, count, dropped),
+		L["One or more of the changes you have made require a ReloadUI."])
 end
 
 -- The import waiting on the name-clash popup below.
@@ -458,12 +665,12 @@ E.PopupDialogs["IMPORT_PROFILE_EXISTS"] = {
 	OnAccept = function()
 		local p = pendingImport
 		pendingImport = nil
-		if p then StoreProfile(p.key, p.data, p.count, p.dropped) end
+		if p then StoreProfile(p.key, p.data, p.count, p.dropped, p.notes) end
 	end,
 	OnCancel = function()
 		local p = pendingImport
 		pendingImport = nil
-		if p then StoreProfile(FreeProfileKey(p.key), p.data, p.count, p.dropped) end
+		if p then StoreProfile(FreeProfileKey(p.key), p.data, p.count, p.dropped, p.notes) end
 	end,
 	timeout = 0,
 	whileDead = 1,
@@ -472,7 +679,7 @@ E.PopupDialogs["IMPORT_PROFILE_EXISTS"] = {
 
 -- Imports an export string (see the section header). Reload-required.
 function E:ImportProfile(text)
-	local dataType, key, data, version = self:DecodeProfileString(text)
+	local dataType, key, data, version, source = self:DecodeProfileString(text)
 	if not dataType then
 		self:Print(key)
 		return
@@ -491,19 +698,26 @@ function E:ImportProfile(text)
 	if dataType == "profile" then
 		self:MigrateProfileData(data)
 	end
+	-- A foreign string omits whatever sat at ITS ElvUI's defaults; those keys
+	-- get that ElvUI's values, or ours would show where theirs did.
+	local notes = ""
+	local sourceDefaults = source and E.ImportDefaults and E.ImportDefaults[source]
+	if sourceDefaults and sourceDefaults[dataType] then
+		local filled = FillMissing(data, sourceDefaults[dataType])
+		local message = string.format(L["This string was exported by another ElvUI: %d settings it left at that ElvUI's defaults were set to those defaults."], filled)
+		self:Print(message)
+		notes = message .. "\n\n"
+	end
 	local clean, dropped = CleanTable(data, DEFAULTS[dataType], GENERATED[dataType], BLACKLIST[dataType])
 	local count = CountLeaves(clean)
-
-	if not version then
-		self:Print(L["This string was not exported by this addon: its settings are taken over as they are, and differences between the two addons' defaults are not adjusted."])
-	end
 
 	if dataType == "private" then
 		local privateKey = ElvPrivateDB.profileKeys[CharKey()]
 		if not privateKey then return end
 		ElvPrivateDB.profiles[privateKey] = clean
-		self:Print(string.format(L["Imported private (character) settings: %d settings, %d unknown settings skipped."], count, dropped))
-		self:RequestReload("private")
+		RequestImportReload(notes,
+			string.format(L["Imported private (character) settings: %d settings, %d unknown settings skipped."], count, dropped),
+			L["A setting you have changed will change an option for this character only. This setting that you have changed will be uneffected by changing user profiles. Changing this setting requires that you reload your User Interface."])
 		return
 	end
 
@@ -512,7 +726,7 @@ function E:ImportProfile(text)
 	-- Only ElvDB counts: every character has private settings under its own
 	-- name, and a profile import does not touch them.
 	if ElvDB.profiles[key] then
-		pendingImport = { key = key, data = clean, count = count, dropped = dropped }
+		pendingImport = { key = key, data = clean, count = count, dropped = dropped, notes = notes }
 		local dialog = E.PopupDialogs["IMPORT_PROFILE_EXISTS"]
 		dialog.text = string.format(L["A profile named '%s' already exists. Overwrite it, or keep both and import this one as '%s'?"], key, FreeProfileKey(key))
 		dialog.button1 = L["Overwrite"]
@@ -521,6 +735,6 @@ function E:ImportProfile(text)
 		return
 	end
 
-	StoreProfile(key, clean, count, dropped)
+	StoreProfile(key, clean, count, dropped, notes)
 end
 

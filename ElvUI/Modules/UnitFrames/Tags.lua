@@ -106,6 +106,15 @@ Methods["smartlevel"] = function(unit)
 	return "??"
 end
 
+-- oUF's `dead`: "Dead" or "Ghost" (localized here), empty while alive.
+Methods["dead"] = function(unit)
+	local okDead, isDead = pcall(UnitIsDead, unit)
+	if okDead and Compat.bool(isDead) then return L["Dead"] end
+	local okGhost, isGhost = pcall(UnitIsGhost, unit)
+	if okGhost and Compat.bool(isGhost) then return L["Ghost"] end
+	return ""
+end
+
 local SHORT_CLASSIFICATION = { rare = "R", rareelite = "R+", elite = "+", worldboss = "B" }
 
 Methods["shortclassification"] = function(unit)

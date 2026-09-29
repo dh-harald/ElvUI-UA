@@ -30,6 +30,7 @@ local function Construct_PetFrame()
 	-- lower, so the two don't default-overlap.
 	frame:SetPoint("CENTER", UIParent, "CENTER", -300, -220)
 	frame:SetFrameStrata("LOW")
+	UF:SetUnitFrameLevel(frame, "pet")
 	frame.unit = "pet"
 
 	local healthHeight = settings.height
@@ -52,7 +53,7 @@ local function Construct_PetFrame()
 
 	HideNativePetFrame()
 	UF:EnableUnitMouse(frame)
-	E:CreateMover(frame, "ElvUF_Pet", L["Pet Frame"])
+	E:CreateMover(frame, "ElvUF_PetMover", L["Pet Frame"])
 
 	return frame
 end

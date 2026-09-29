@@ -152,10 +152,39 @@ local DEAD_COLOR = {0.5, 0.5, 0.5}
 local INSET = 2
 -- Shared with the per-client portrait files (PortraitUA.lua/PortraitLegacy.lua).
 UF.INSET = INSET
--- Fixed alpha for colors.transparentHealth/transparentPower -- see the
--- defaults block above for why this is a simplified uniform-alpha
--- stand-in for real ElvUI's own inverted-fill masking technique.
+-- Fixed alpha for colors.transparentHealth -- see the defaults block
+-- above for why this is a simplified uniform-alpha stand-in for real
+-- ElvUI's own inverted-fill masking technique. transparentPower follows
+-- real ElvUI's colours instead (UpdateFrame).
 local TRANSPARENT_ALPHA = 0.35
+
+-- Every unit frame owns a band of frame levels, and no two bands overlap.
+-- All unit frames share one strata, and inside a strata the client orders
+-- by frame level alone, not by parent: with a common base level the parts
+-- of two overlapping frames interleave (one frame's panel below the other's
+-- bars, its text above them). A frame's own parts stay below its base +
+-- UNIT_LEVEL_BAND, so one overlapping frame always covers the other whole.
+-- Castbars move on their own and sit above every band.
+local UNIT_LEVEL_BAND = 20
+local UNIT_LEVEL_ORDER = {
+	"player", "target", "targettarget", "pet", "pettarget",
+	"party1", "party2", "party3", "party4",
+}
+local UNIT_BASE_LEVEL = {}
+do
+	local i
+	for i = 1, table.getn(UNIT_LEVEL_ORDER) do
+		UNIT_BASE_LEVEL[UNIT_LEVEL_ORDER[i]] = 10 + (i - 1) * UNIT_LEVEL_BAND
+	end
+	UF.CASTBAR_LEVEL = 10 + table.getn(UNIT_LEVEL_ORDER) * UNIT_LEVEL_BAND
+end
+
+-- Called right after a unit frame is created, before any of its parts: the
+-- parts take their levels relative to the frame's.
+function UF:SetUnitFrameLevel(frame, unit)
+	local base = UNIT_BASE_LEVEL[unit]
+	if base then pcall(frame.SetFrameLevel, frame, base) end
+end
 
 -- Builds the frame's own outer panel -- same plain SetBackdrop pattern
 -- established throughout this project (Minimap/Movers/DataBars/PetBar/
@@ -773,7 +802,7 @@ function UF:Construct_Castbar(frame)
 		background = {0.1, 0.1, 0.1, 1},
 		texture = GetBarTexture(),
 	})
-	bar:SetFrameLevel(frame:GetFrameLevel() + 40)
+	pcall(bar.SetFrameLevel, bar, UF.CASTBAR_LEVEL)
 	bar:Hide()
 
 	local icon = bar:CreateTexture(nil, "ARTWORK")
@@ -2077,6 +2106,13 @@ function UF:UpdateFrame(frame)
 	if settings.power and settings.power.enable then
 		healthHeight = settings.height - settings.power.height - 1
 	end
+	-- The information panel sits inside the frame's height, at its bottom,
+	-- as in real ElvUI (UF:GetHealthBottomOffset): the health bar gives up
+	-- the room, so a frame placed right below this one is not overlapped.
+	local infoDB = settings.infoPanel
+	if frame.InfoPanel and infoDB and infoDB.enable then
+		healthHeight = healthHeight - (infoDB.height or 20) - 1
+	end
 
 	-- Room the combo point bar takes at the top of the frame (ComboPoints.lua),
 	-- 0 while it is hidden. Guarded so a failure there costs only the bar.
@@ -2168,16 +2204,25 @@ function UF:UpdateFrame(frame)
 		frame.Power:SetMinMaxValues(0, powerMax > 0 and powerMax or 1)
 		frame.Power:SetValue(power)
 
-		local powerAlpha = E.db.unitframe.colors.transparentPower and TRANSPARENT_ALPHA or 1
 		local powerColors = E.db.unitframe.colors.power
 		local pc = powerColors[powerToken] or powerColors.MANA
+		local pr, pg, pb = pc.r, pc.g, pc.b
 		if E.db.unitframe.colors.powerclass then
-			local cr, cg, cb = UnitColor(unit)
-			ElvUI.Util.SetStatusBarColor(frame.Power, cr, cg, cb, powerAlpha)
-		else
-			ElvUI.Util.SetStatusBarColor(frame.Power, pc.r, pc.g, pc.b, powerAlpha)
+			pr, pg, pb = UnitColor(unit)
 		end
-		ElvUI.Util.SetStatusBarBackgroundColor(frame.Power, POWER_BG_COLOR[1], POWER_BG_COLOR[2], POWER_BG_COLOR[3], powerAlpha)
+		if E.db.unitframe.colors.transparentPower then
+			-- Real ElvUI's transparent bar (UF:ToggleTransparentStatusBar and
+			-- its SetStatusBarColor hook): the filled part is the colour at
+			-- 58% on the translucent "Transparent" backdrop, the empty part
+			-- the colour at 35%.
+			local fade = E.db.general.backdropfadecolor
+			local fadeAlpha = (fade and tonumber(fade.a)) or 0.8
+			ElvUI.Util.SetStatusBarColor(frame.Power, pr * 0.58, pg * 0.58, pb * 0.58, fadeAlpha)
+			ElvUI.Util.SetStatusBarBackgroundColor(frame.Power, pr * 0.35, pg * 0.35, pb * 0.35, 1)
+		else
+			ElvUI.Util.SetStatusBarColor(frame.Power, pr, pg, pb, 1)
+			ElvUI.Util.SetStatusBarBackgroundColor(frame.Power, POWER_BG_COLOR[1], POWER_BG_COLOR[2], POWER_BG_COLOR[3], 1)
+		end
 		ElvUI.Util.SetStatusBarTexture(frame.Power, GetBarTexture())
 	end
 
@@ -2254,9 +2299,9 @@ function UF:UpdateFrame(frame)
 	-- edge when Power is enabled, otherwise below Health's -- matches
 	-- real ElvUI's own equivalent fallback (its Configure_InfoPanel
 	-- anchors to Power's backdrop only when a non-detached/non-inset
-	-- power bar is actually in use, Health's otherwise). Extends BELOW
-	-- the frame's own configured height rather than being counted
-	-- within it, same as real ElvUI.
+	-- power bar is actually in use, Health's otherwise). Counted within
+	-- the frame's configured height: the health bar above was shortened by
+	-- the panel's height.
 	if frame.InfoPanel then
 		local infoDB = settings.infoPanel
 		if infoDB and infoDB.enable then

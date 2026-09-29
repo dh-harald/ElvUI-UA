@@ -77,6 +77,7 @@ local function Construct_PartyMemberFrame(index)
 		-- which all sit lower/more central).
 		frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 40, -220 - (index - 1) * (settings.height + PARTY_GAP))
 		frame:SetFrameStrata("LOW")
+		UF:SetUnitFrameLevel(frame, "party"..index)
 		frame.unit = "party"..index
 		frame.unitDBKey = "party"
 

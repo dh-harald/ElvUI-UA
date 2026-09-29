@@ -36,6 +36,7 @@ local function Construct_TargetTargetFrame()
 	-- lower, so the two don't default-overlap.
 	frame:SetPoint("CENTER", UIParent, "CENTER", 100, -220)
 	frame:SetFrameStrata("LOW")
+	UF:SetUnitFrameLevel(frame, "targettarget")
 	frame.unit = "targettarget"
 
 	local healthHeight = settings.height
@@ -62,7 +63,7 @@ local function Construct_TargetTargetFrame()
 
 	HideNativeTargetTargetFrame()
 	UF:EnableUnitMouse(frame)
-	E:CreateMover(frame, "ElvUF_TargetTarget", L["Target of Target Frame"])
+	E:CreateMover(frame, "ElvUF_TargetTargetMover", L["Target of Target Frame"])
 
 	return frame
 end
