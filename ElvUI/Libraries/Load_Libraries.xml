@@ -23,4 +23,6 @@
 	<Include file="LibHealComm-1.0\LibHealComm-1.0.xml"/>
 	<Include file="LibMobHealth-4.0\LibMobHealth-4.0.xml"/>
 	<Include file="LibVanillaDurations-1.0\LibVanillaDurations-1.0.xml"/>
+	<Include file="LibDeflate\LibDeflate.xml"/>
+	<Include file="AceSerializer-3.0\AceSerializer-3.0.xml"/>
 </Ui>

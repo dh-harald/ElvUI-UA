@@ -23,7 +23,16 @@ L["Profile '%s' reset to defaults. /reload to apply."] = "配置方案“%s”�
 L["Refusing to delete the profile this character is using -- switch to another one first."] = "无法删除当前角色正在使用的配置方案——请先切换到其他方案。"
 L["Deleted profile '%s'."] = "已删除配置方案“%s”。"
 L["Import failed -- couldn't parse the pasted text as a Lua table."] = "导入失败——无法将粘贴的文本解析为 Lua 表。"
-L["Profile imported. /reload to apply."] = "配置方案已导入。/reload 后生效。"
+L["Error decoding data. Import string may be corrupted!"] = "解码错误.导入的字符串可能已损坏!"
+L["This import string uses an older ElvUI format (!E1!) that is no longer supported. Export it again from a current ElvUI."] = "此导入字符串使用的是已不再支持的旧版 ElvUI 格式 (!E1!)。请用新版 ElvUI 重新导出。"
+L["This string was exported by a newer version of ElvUI (%s, you have %s). Update ElvUI, then import it again."] = "此字符串由更新版本的 ElvUI 导出 (%s,你的版本为 %s)。请先更新 ElvUI,然后重新导入。"
+L["Importing '%s' settings is not supported yet."] = "暂不支持导入“%s”设置。"
+L["This string was not exported by this addon: its settings are taken over as they are, and differences between the two addons' defaults are not adjusted."] = "此字符串并非由本插件导出:其设置将按原样导入,两个插件默认值之间的差异不会被调整。"
+L["Imported private (character) settings: %d settings, %d unknown settings skipped."] = "已导入个人(角色)设置:%d 项设置,跳过 %d 项未知设置。"
+L["Imported profile '%s': %d settings, %d unknown settings skipped."] = "已导入配置方案“%s”:%d 项设置,跳过 %d 项未知设置。"
+L["A profile named '%s' already exists. Overwrite it, or keep both and import this one as '%s'?"] = "名为“%s”的配置方案已存在。要覆盖它,还是保留两者并将此方案导入为“%s”?"
+L["Overwrite"] = "覆盖"
+L["Keep Both"] = "保留两者"
 
 --Static popups
 L["One or more of the changes you have made require a ReloadUI."] = "你做出的一个或多个更改需要重载界面才能生效。"

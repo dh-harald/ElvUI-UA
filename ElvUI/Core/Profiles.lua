@@ -171,68 +171,325 @@ function E:DeleteProfile(key)
 	return true
 end
 
--- Export/Import -- lets a real ElvUI-vanilla profile (exported via ITS OWN
--- "Export as Lua Table" option, ElvUI-vanilla/ElvUI/Core/
--- distributor.lua's `exportFormat == "luaTable"` branch) be pasted into
--- this addon. Deliberately the SIMPLE plain-Lua-table format, not real
--- ElvUI's OTHER "text" export option (AceSerializer+LibCompress+
--- LibBase64) -- neither library is vendored here, and this project's goal
--- is specifically loading a plain-table SavedVariables profile as-is, not
--- the compressed format.
+-- Export / Import
 --
--- Exports `ElvDB.profiles[key]` directly -- the SAME table object as
--- `E.db` for the CURRENT character (Init.lua assigns it by reference),
--- so this always reflects live, current settings. Unlike real ElvUI's
--- own export, this does NOT strip values that match the defaults first
--- (`E:RemoveTableDuplicates`) -- simpler, at the cost of a longer export
--- string; add that trimming later if the size becomes a real problem.
-function E:ExportProfile()
-	local key = self:GetProfileKey()
-	local data = key and ElvDB.profiles[key]
-	if not data then return "" end
-	return ElvUI.Util.TableToLuaString(data)
+-- Two formats, both ending in real ElvUI's "::type::key" / "::type" suffix
+-- (retail Distributor.lua `D:CreateProfileExport`):
+--   "text"      the "!E2!" string of current ElvUI (Core/ProfileCodec.lua)
+--   "luaTable"  a plain Lua table literal on one line
+-- Types: "profile" (this character's profile, suffixed with its name) and
+-- "private" (this character's private settings: module switches, skins,
+-- textures). Real ElvUI also exports "global" and "filters"; an import of
+-- those is declined with a message. An import additionally reads
+-- ElvUI-vanilla's "text" export (Base64 without a prefix).
+--
+-- An export holds only what differs from this addon's defaults (retail
+-- `E:RemoveTableDuplicates`), without the keys retail never exports
+-- (`D.blacklistedKeys`), plus the marker `elvuiUA = { version = ... }` at the
+-- top level. The marker identifies a string from this addon: its values are
+-- relative to OUR defaults, and its version lets an older copy of the addon
+-- refuse it. A string without the marker came from another ElvUI.
+--
+-- An import is cleaned against our defaults before it is stored: unknown
+-- keys and values of the wrong type are dropped and counted. Init.lua merges
+-- the defaults back in at the next load, which is why every import ends in a
+-- reload request.
+
+local Codec = ElvUI.ProfileCodec
+local EXPORT_MARKER = "elvuiUA"
+
+local DEFAULTS = { profile = P, private = V }
+
+-- Keys written at runtime without a default that are exported anyway
+-- (retail `D.GeneratedKeys`). An EMPTY default table is open without being
+-- listed here: its children are user data (movers, custom texts).
+local GENERATED = {
+	profile = {},
+	private = { installComplete = true, theme = true },
+}
+
+-- Keys that are never exported or imported (the entries of retail
+-- `D.blacklistedKeys` this addon has): screen- and language-specific.
+local BLACKLIST = {
+	profile = { gridSize = true, general = { numberPrefixStyle = true } },
+	private = {},
+}
+
+local function CountLeaves(value)
+	if type(value) ~= "table" then return 1 end
+	local n = 0
+	local k, v
+	for k, v in pairs(value) do
+		n = n + CountLeaves(v)
+	end
+	return n
 end
 
--- Parses a plain Lua table string back into a table and installs it as
--- THIS character's own profile -- reload-required, same as CopyProfile/
--- UseProfile above (this project's own established pattern; nothing
--- here calls a live AceDB SetProfile, there isn't one -- see this file's
--- own header comment).
---
--- Tries the pasted text AS-IS first (covers this addon's own export, or
--- a hand-copied plain table with no wrapper). If that fails to parse,
--- strips a trailing "::profileType::profileKey" suffix (real ElvUI's
--- own Distributor wraps its export this way,
--- `D:CreateProfileExport`/`D:Decode`) and un-escapes "||" back to "|"
--- (real ElvUI escapes it for safe display in a chat-style edit box) and
--- retries once -- covers pasting a real ElvUI-vanilla "Export as Lua
--- Table" string directly.
-function E:ImportProfile(dataString)
-	if type(dataString) ~= "string" or dataString == "" then return end
+-- A copy of `data` reduced to what differs from `defaults`. A key with no
+-- default is dropped unless `generated` names it; a value whose type differs
+-- from its default's is dropped; blacklisted keys are left out. Returns the
+-- copy and the number of dropped leaf values (blacklisted ones not counted).
+local function CleanTable(data, defaults, generated, blacklist)
+	local out, dropped = {}, 0
+	local k, v
+	for k, v in pairs(data) do
+		local default = defaults[k]
+		local black = blacklist and blacklist[k]
+		if black == true then
+			-- never carried
+		elseif default == nil then
+			if generated and generated[k] then
+				out[k] = type(v) == "table" and DeepCopy(v) or v
+			else
+				dropped = dropped + CountLeaves(v)
+			end
+		elseif type(v) ~= type(default) then
+			dropped = dropped + CountLeaves(v)
+		elseif type(v) == "table" then
+			if next(default) == nil then
+				if next(v) ~= nil then out[k] = DeepCopy(v) end
+			else
+				local subGenerated = generated and generated[k]
+				if type(subGenerated) ~= "table" then subGenerated = nil end
+				if type(black) ~= "table" then black = nil end
+				local sub, subDropped = CleanTable(v, default, subGenerated, black)
+				dropped = dropped + subDropped
+				if next(sub) ~= nil then out[k] = sub end
+			end
+		elseif v ~= default then
+			out[k] = v
+		end
+	end
+	return out, dropped
+end
 
-	local function TryParse(text)
-		local chunk = loadstring("return "..text)
-		if not chunk then return nil end
-		local ok, result = pcall(chunk)
-		if not ok or type(result) ~= "table" then return nil end
-		return result
+-- The stored table and its key for one export type of this character.
+local function StoredData(dataType)
+	local charKey = CharKey()
+	local key
+	if dataType == "profile" then
+		key = ElvDB.profileKeys[charKey]
+		return key, key and ElvDB.profiles[key]
+	elseif dataType == "private" then
+		key = ElvPrivateDB.profileKeys[charKey]
+		return key, key and ElvPrivateDB.profiles[key]
+	end
+end
+
+-- The .toc "## Version:" the packager fills in from the release tag.
+local function AddonVersion()
+	local version = GetAddOnMetadata and GetAddOnMetadata("ElvUI", "Version")
+	if type(version) ~= "string" or version == "" then return "unknown" end
+	return version
+end
+
+-- major, minor, patch of a "v0.8.0" / "0.8.0-3-gabc123" style version, or
+-- nil when it has none (an unpackaged development copy).
+local function ParseVersion(version)
+	if type(version) ~= "string" then return nil end
+	local _, _, major, minor, patch = string.find(version, "^v?(%d+)%.(%d+)%.?(%d*)")
+	if not major then return nil end
+	return tonumber(major), tonumber(minor), tonumber(patch) or 0
+end
+
+-- Is `theirs` a later release than `mine`? False when either is unparsable.
+local function IsNewerVersion(theirs, mine)
+	local a1, a2, a3 = ParseVersion(theirs)
+	local b1, b2, b3 = ParseVersion(mine)
+	if not a1 or not b1 then return false end
+	if a1 ~= b1 then return a1 > b1 end
+	if a2 ~= b2 then return a2 > b2 end
+	return a3 > b3
+end
+
+-- Returns the export string of `dataType` ("profile" / "private") in
+-- `exportFormat` ("text" / "luaTable"), or nil.
+function E:ExportProfile(dataType, exportFormat)
+	local key, stored = StoredData(dataType)
+	if not stored then return nil end
+
+	local data = CleanTable(stored, DEFAULTS[dataType], GENERATED[dataType], BLACKLIST[dataType])
+	data[EXPORT_MARKER] = { version = AddonVersion() }
+
+	if exportFormat == "text" then
+		return Codec.Encode(dataType, key, data)
 	end
 
-	local parsed = TryParse(dataString)
-	if not parsed then
-		local stripped = string.gsub(dataString, "::[^:]*::[^:]*$", "")
-		stripped = string.gsub(stripped, "\124\124", "\124")
-		parsed = TryParse(stripped)
+	-- One line: shorter to carry and safe in any one-line field. The table
+	-- writer escapes newlines inside strings, so only layout is removed.
+	local text = string.gsub(ElvUI.Util.TableToLuaString(data), "\n%s*", " ")
+	text = text.."::"..dataType
+	if dataType == "profile" then
+		text = text.."::"..key
+	end
+	return text
+end
+
+local function ParseTable(text)
+	local chunk = loadstring("return "..text)
+	if not chunk then return nil end
+	local ok, result = pcall(chunk)
+	if ok and type(result) == "table" then return result end
+end
+
+-- A Lua table literal with an optional "::type::key" / "::type" suffix: this
+-- addon's own "luaTable" export, real ElvUI's (vanilla and retail), or a bare
+-- table. Real ElvUI doubles every "|" for display in its edit box and retail
+-- expects the closing brace to be missing, so both repairs are tried.
+local function DecodeTable(text)
+	local body, dataType, key = text
+	local _, _, b, t, k = string.find(text, "^(.*)::([^:]-)::(.-)$")
+	if b and Codec.TYPES[t] then
+		body, dataType, key = b, t, k
+	else
+		_, _, b, t = string.find(text, "^(.*)::([^:]-)$")
+		if b and Codec.TYPES[t] then
+			body, dataType = b, t
+		end
 	end
 
-	if not parsed then
-		self:Print(L["Import failed -- couldn't parse the pasted text as a Lua table."])
+	local unescaped = string.gsub(body, "\124\124", "\124")
+	local data = ParseTable(body) or ParseTable(body.."}")
+		or ParseTable(unescaped) or ParseTable(unescaped.."}")
+	if not data then return nil end
+	if dataType ~= "profile" then key = nil end
+	if key == "" then key = nil end
+	return dataType or "profile", key, data
+end
+
+-- Decodes an import string without storing anything. Returns dataType, key
+-- (nil for a type without one, or a bare table), data, and the exporting
+-- version of this addon (nil for a string from another ElvUI); or nil and a
+-- message for the player.
+function E:DecodeProfileString(text)
+	if type(text) ~= "string" then return nil, L["Error decoding data. Import string may be corrupted!"] end
+	local _, _, body = string.find(text, "^%s*(.-)%s*$")
+
+	local dataType, key, data
+	local first = string.sub(body, 1, 1)
+	if first == "!" then
+		dataType, key, data = Codec.Decode(body)
+		if not dataType then
+			if key == "old" then
+				return nil, L["This import string uses an older ElvUI format (!E1!) that is no longer supported. Export it again from a current ElvUI."]
+			end
+			return nil, L["Error decoding data. Import string may be corrupted!"]
+		end
+	elseif first == "{" then
+		dataType, key, data = DecodeTable(body)
+		if not dataType then
+			return nil, L["Import failed -- couldn't parse the pasted text as a Lua table."]
+		end
+	else
+		-- ElvUI-vanilla's "text" export: bare Base64, no prefix.
+		dataType, key, data = Codec.DecodeVanilla(body)
+		if not dataType then
+			return nil, L["Error decoding data. Import string may be corrupted!"]
+		end
+	end
+
+	local marker = data[EXPORT_MARKER]
+	data[EXPORT_MARKER] = nil
+	local version
+	if type(marker) == "table" then
+		version = tostring(marker.version or "unknown")
+	end
+	return dataType, key, data, version
+end
+
+-- An unused profile name "<base> (2)", "<base> (3)", ...
+local function FreeProfileKey(base)
+	local n = 2
+	local candidate = base.." (2)"
+	while ElvDB.profiles[candidate] or ElvPrivateDB.profiles[candidate] do
+		n = n + 1
+		candidate = base.." ("..n..")"
+	end
+	return candidate
+end
+
+-- Stores an imported profile under `key` and points this character's
+-- PROFILE at it. The private settings key is left as it is, as in retail's
+-- import: a profile import must not reset the character's module switches.
+-- From here the two keys may differ, which Init.lua supports (it resolves
+-- each through its own `profileKeys`).
+local function StoreProfile(key, data, count, dropped)
+	ElvDB.profiles[key] = data
+	ElvDB.profileKeys[CharKey()] = key
+	E:Print(string.format(L["Imported profile '%s': %d settings, %d unknown settings skipped."], key, count, dropped))
+	E:RequestReload()
+end
+
+-- The import waiting on the name-clash popup below.
+local pendingImport
+
+-- A name clash offers overwrite or keep-both rather than a rename box: the
+-- native popup's edit box is not reliable on every client this addon
+-- supports. Escape is disabled so the dialog always ends in one of the two.
+E.PopupDialogs["IMPORT_PROFILE_EXISTS"] = {
+	OnAccept = function()
+		local p = pendingImport
+		pendingImport = nil
+		if p then StoreProfile(p.key, p.data, p.count, p.dropped) end
+	end,
+	OnCancel = function()
+		local p = pendingImport
+		pendingImport = nil
+		if p then StoreProfile(FreeProfileKey(p.key), p.data, p.count, p.dropped) end
+	end,
+	timeout = 0,
+	whileDead = 1,
+	hideOnEscape = false,
+}
+
+-- Imports an export string (see the section header). Reload-required.
+function E:ImportProfile(text)
+	local dataType, key, data, version = self:DecodeProfileString(text)
+	if not dataType then
+		self:Print(key)
 		return
 	end
 
-	local key = self:GetProfileKey()
-	if not key then return end
-	ElvDB.profiles[key] = parsed
+	if version and IsNewerVersion(version, AddonVersion()) then
+		self:Print(string.format(L["This string was exported by a newer version of ElvUI (%s, you have %s). Update ElvUI, then import it again."], version, AddonVersion()))
+		return
+	end
 
-	self:Print(L["Profile imported. /reload to apply."])
+	if not DEFAULTS[dataType] then
+		self:Print(string.format(L["Importing '%s' settings is not supported yet."], dataType))
+		return
+	end
+
+	local clean, dropped = CleanTable(data, DEFAULTS[dataType], GENERATED[dataType], BLACKLIST[dataType])
+	local count = CountLeaves(clean)
+
+	if not version then
+		self:Print(L["This string was not exported by this addon: its settings are taken over as they are, and differences between the two addons' defaults are not adjusted."])
+	end
+
+	if dataType == "private" then
+		local privateKey = ElvPrivateDB.profileKeys[CharKey()]
+		if not privateKey then return end
+		ElvPrivateDB.profiles[privateKey] = clean
+		self:Print(string.format(L["Imported private (character) settings: %d settings, %d unknown settings skipped."], count, dropped))
+		self:RequestReload("private")
+		return
+	end
+
+	key = key or self:GetProfileKey()
+	if not key then return end
+	-- Only ElvDB counts: every character has private settings under its own
+	-- name, and a profile import does not touch them.
+	if ElvDB.profiles[key] then
+		pendingImport = { key = key, data = clean, count = count, dropped = dropped }
+		local dialog = E.PopupDialogs["IMPORT_PROFILE_EXISTS"]
+		dialog.text = string.format(L["A profile named '%s' already exists. Overwrite it, or keep both and import this one as '%s'?"], key, FreeProfileKey(key))
+		dialog.button1 = L["Overwrite"]
+		dialog.button2 = L["Keep Both"]
+		self:StaticPopup_Show("IMPORT_PROFILE_EXISTS")
+		return
+	end
+
+	StoreProfile(key, clean, count, dropped)
 end
+

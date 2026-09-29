@@ -65,7 +65,16 @@ L["Profile '%s' reset to defaults. /reload to apply."] = true
 L["Refusing to delete the profile this character is using -- switch to another one first."] = true
 L["Deleted profile '%s'."] = true
 L["Import failed -- couldn't parse the pasted text as a Lua table."] = true
-L["Profile imported. /reload to apply."] = true
+L["Error decoding data. Import string may be corrupted!"] = true
+L["This import string uses an older ElvUI format (!E1!) that is no longer supported. Export it again from a current ElvUI."] = true
+L["This string was exported by a newer version of ElvUI (%s, you have %s). Update ElvUI, then import it again."] = true
+L["Importing '%s' settings is not supported yet."] = true
+L["This string was not exported by this addon: its settings are taken over as they are, and differences between the two addons' defaults are not adjusted."] = true
+L["Imported private (character) settings: %d settings, %d unknown settings skipped."] = true
+L["Imported profile '%s': %d settings, %d unknown settings skipped."] = true
+L["A profile named '%s' already exists. Overwrite it, or keep both and import this one as '%s'?"] = true
+L["Overwrite"] = true
+L["Keep Both"] = true
 
 --Static popups
 L["One or more of the changes you have made require a ReloadUI."] = true

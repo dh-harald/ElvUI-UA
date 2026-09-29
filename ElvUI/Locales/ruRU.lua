@@ -23,7 +23,16 @@ L["Profile '%s' reset to defaults. /reload to apply."] = "Профиль '%s' с
 L["Refusing to delete the profile this character is using -- switch to another one first."] = "Нельзя удалить профиль, который использует этот персонаж -- сначала переключитесь на другой."
 L["Deleted profile '%s'."] = "Профиль '%s' удалён."
 L["Import failed -- couldn't parse the pasted text as a Lua table."] = "Ошибка импорта -- вставленный текст не удалось разобрать как таблицу Lua."
-L["Profile imported. /reload to apply."] = "Профиль импортирован. /reload для применения."
+L["Error decoding data. Import string may be corrupted!"] = "Ошибка при кодировании. Импортируемая строка может быть повреждена!"
+L["This import string uses an older ElvUI format (!E1!) that is no longer supported. Export it again from a current ElvUI."] = "Эта строка импорта использует старый формат ElvUI (!E1!), который больше не поддерживается. Экспортируйте её заново из актуального ElvUI."
+L["This string was exported by a newer version of ElvUI (%s, you have %s). Update ElvUI, then import it again."] = "Эта строка экспортирована более новой версией ElvUI (%s, у вас %s). Обновите ElvUI и импортируйте её снова."
+L["Importing '%s' settings is not supported yet."] = "Импорт настроек '%s' пока не поддерживается."
+L["This string was not exported by this addon: its settings are taken over as they are, and differences between the two addons' defaults are not adjusted."] = "Эта строка экспортирована не этим аддоном: её настройки переносятся как есть, различия между значениями по умолчанию двух аддонов не учитываются."
+L["Imported private (character) settings: %d settings, %d unknown settings skipped."] = "Импортированы личные настройки (персонажа): %d настроек, %d неизвестных настроек пропущено."
+L["Imported profile '%s': %d settings, %d unknown settings skipped."] = "Импортирован профиль '%s': %d настроек, %d неизвестных настроек пропущено."
+L["A profile named '%s' already exists. Overwrite it, or keep both and import this one as '%s'?"] = "Профиль с именем '%s' уже существует. Перезаписать его или сохранить оба и импортировать этот как '%s'?"
+L["Overwrite"] = "Перезаписать"
+L["Keep Both"] = "Сохранить оба"
 
 --Static popups
 L["One or more of the changes you have made require a ReloadUI."] = "Одно или несколько изменений требуют перезагрузки интерфейса"

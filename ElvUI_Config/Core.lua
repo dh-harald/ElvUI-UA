@@ -143,16 +143,27 @@ E.Options.args.ResetAllMovers = {
 	func = function() E:StaticPopup_Show("RESET_ALL_MOVERS") end,
 }
 
--- Last-generated export text, empty until the "Generate Export" button
--- is actually clicked. The export field's own `get` used to
--- call E:ExportProfile() live, meaning simply OPENING the Profiles page
--- re-serialized the entire profile table on every render -- surprising
--- (an unasked-for wall of text appearing immediately) and wasteful
--- (Util.TableToLuaString does a full recursive walk + string
--- concatenation, not cheap to redo on every page visit). Real ElvUI's
--- own export is button-triggered too, not continuously live -- matched
--- here.
-local exportText = ""
+-- Export state, following real ElvUI's export tab: the types ticked under
+-- "Choose What To Export" (only the profile by default), and the last
+-- generated string per type. Strings are made only when an export button is
+-- clicked, never by rendering the page: encoding walks the whole stored
+-- profile.
+local exportTypes = { profile = true }
+local exportTexts = {}
+
+local function ExportTypeValues()
+	return { profile = L["Profile"], private = L["Private (Character Settings)"] }
+end
+
+local function GenerateExports(exportFormat)
+	exportTexts = {}
+	local dataType
+	for dataType in pairs(ExportTypeValues()) do
+		if exportTypes[dataType] then
+			exportTexts[dataType] = E:ExportProfile(dataType, exportFormat) or L["Error exporting profile!"]
+		end
+	end
+end
 
 -- Every profile EXCEPT this character's own -- AceDBOptions-3.0 calls this
 -- `arg = "nocurrent"` and uses it for Copy From and Delete, where the active
@@ -344,41 +355,58 @@ E.Options.args.profiles = {
 		exportIntro = {
 			type = "description",
 			order = 91,
-			name = L["A plain Lua table -- NOT the compressed/encoded format some addons use. Click Generate, then select all (Ctrl+A) and copy from the box below to export this character's current profile as text. A profile exported from real ElvUI-vanilla's own \"Export as Lua Table\" option can be pasted into the Import box as-is."],
+			name = L["Export writes the current character's settings as text to share with other players of this addon: tick what to export, click Export (a short \"!E2!\" string, the format of current ElvUI) or Table (a plain Lua table), then select all (Ctrl+A) and copy from the box below. Import takes either format, and also real ElvUI's own exports; each import asks for a reload."],
 		},
-		generateExport = {
-			type = "execute",
-			name = L["Generate Export"],
-			desc = L["(Re)computes the export text below from this character's current profile."],
+		exportTypes = {
+			type = "multiselect",
+			name = L["Choose What To Export"],
 			order = 92,
-			func = function()
-				-- Flattened to ONE line: Util.TableToLuaString puts a
-				-- real newline + indentation between every table entry,
-				-- and a single-line value is both shorter to carry
-				-- around and safe to paste into any one-line field.
-				-- Whitespace makes no difference to loadstring on the
-				-- import side either way.
-				local text = E:ExportProfile()
-				text = string.gsub(text, "\n%s*", " ")
-				exportText = text
-			end,
+			values = ExportTypeValues,
+			get = function(_, key) return exportTypes[key] end,
+			set = function(_, key, value) exportTypes[key] = value or nil end,
 		},
-		export = {
-			type = "input",
-			name = L["Export (read from here)"],
-			width = "full",
-			-- A one-line box cannot show a whole profile, and the value
-			-- is long enough to be worth seeing before copying it.
-			multiline = 8,
+		exportText = {
+			type = "execute",
+			name = L["Export"],
+			desc = L["Export the ticked settings as an \"!E2!\" string, the format of current ElvUI."],
 			order = 93,
-			get = function() return exportText end,
+			func = function() GenerateExports("text") end,
+		},
+		exportTable = {
+			type = "execute",
+			name = L["Table"],
+			desc = L["Export the ticked settings as a plain Lua table."],
+			order = 94,
+			func = function() GenerateExports("luaTable") end,
+		},
+		-- One read-only box per type, shown once it has a string. A one-line
+		-- box cannot show a long string, and the value is worth seeing
+		-- before copying it.
+		exportProfile = {
+			type = "input",
+			name = L["Profile"],
+			width = "full",
+			multiline = 6,
+			order = 95,
+			hidden = function() return not exportTexts.profile end,
+			get = function() return exportTexts.profile or "" end,
+			set = function() end,
+		},
+		exportPrivate = {
+			type = "input",
+			name = L["Private (Character Settings)"],
+			width = "full",
+			multiline = 6,
+			order = 96,
+			hidden = function() return not exportTexts.private end,
+			get = function() return exportTexts.private or "" end,
 			set = function() end,
 		},
 		import = {
 			type = "input",
 			name = L["Import (paste here, press Enter)"],
 			width = "full",
-			order = 94,
+			order = 97,
 			get = function() return "" end,
 			set = function(_, value) E:ImportProfile(value) end,
 		},

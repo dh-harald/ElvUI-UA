@@ -34,6 +34,11 @@ Two addons ship together:
 **Done:**
 - Core engine (profiles, defaults, SavedVariables layout matching real
   ElvUI where practical)
+- Profile export/import in the format of current ElvUI (`!E2!` strings) or
+  as a plain Lua table, for the profile and the character (private)
+  settings; exports only hold what differs from the defaults, and an import
+  drops settings this addon does not know. Import also reads ElvUI-vanilla's
+  own exports (its compressed text and its Lua table)
 - Layout (screen panels, minimap panels, mover system)
 - ActionBars, PetBar/StanceBar, Cooldown text
 - Target aura time on action buttons (later ElvUI's "Target Aura"): a

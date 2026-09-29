@@ -23,7 +23,16 @@ L["Profile '%s' reset to defaults. /reload to apply."] = "Perfil '%s' restableci
 L["Refusing to delete the profile this character is using -- switch to another one first."] = "No se puede eliminar el perfil que este personaje está usando -- cambia antes a otro."
 L["Deleted profile '%s'."] = "Perfil '%s' eliminado."
 L["Import failed -- couldn't parse the pasted text as a Lua table."] = "Error al importar -- el texto pegado no pudo interpretarse como una tabla Lua."
-L["Profile imported. /reload to apply."] = "Perfil importado. /reload para aplicar."
+L["Error decoding data. Import string may be corrupted!"] = "¡Error al decodificar los datos. ¡La cadena de importación puede estar dañada!"
+L["This import string uses an older ElvUI format (!E1!) that is no longer supported. Export it again from a current ElvUI."] = "Esta cadena de importación usa un formato antiguo de ElvUI (!E1!) que ya no es compatible. Vuelve a exportarla desde un ElvUI actual."
+L["This string was exported by a newer version of ElvUI (%s, you have %s). Update ElvUI, then import it again."] = "Esta cadena fue exportada por una versión más reciente de ElvUI (%s, tienes %s). Actualiza ElvUI y vuelve a importarla."
+L["Importing '%s' settings is not supported yet."] = "La importación de ajustes '%s' aún no es compatible."
+L["This string was not exported by this addon: its settings are taken over as they are, and differences between the two addons' defaults are not adjusted."] = "Esta cadena no fue exportada por este addon: sus ajustes se toman tal cual, y las diferencias entre los valores predeterminados de ambos addons no se ajustan."
+L["Imported private (character) settings: %d settings, %d unknown settings skipped."] = "Ajustes privados (del personaje) importados: %d ajustes, %d ajustes desconocidos omitidos."
+L["Imported profile '%s': %d settings, %d unknown settings skipped."] = "Perfil '%s' importado: %d ajustes, %d ajustes desconocidos omitidos."
+L["A profile named '%s' already exists. Overwrite it, or keep both and import this one as '%s'?"] = "Ya existe un perfil llamado '%s'. ¿Sobrescribirlo, o conservar ambos e importar este como '%s'?"
+L["Overwrite"] = "Sobrescribir"
+L["Keep Both"] = "Conservar ambos"
 
 --Static popups
 L["One or more of the changes you have made require a ReloadUI."] = "Uno o más de los cambios que has hecho requieren una recarga de la interfaz."
