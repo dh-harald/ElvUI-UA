@@ -821,6 +821,9 @@ P.unitframe.units = {}
 --                    Custom Text.
 --   customTexts      Real ElvUI schema: a plain table KEYED BY NAME, not
 --                    an array. Populated live via the config UI.
+--   threatStyle      Real ElvUI field/defaults. The 1.12 client has no
+--                    threat API: the only state shown is LibBanzai-1.0's
+--                    "this unit has aggro" (Modules/UnitFrames/Threat.lua).
 
 P.unitframe.units.player = {
 	enable = true,
@@ -829,6 +832,7 @@ P.unitframe.units.player = {
 	healPrediction = true,
 	orientation = "LEFT",
 	colorOverride = "USE_DEFAULT",
+	threatStyle = "GLOW",
 	health = {
 		text_format = "[healthcolor][health:current-percent]",
 		position = "LEFT",
@@ -962,6 +966,7 @@ P.unitframe.units.target = {
 	healPrediction = true,
 	orientation = "RIGHT",
 	colorOverride = "USE_DEFAULT",
+	threatStyle = "GLOW",
 	health = {
 		text_format = "[healthcolor][health:current-percent]",
 		position = "RIGHT",
@@ -1096,6 +1101,7 @@ P.unitframe.units.targettarget = {
 	height = 36,
 	orientation = "MIDDLE",
 	colorOverride = "USE_DEFAULT",
+	threatStyle = "NONE",
 	health = {
 		text_format = "",
 		position = "RIGHT",
@@ -1187,6 +1193,7 @@ P.unitframe.units.pet = {
 	healPrediction = true,
 	orientation = "MIDDLE",
 	colorOverride = "USE_DEFAULT",
+	threatStyle = "GLOW",
 	health = {
 		text_format = "",
 		position = "RIGHT",
@@ -1278,6 +1285,7 @@ P.unitframe.units.pettarget = {
 	height = 26,
 	orientation = "MIDDLE",
 	colorOverride = "USE_DEFAULT",
+	threatStyle = "NONE",
 	health = {
 		text_format = "",
 		position = "RIGHT",
@@ -1358,6 +1366,7 @@ P.unitframe.units.party = {
 	healPrediction = false,
 	orientation = "LEFT",
 	colorOverride = "USE_DEFAULT",
+	threatStyle = "GLOW",
 	health = {
 		text_format = "[healthcolor][health:current-percent]",
 		position = "LEFT",

@@ -2064,6 +2064,11 @@ function UF:UpdateFrame(frame)
 	-- Matches real ElvUI's own "stay visible for positioning while
 	-- unlocked" behavior in its own mover/test mode.
 	local okExists, exists = pcall(UnitExists, unit)
+	-- Before the early return below: the threat parts are hidden one by
+	-- one when the unit is gone (Threat.lua).
+	if self.UpdateThreat then
+		pcall(self.UpdateThreat, self, frame, unit, settings, okExists and ElvUI.Compat.bool(exists))
+	end
 	if (not okExists or not exists) and not E.moversUnlocked then
 		frame:Hide()
 		return

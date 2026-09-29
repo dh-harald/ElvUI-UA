@@ -6,6 +6,7 @@
 	<Script file="OwnAuras.lua"/>
 	<Script file="CastTracker.lua"/>
 	<Script file="ComboPoints.lua"/>
+	<Script file="Threat.lua"/>
 	<!-- Real 1.12.1 cannot load a <Script> from a subdirectory (silent
 	     "Error loading Units\Player.lua" in Logs\FrameXML.log). <Include>
 	     of a subdirectory XML does work, so every subdirectory gets its

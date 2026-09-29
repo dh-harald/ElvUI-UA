@@ -1120,6 +1120,35 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasHappin
 		}
 	end
 
+	-- Real ElvUI's key, values and per-unit orders; the frames pick a change
+	-- up on their next poll pass (Modules/UnitFrames/Threat.lua).
+	if P.unitframe.units[dbKey] and P.unitframe.units[dbKey].threatStyle ~= nil then
+		local orders = { player = 11, target = 12, targettarget = 10, pet = 11, pettarget = 10, party = 6 }
+		args.generalGroup.args.threatStyle = {
+			type = "select",
+			name = L["Threat Display Mode"],
+			desc = L["The client has no threat data: shown only while the unit has aggro, that is, a hostile unit targeted by a group member is targeting it."],
+			order = orders[dbKey] or 11,
+			values = {
+				["GLOW"] = L["Glow"],
+				["BORDERS"] = L["Borders"],
+				["HEALTHBORDER"] = L["Health Border"],
+				["INFOPANELBORDER"] = L["InfoPanel Border"],
+				["ICONTOPLEFT"] = L["Icon: TOPLEFT"],
+				["ICONTOPRIGHT"] = L["Icon: TOPRIGHT"],
+				["ICONBOTTOMLEFT"] = L["Icon: BOTTOMLEFT"],
+				["ICONBOTTOMRIGHT"] = L["Icon: BOTTOMRIGHT"],
+				["ICONLEFT"] = L["Icon: LEFT"],
+				["ICONRIGHT"] = L["Icon: RIGHT"],
+				["ICONTOP"] = L["Icon: TOP"],
+				["ICONBOTTOM"] = L["Icon: BOTTOM"],
+				["NONE"] = L["None"],
+			},
+			get = function() return unitTable().threatStyle end,
+			set = function(_, value) unitTable().threatStyle = value end,
+		}
+	end
+
 	return args
 end
 

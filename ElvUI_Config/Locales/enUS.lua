@@ -582,6 +582,20 @@ L["Spaced"] = true
 L["Auto-Hide"] = true
 L["Class Resources"] = true
 L["Combo Point"] = true
+L["Threat Display Mode"] = true
+L["The client has no threat data: shown only while the unit has aggro, that is, a hostile unit targeted by a group member is targeting it."] = true
+L["Glow"] = true
+L["Borders"] = true
+L["Health Border"] = true
+L["InfoPanel Border"] = true
+L["Icon: TOPLEFT"] = true
+L["Icon: TOPRIGHT"] = true
+L["Icon: BOTTOMLEFT"] = true
+L["Icon: BOTTOMRIGHT"] = true
+L["Icon: LEFT"] = true
+L["Icon: RIGHT"] = true
+L["Icon: TOP"] = true
+L["Icon: BOTTOM"] = true
 
 --DataBars
 L["DataBars"] = true
