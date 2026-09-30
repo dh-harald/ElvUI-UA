@@ -113,13 +113,26 @@ local ZONE_COLORS = {
 	default = { 1, 1, 1 },
 }
 
+-- Real ElvUI's list (Maps/Minimap.lua). `MinimapZoneTextButton` carries the
+-- native gold zone name; this module draws its own (`ElvUIMinimapZoneText`)
+-- in the holder's header, right where the native one sits. The two `*Border`
+-- entries are the round gold rings around the mail and battleground icons;
+-- only the ring goes, the icons themselves stay.
 local CHROME_TO_HIDE = {
 	"MinimapBorder",
 	"MinimapBorderTop",
 	"MinimapToggleButton",
 	"MinimapZoomIn",
 	"MinimapZoomOut",
+	"MinimapZoneTextButton",
+	"MiniMapMailBorder",
+	"MiniMapBattlefieldBorder",
 }
+
+-- Real ElvUI's own envelope for the new-mail icon, in place of the native
+-- `INV_Letter_15` (the path's case matches the file on disk, which Unreal
+-- Azeroth requires).
+local MAIL_ICON_TEXTURE = "Interface\\AddOns\\ElvUI\\Media\\Textures\\mail"
 
 local function HideChrome()
 	for _, name in ipairs(CHROME_TO_HIDE) do
@@ -127,6 +140,11 @@ local function HideChrome()
 		if frame then
 			pcall(frame.Hide, frame)
 		end
+	end
+
+	local mailIcon = _G.MiniMapMailIcon
+	if mailIcon then
+		pcall(mailIcon.SetTexture, mailIcon, MAIL_ICON_TEXTURE)
 	end
 end
 
