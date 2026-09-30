@@ -1,3 +1,10 @@
+## [0.10.1](https://github.com/dh-harald/ElvUI-UA/compare/v0.10.0...v0.10.1) (2026-09-30)
+
+
+### Bug Fixes
+
+* LibStub again ([2b0a553](https://github.com/dh-harald/ElvUI-UA/commit/2b0a553718e6234d519ed8392c982801c6d129c3))
+
 # [0.10.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.9.0...v0.10.0) (2026-09-30)
 
 
