@@ -11,6 +11,7 @@
 # in that order after the rest, all .pkgmeta externals. LibMobHealth40DB/LibMobHealth40Opt are LibMobHealth-4.0's
 # account-wide mob health database and settings; the library adopts them at
 # PLAYER_LOGIN.
+Libraries\LibStub\LibStub.lua
 Libraries\Load_Libraries.xml
 Locales\Load_Locales.xml
 Media\Load_Media.xml
