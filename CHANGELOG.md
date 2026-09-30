@@ -1,3 +1,32 @@
+# [0.10.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.9.0...v0.10.0) (2026-09-30)
+
+
+### Bug Fixes
+
+* add more tags from retail/classic ElvUI ([016a172](https://github.com/dh-harald/ElvUI-UA/commit/016a1728d524317d9123d763b9fabde8cdd492c3))
+* **aura:** refactor aura durations to LibVanillaDurations-1.0 ([c2c8125](https://github.com/dh-harald/ElvUI-UA/commit/c2c8125eedb6a60ad3a08ef115a9846f792a7a1d))
+* **installer:** add bar positions for classes ([516672c](https://github.com/dh-harald/ElvUI-UA/commit/516672c3b838638a5e3fc9f9a4df4a826d069bb8))
+* **minimap:** move minimap to BACKGROUND strata (as original) ([ded5edd](https://github.com/dh-harald/ElvUI-UA/commit/ded5edd8cfd0579f5b2ec1a4d00678c508a95cdb))
+* **minimap:** remove zone text, template mail icon ([a5523e5](https://github.com/dh-harald/ElvUI-UA/commit/a5523e542956c3bc8ed775b8d08bfce5d14e831b))
+* **profiles:** restore aura only settings after the update ([05a2d0f](https://github.com/dh-harald/ElvUI-UA/commit/05a2d0fe09a179e524c1139502df3ec355bf9e68))
+* **unitframes:** show stancebar buttons ([0126bec](https://github.com/dh-harald/ElvUI-UA/commit/0126bec957af3a990820902fa6d604a5dfbc2b27))
+* **worldmap:** make smaller worldmap draggable. ([85fcfae](https://github.com/dh-harald/ElvUI-UA/commit/85fcfae6a9b2a5ed0ad38918379abaefbade8b4a))
+
+
+### Features
+
+* add threat handling with LibBanzai-1.0 ([27d7e03](https://github.com/dh-harald/ElvUI-UA/commit/27d7e03f648b07d54c8d8c383ff7bf715368f899))
+* **aura:** add temporary weapon enchants to aurabar ([065d685](https://github.com/dh-harald/ElvUI-UA/commit/065d68544d6f128b9fe44d6846d275c15ac2042c))
+* **aurabars:** initial commit ([af1c729](https://github.com/dh-harald/ElvUI-UA/commit/af1c729003ba77b2efcd7120f6247e94ba0029c1))
+* import pet happyness with tags from classic ElvUI ([ec3c516](https://github.com/dh-harald/ElvUI-UA/commit/ec3c51608b659fc15792ec4e36e65bc2bfcd7a7d))
+* **modules:** add Auto Track Reputation ([7a7e51d](https://github.com/dh-harald/ElvUI-UA/commit/7a7e51d89f8bbccc20a8bfff4664cab922337c68))
+* **modules:** misc/AFK ([6b8e5d3](https://github.com/dh-harald/ElvUI-UA/commit/6b8e5d35e39ec0fcff55720d49ed8a39ecd93f98))
+* **profiles:** export import into string ([f7c2e09](https://github.com/dh-harald/ElvUI-UA/commit/f7c2e09288156b99f9475c603892a1b445d56769))
+* **profiles:** initial retail/classic import ([18022c5](https://github.com/dh-harald/ElvUI-UA/commit/18022c544aa839a99517ca0965bb9995c50a9a0b))
+* **skin:** add Bag, MirrorTimers skin alongside with the modules ([27bc06b](https://github.com/dh-harald/ElvUI-UA/commit/27bc06b732031cc5cf2ca8368aef9bc81631a8c3))
+* **skin:** add worldmap skin ([d216200](https://github.com/dh-harald/ElvUI-UA/commit/d216200f50d9d98f9fbc421d8b31b01599bee47a))
+* **unitframes:** tagparser ([0613bae](https://github.com/dh-harald/ElvUI-UA/commit/0613bae9f1d62ad21b4ffdc288d855d15a457a46))
+
 # [0.9.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.8.0...v0.9.0) (2026-09-28)
 
 
