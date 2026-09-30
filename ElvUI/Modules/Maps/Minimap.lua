@@ -300,6 +300,11 @@ local ICON_FRAMES = {
 	battlefield = "MiniMapBattlefieldFrame",
 }
 
+-- Frame level of the native minimap icons below; matches LibDBIcon-1.0's
+-- button level (Ace3v), so both kinds of minimap button share one level in
+-- the minimap's own strata.
+local ICON_LEVEL = 20
+
 -- Icon frames (GameTimeFrame/MiniMapMailFrame/MiniMapBattlefieldFrame)
 -- are pre-existing native Blizzard children of Minimap; repositioning
 -- them here needs both a frame-strata and frame-level fix below to avoid
@@ -322,35 +327,25 @@ function M:UpdateIcons()
 				pcall(frame.SetPoint, frame, pos, Minimap, pos, cfg.xOffset or 0, cfg.yOffset or 0)
 				pcall(frame.SetScale, frame, cfg.scale or 1)
 
-				-- `Minimap` is REPARENTED onto `holder` in M:Initialize
-				-- (`Minimap:SetParent(holder)`) -- reparenting changes a
-				-- frame's PARENT, not its own STRATA, so `Minimap` still
-				-- carries whatever strata it had as an original
-				-- `MinimapCluster` child, while these icon frames are never
-				-- touched and keep their own original strata. STRATA takes
-				-- priority over LEVEL in WoW's own compositing order -- a
-				-- frame in a LOWER strata can never render above one in a
-				-- HIGHER strata, at ANY frame level -- so an icon whose
-				-- strata ends up below Minimap's gets visually occluded by
-				-- the square Minimap frame wherever they overlap, and
-				-- bumping its frame LEVEL alone (which only matters WITHIN
-				-- one strata) can't fix that. Explicitly copying `Minimap`'s
-				-- own current strata onto each icon guarantees they share a
-				-- strata with it, making the frame-level bump below
-				-- meaningful.
+				-- `Minimap` is REPARENTED onto `holder` in M:Initialize, while
+				-- these icon frames stay children of MinimapCluster, so the
+				-- two can end up in different stratas. STRATA takes priority
+				-- over LEVEL in WoW's compositing order -- a frame in a lower
+				-- strata never renders above one in a higher strata, at any
+				-- frame level -- so an icon left below Minimap's strata is
+				-- occluded by the square Minimap frame. Copying `Minimap`'s
+				-- current strata onto each icon puts them in one strata, and
+				-- the level below then decides.
 				local okStrata, minimapStrata = pcall(Minimap.GetFrameStrata, Minimap)
 				if okStrata and minimapStrata then
 					pcall(frame.SetFrameStrata, frame, minimapStrata)
 				end
 
-				-- Bumping the icon's level above Minimap's current level --
-				-- same technique used for wheelCatcher below -- puts it
-				-- back on top regardless of what reparenting changed the
-				-- ordering to. Applied to all three icons for consistency,
-				-- even though only the calendar icon was ever confirmed
-				-- affected.
-				local okLevel, minimapLevel = pcall(Minimap.GetFrameLevel, Minimap)
-				pcall(frame.SetFrameLevel, frame, (okLevel and minimapLevel or 0) + 5)
+				-- The same high level LibDBIcon-1.0 gives its minimap
+				-- buttons, so every button on the minimap sits on one level,
+				-- clear of the minimap and of the wheel catcher (minimap
+				-- level + 5).
+				pcall(frame.SetFrameLevel, frame, ICON_LEVEL)
 
 				-- Real ElvUI only force-Shows the calendar icon (tied to
 				-- hideCalendar above) -- mail/battlefield are deliberately
@@ -461,6 +456,14 @@ function M:Initialize()
 	local size = E.db.general.minimap.size or 176
 
 	local holder = CreateFrame("Frame", "ElvUIMinimapHolder", UIParent)
+	-- The native Minimap lives in MinimapCluster, which is BACKGROUND strata
+	-- (FrameXML Minimap.xml), and real ElvUI leaves it there. A plain child of
+	-- UIParent would be MEDIUM, and the reparented Minimap, the data panels
+	-- under it (Layout.lua) and every other child of this holder take the
+	-- holder's strata -- which put the whole corner level with the native
+	-- MEDIUM windows, so a bag column climbing into it opened underneath.
+	-- Set before any child is created and before the reparent below.
+	holder:SetFrameStrata("BACKGROUND")
 	holder:SetWidth(size + 8)
 	holder:SetHeight(size + 8 + HEADER_HEIGHT)
 	holder:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -4, -4)
