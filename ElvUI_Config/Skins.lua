@@ -114,6 +114,7 @@ E.Options.args.skins = {
 				},
 				trade = { type = "toggle", name = L["Trade"], desc = SKIN_DESC },
 				taxi = { type = "toggle", name = L["Taxi Frame"], desc = SKIN_DESC },
+				worldmap = { type = "toggle", name = L["World Map"], desc = SKIN_DESC },
 				inspect = { type = "toggle", name = L["Inspect"], desc = SKIN_DESC },
 				stable = { type = "toggle", name = L["Stable"], desc = SKIN_DESC },
 				dressingroom = { type = "toggle", name = L["Dressing Room"], desc = SKIN_DESC },

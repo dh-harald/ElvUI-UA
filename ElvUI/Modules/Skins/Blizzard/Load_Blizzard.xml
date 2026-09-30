@@ -16,6 +16,7 @@
 	<Script file="Merchant.lua"/>
 	<Script file="Trade.lua"/>
 	<Script file="Taxi.lua"/>
+	<Script file="WorldMap.lua"/>
 	<Script file="Inspect.lua"/>
 	<Script file="Stable.lua"/>
 	<Script file="DressingRoom.lua"/>

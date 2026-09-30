@@ -3,12 +3,9 @@
 -- Real ElvUI's own WorldMap.lua (ElvUI-vanilla/ElvUI/Modules/Maps/
 -- WorldMap.lua) does two things: a player/cursor coordinate readout
 -- (CONFIRMED WORKING in-game -- see CreateCoordsHolder/Refresh below) and
--- "Smaller World Map" (ApplySmallerWorldMap below -- untested). Its own
--- separate Skins/Blizzard/WorldMap.lua (dropdown/button/backdrop
--- reskinning) needs core Skins-module helpers (E:StripTextures/
--- E:CreateBackdrop/E:Point/S:HandleDropDownBox/S:HandleButton) that don't
--- exist anywhere in this project yet -- still deferred, not attempted
--- here.
+-- "Smaller World Map" (ApplySmallerWorldMap below -- untested). The map
+-- window's chrome is styled separately, by Skins/Blizzard/WorldMap.lua
+-- (`E.private.skins.blizzard.worldmap`).
 --
 -- UA construction pattern for the coordinate readout deliberately copied
 -- from UnrealUI's OWN worldmap.lua (UnrealUI/modules/worldmap.lua),
@@ -185,8 +182,90 @@ function M:ApplySmallerWorldMap()
 	end
 end
 
+-- Zone dropdown in alphabetical order. Unreal Azeroth's `GetMapZones`
+-- returns a continent's zones unsorted (the legacy client returns them
+-- sorted), and the native dropdown lists them in that order, using the
+-- list POSITION both as the `SetMapZoom` zone index and as the selected
+-- entry (`UIDropDownMenu_SetSelectedID(..., GetCurrentMapZone())`). Only the
+-- two map-dropdown globals are replaced, each keeping a position -> zone
+-- index table so clicks and the check mark still resolve to the real
+-- index. `GetMapZones` itself is left alone: other addons address zones by
+-- that index. An already sorted list maps to itself, so where the client
+-- sorts, nothing changes.
+local zoneOrder = {}
+
+local function ZoneEntryLess(a, b)
+	local la, lb = string.lower(a.name), string.lower(b.name)
+	if la ~= lb then return la < lb end
+	return a.index < b.index
+end
+
+-- Rebuilds `zoneOrder` for the current continent and returns the sorted
+-- entries ({ name, index }).
+local function BuildZoneOrder()
+	local ok, zones = pcall(function() return { GetMapZones(GetCurrentMapContinent()) } end)
+	local entries = {}
+	for k in pairs(zoneOrder) do zoneOrder[k] = nil end
+	if not ok or type(zones) ~= "table" then return entries end
+
+	local n = table.getn(zones)
+	local i
+	for i = 1, n do
+		entries[i] = { name = tostring(zones[i]), index = i }
+	end
+	table.sort(entries, ZoneEntryLess)
+	for i = 1, n do
+		zoneOrder[i] = entries[i].index
+	end
+	return entries
+end
+
+local function ZoneButton_OnClick()
+	local pos = this:GetID()
+	UIDropDownMenu_SetSelectedID(_G.WorldMapZoneDropDown, pos)
+	SetMapZoom(GetCurrentMapContinent(), zoneOrder[pos] or pos)
+end
+
+local function ZoneDropDown_Initialize()
+	local entries = BuildZoneOrder()
+	local i
+	for i = 1, table.getn(entries) do
+		UIDropDownMenu_AddButton({ text = entries[i].name, func = ZoneButton_OnClick })
+	end
+end
+
+local function UpdateZoneDropDownText()
+	local dropdown = _G.WorldMapZoneDropDown
+	local zone = GetCurrentMapZone()
+	if zone == 0 then
+		UIDropDownMenu_ClearAll(dropdown)
+		return
+	end
+	BuildZoneOrder()
+	for pos, index in pairs(zoneOrder) do
+		if index == zone then
+			UIDropDownMenu_SetSelectedID(dropdown, pos)
+			return
+		end
+	end
+	UIDropDownMenu_SetSelectedID(dropdown, zone)
+end
+
+-- The native dropdown's OnShow/OnEvent look both globals up by name on
+-- every call, so replacing them takes effect from the next map open.
+function M:SortZoneDropDown()
+	if type(_G.WorldMapZoneDropDown_Initialize) ~= "function"
+		or type(_G.WorldMap_UpdateZoneDropDownText) ~= "function"
+		or type(GetMapZones) ~= "function" or type(SetMapZoom) ~= "function" then
+		return
+	end
+	_G.WorldMapZoneDropDown_Initialize = ZoneDropDown_Initialize
+	_G.WorldMap_UpdateZoneDropDownText = UpdateZoneDropDownText
+end
+
 function M:Initialize()
 	self:ApplySmallerWorldMap()
+	self:SortZoneDropDown()
 
 	if not E.global.general.WorldMapCoordinates.enable then
 		return

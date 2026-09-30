@@ -122,6 +122,7 @@ V.skins = {
 		merchant = true,
 		trade = true,
 		taxi = true,
+		worldmap = true,
 		inspect = true,
 		stable = true,
 		dressingroom = true,

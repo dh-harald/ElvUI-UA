@@ -129,7 +129,8 @@ Two addons ship together:
   place (Character, Friends, SpellBook, Macro, Key Bindings, Main Menu,
   Interface/Video/Sound Options, Gossip/Greeting/Quest/QuestLog,
   Merchant, Trade, Taxi, Pet Stable, Talents, Trade Skills, Enchanting,
-  Trainer, Mail, Auction House, Dressing Room, Stack Split, and more).
+  Trainer, Mail, Auction House, Dressing Room, World Map, Stack Split, and
+  more).
   Where ElvUI has its own module for a window (Bags/Bank, Mailbox, Mirror
   Timers), the module decides its look while it is on; with the module off,
   the window's skin toggle takes over, so e.g. the native bags and bank can
@@ -150,8 +151,8 @@ Two addons ship together:
   lines are not yet
   shown on action buttons (the client offers no way to read the item of an
   action slot)
-- A handful of native windows not yet reskinned (Tabard, World Map polish,
-  and a few more niche ones)
+- A handful of native windows not yet reskinned (Tabard and a few more
+  niche ones)
 - Nameplate customization — blocked by a client-side limitation on
   Unreal Azeroth, parked until that changes
 - Heal prediction: channelled heals (Tranquility, Mend Pet, bandages) are not

@@ -5125,6 +5125,16 @@ function S:StyleDropDownBox(dd)
 		pcall(btn.SetDisabledTexture, btn, "")
 		pcall(btn.DisableDrawLayer, btn, "ARTWORK")
 
+		-- Raising the dropdown's level above does not carry its children
+		-- along: a dropdown that started below level 4 (e.g. on a parentless
+		-- fullscreen frame such as `WorldMapFrame`) keeps its arrow button at
+		-- the old level, under the box surface at `ddLevel - 1`.
+		local okBtnLevel, btnLevel = pcall(btn.GetFrameLevel, btn)
+		btnLevel = okBtnLevel and tonumber(btnLevel)
+		if not btnLevel or btnLevel <= ddLevel then
+			pcall(btn.SetFrameLevel, btn, ddLevel + 1)
+		end
+
 		if not btn.elvGlyph then
 			local icon = btn:CreateTexture(nil, "OVERLAY")
 			icon:SetWidth(10)
@@ -5136,8 +5146,12 @@ function S:StyleDropDownBox(dd)
 			end
 			btn.elvGlyph = icon
 		end
+		-- Right-aligned, not centred: the centre of the native 24px button,
+		-- but it stays at the box's right end when an addon widens the
+		-- button over the whole box via `UIDropDownMenu_SetButtonWidth`
+		-- (pfQuest's world map dropdown does, on every show).
 		pcall(btn.elvGlyph.ClearAllPoints, btn.elvGlyph)
-		pcall(btn.elvGlyph.SetPoint, btn.elvGlyph, "CENTER", btn, "CENTER", 0, 0)
+		pcall(btn.elvGlyph.SetPoint, btn.elvGlyph, "RIGHT", btn, "RIGHT", -7, 0)
 	end
 end
 
