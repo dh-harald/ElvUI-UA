@@ -103,6 +103,10 @@ Two addons ship together:
   Automatic); right-clicking a mob you can attack never leaves the form
 - Auto track reputation: the reputation bar switches to the faction you
   just gained reputation with (General → General → Auto Track Reputation)
+- AFK screen: while you are away the UI is hidden and a panel shows your
+  character, guild and the time away, with whispers and guild chat listed
+  in the corner; a key press or click brings the UI back and clears AFK (General →
+  General → AFK Mode)
 - Tooltip: class/reaction-coloured unit tooltips, guild rank,
   level/classification line, target and "targeted by" info, movable anchor
   or cursor anchor, flat ElvUI skin, health bar with health text, sell
@@ -154,8 +158,8 @@ Two addons ship together:
   predicted, Chain Heal only on its first target, and another player's
   heal-over-time only by estimate until its first tick (the HealComm protocol
   carries no amount for it). Pets and NPCs get no prediction.
-- A few smaller ElvUI features (auto-track reputation, chat-anchored
-  data panels) are researched but not built yet
+- A few smaller ElvUI features (chat-anchored data panels) are researched
+  but not built yet
 
 ## Known issues
 

@@ -103,6 +103,8 @@ P.general = {
 	-- Read by Modules/Misc/AutoTrackReputation.lua (retail ElvUI's key and
 	-- default; its installer turns it on).
 	autoTrackReputation = false,
+	-- Read by Modules/Misc/AFK.lua.
+	afk = true,
 	autoRoll = false,
 	bottomPanel = true,
 

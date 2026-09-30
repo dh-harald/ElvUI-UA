@@ -8,4 +8,5 @@
 	<Script file="Totems.lua"/>
 	<Script file="CancelForm.lua"/>
 	<Script file="AutoTrackReputation.lua"/>
+	<Script file="AFK.lua"/>
 </Ui>

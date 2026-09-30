@@ -453,3 +453,74 @@ function Compat.GetWeaponEnchants()
 	end
 	return list
 end
+
+-- UnitIsAFK: absent on both clients (the 1.12.1 FrameXML never calls it).
+-- The native function is used where a client has it; otherwise the player's
+-- own AFK flag is tracked from CHAT_MSG_SYSTEM: any "You are now AFK"
+-- (MARKED_AFK_MESSAGE, whatever the away text) sets it, CLEARED_AFK clears
+-- it. Other units cannot be tracked and read as nil. The tracked flag starts
+-- false, so after a /reload while away it reads false until the next AFK
+-- message.
+--
+-- Compat.ClearAFK clears the flag. The only way on these clients is the AFK
+-- chat command, which toggles, so it is sent only while the flag is set.
+-- Should the flag have been cleared without a message (the "now AFK" reply
+-- then shows the command set it instead), the command is sent once more,
+-- so the end result is always cleared. Unreal Azeroth needs this more than
+-- the legacy client: it never clears the flag on movement or input.
+local AFK_CLEAR_WINDOW = 5
+local afkState = { flag = false, clearSent = nil, retried = false }
+
+-- "AFK" for a "now AFK" message, "CLEARED" for the "no longer AFK" one, nil
+-- for anything else.
+function Compat.AFKMessage(msg)
+	if type(msg) ~= "string" then return nil end
+	if msg == _G.CLEARED_AFK then return "CLEARED" end
+	local fmt = _G.MARKED_AFK_MESSAGE
+	if type(fmt) ~= "string" then return nil end
+	local at = string.find(fmt, "%s", 1, true)
+	if not at or at < 2 then return nil end
+	local prefix = string.sub(fmt, 1, at - 1)
+	if string.sub(msg, 1, string.len(prefix)) == prefix then return "AFK" end
+	return nil
+end
+
+local function SendAFKCommand(retry)
+	afkState.clearSent = GetTime()
+	afkState.retried = retry
+	pcall(SendChatMessage, "", "AFK")
+end
+
+-- True while a "now AFK" message may be the reply to Compat.ClearAFK's own
+-- command rather than the player going away.
+function Compat.IsClearingAFK()
+	return afkState.clearSent ~= nil and GetTime() - afkState.clearSent < AFK_CLEAR_WINDOW
+end
+
+local afkListener = CreateFrame("Frame")
+afkListener:RegisterEvent("CHAT_MSG_SYSTEM")
+afkListener:SetScript("OnEvent", function()
+	local kind = Compat.AFKMessage(arg1)
+	if kind == "CLEARED" then
+		afkState.flag = false
+		afkState.clearSent = nil
+	elseif kind == "AFK" then
+		afkState.flag = true
+		if Compat.IsClearingAFK() and not afkState.retried then
+			SendAFKCommand(true)
+		end
+	end
+end)
+
+function Compat.UnitIsAFK(unit)
+	if type(UnitIsAFK) == "function" then
+		local ok, value = pcall(UnitIsAFK, unit)
+		if ok then return Compat.bool(value) end
+	end
+	if unit == "player" then return afkState.flag end
+	return nil
+end
+
+function Compat.ClearAFK()
+	if Compat.UnitIsAFK("player") then SendAFKCommand(false) end
+end

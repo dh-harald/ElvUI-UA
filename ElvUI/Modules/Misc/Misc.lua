@@ -1,13 +1,14 @@
 -- Misc module -- the catch-all real ElvUI keeps for small features that
 -- don't earn a module of their own (ElvUI-vanilla/ElvUI/Modules/
 -- Misc/). Ported so far: the solo loot window, the raid marker ring, the
--- group loot roll bars, auto repair, interrupt announce and the totem
--- tracker, plus two features real ElvUI does not have: leaving Druid form
+-- group loot roll bars, auto repair, interrupt announce, the totem
+-- tracker and the AFK screen (a module of its own in real ElvUI), plus two
+-- features real ElvUI does not have: leaving Druid form
 -- when it blocks an action (CancelForm.lua) and the colour
 -- picker replacement (real ElvUI keeps that one in Modules/Blizzard/, a
 -- module this project does not have); the rest of that folder's surface
 -- (enhanced PvP messages, auto invite, error-frame toggle,
--- forced CVars, AFK screen, chat bubbles) is not. Each feature is its own file beside
+-- forced CVars, chat bubbles) is not. Each feature is its own file beside
 -- Loot.lua, defining one M:Load*() that Initialize below calls -- the same
 -- arrangement real ElvUI's own Misc.lua uses. Auto repair is the exception:
 -- real ElvUI keeps it in Misc.lua itself, and so does this file.
@@ -57,6 +58,7 @@ function M:Initialize()
 	self:LoadTotems()
 	self:LoadCancelForm()
 	self:LoadAutoTrackReputation()
+	self:LoadAFK()
 
 	-- AceEvent passes no event arguments on UA; none are needed.
 	self:RegisterEvent("MERCHANT_SHOW", function() M:AutoRepair() end)

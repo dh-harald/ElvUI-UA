@@ -284,6 +284,18 @@ E.Options.args.general = {
 						E:GetModule("Layout"):TopPanelVisibility()
 					end,
 				},
+				-- Read by Modules/Misc/AFK.lua; the setter registers or
+				-- drops its events at once.
+				afk = {
+					order = 15,
+					type = "toggle",
+					name = L["AFK Mode"],
+					desc = L["When you go AFK display the AFK screen."],
+					set = function(_, value)
+						E.db.general.afk = value
+						E:GetModule("Misc"):ToggleAFK()
+					end,
+				},
 				-- Number abbreviation. Real ElvUI's own orders (20/21) and value
 				-- set. Both are read LIVE by `E:ShortValue` (Core/Util.lua), so
 				-- no reload popup here: the unit frames repaint on their own
