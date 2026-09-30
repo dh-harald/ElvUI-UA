@@ -238,3 +238,218 @@ function Compat.GetInventoryItemDurability(slot)
 		return current, maximum
 	end
 end
+
+-- GetWeaponEnchants: the player's temporary weapon enchants (shaman weapon
+-- imbues, rogue poisons, sharpening stones, oils) as buff-like entries. On
+-- both clients these are not auras -- UnitBuff/GetPlayerBuff never list
+-- them, and GetWeaponEnchantInfo reports only presence, time and charges,
+-- with no name or icon. Returns a list, main hand first, of:
+--   slot      16 (main hand) or 17 (off hand), for SetInventoryItem
+--   texture   the enchanting spell's icon when the enchant is known to
+--             ENCHANT_ICONS below, otherwise the weapon's own icon (real
+--             ElvUI's Auras module always shows the weapon)
+--   isWeaponIcon  true when `texture` is the weapon's icon
+--   name      the enchant's name from the weapon tooltip ("Rockbiter 2"),
+--             nil when no tooltip line matched
+--   timeLeft  seconds remaining, or nil
+--   charges   charges remaining (0 for an enchant without charges)
+-- An enchant is left out when the player already has a buff of the same
+-- name, with or without its trailing rank number, so a client that lists
+-- weapon enchants among the buffs itself does not show them twice.
+--
+-- GetWeaponEnchantInfo's time is in milliseconds (fractional on UA), and its
+-- "has" flags are 1/nil on the 1.12 client, hence Compat.bool.
+--
+-- Tooltip scans are cached, since the Auras module asks ten times a second:
+-- the enchant name is re-read only when the weapon changes, when an enchant
+-- appears, or when its time or charges jump upwards (a re-application,
+-- possibly of a different poison); a buff name only when the buff at that
+-- index changes texture.
+local ENCHANT_SCAN_TOOLTIP = "ElvUICompat_EnchantScanTooltip"
+local WEAPON_SLOTS = { 16, 17 }
+-- The weapon tooltip's green enchant line, "<name> (<n> <unit>)".
+local ENCHANT_TIME_FORMATS = {
+	"ITEM_ENCHANT_TIME_LEFT_SEC",
+	"ITEM_ENCHANT_TIME_LEFT_MIN",
+	"ITEM_ENCHANT_TIME_LEFT_HOURS",
+	"ITEM_ENCHANT_TIME_LEFT_HOURS_P1",
+	"ITEM_ENCHANT_TIME_LEFT_DAYS",
+	"ITEM_ENCHANT_TIME_LEFT_DAYS_P1",
+}
+local MAX_PLAYER_BUFFS = 32
+
+-- Icon of the spell behind an enchant, keyed by the enchant's name as the
+-- weapon tooltip shows it with the rank stripped ("Rockbiter 2" ->
+-- "Rockbiter", "Instant Poison III" -> "Instant Poison"). Icons from pfUI's
+-- spell table (env/locales_enUS.lua). English names only: on another client
+-- language, and for enchants not listed (sharpening stones, weightstones,
+-- oils), the entry keeps the weapon's icon.
+local ENCHANT_ICONS = {
+	["Rockbiter"] = "Spell_Nature_RockBiter",
+	["Flametongue"] = "Spell_Fire_FlameTounge",
+	["Frostbrand"] = "Spell_Frost_FrostBrand",
+	["Windfury"] = "Spell_Nature_Cyclone",
+	["Windfury Totem"] = "Spell_Nature_Windfury",
+	["Flametongue Totem"] = "Spell_Nature_GuardianWard",
+	["Instant Poison"] = "Ability_Poisons",
+	["Deadly Poison"] = "Ability_Rogue_DualWeild",
+	["Crippling Poison"] = "Ability_PoisonSting",
+	["Mind-numbing Poison"] = "Spell_Nature_NullifyDisease",
+	["Wound Poison"] = "INV_Misc_Herb_16",
+}
+
+-- "Rockbiter 2" -> "Rockbiter", "Instant Poison III" -> "Instant Poison".
+local function StripRank(name)
+	local base = string.gsub(name, "%s+%d+$", "")
+	base = string.gsub(base, "%s+[IVX]+$", "")
+	return base
+end
+
+local function EnchantIcon(name)
+	local icon = name and ENCHANT_ICONS[StripRank(name)]
+	return icon and ("Interface\\Icons\\"..icon) or nil
+end
+
+local enchantScanTooltip
+local enchantPatterns
+local enchantCache = {}
+local buffNameCache = {}
+
+-- "%s (%d min)" -> "^(.+) %(%d+ min%)$": every pattern character escaped,
+-- then %s captures the name and %d matches the number.
+local function FormatToPattern(fmt)
+	local pattern = string.gsub(fmt, "([%(%)%.%+%-%*%?%[%]%^%$%%])", "%%%1")
+	pattern = string.gsub(pattern, "%%%%s", "(.+)")
+	pattern = string.gsub(pattern, "%%%%d", "%%d+")
+	return "^"..pattern.."$"
+end
+
+-- Fills the scan tooltip through tip[method](tip, a1, a2) and returns it, or
+-- nil. The owner is set on every scan: Hide clears it, and on the 1.12 client
+-- an unowned tooltip is not filled. The caller hides it again, because with
+-- ANCHOR_NONE a filled tooltip stays drawn in the bottom-left corner.
+local function FillScanTooltip(method, a1, a2)
+	if not enchantScanTooltip then
+		local ok, tip = pcall(CreateFrame, "GameTooltip", ENCHANT_SCAN_TOOLTIP, nil, "GameTooltipTemplate")
+		if not ok or not tip then return nil end
+		enchantScanTooltip = tip
+	end
+	local tip = enchantScanTooltip
+	pcall(tip.SetOwner, tip, UIParent, "ANCHOR_NONE")
+	pcall(tip.ClearLines, tip)
+	if not pcall(tip[method], tip, a1, a2) then
+		pcall(tip.Hide, tip)
+		return nil
+	end
+	return tip
+end
+
+local function ScanEnchantName(slot)
+	if not enchantPatterns then
+		enchantPatterns = {}
+		local i
+		for i = 1, table.getn(ENCHANT_TIME_FORMATS) do
+			local fmt = _G[ENCHANT_TIME_FORMATS[i]]
+			if type(fmt) == "string" then
+				table.insert(enchantPatterns, FormatToPattern(fmt))
+			end
+		end
+	end
+
+	local tip = FillScanTooltip("SetInventoryItem", "player", slot)
+	if not tip then return nil end
+
+	local name
+	local okLines, numLines = pcall(tip.NumLines, tip)
+	local line
+	for line = 2, (okLines and tonumber(numLines)) or 0 do
+		local region = _G[ENCHANT_SCAN_TOOLTIP.."TextLeft"..line]
+		local text = region and region:GetText()
+		if text then
+			local p
+			for p = 1, table.getn(enchantPatterns) do
+				local _, _, captured = string.find(text, enchantPatterns[p])
+				if captured then
+					name = captured
+					break
+				end
+			end
+		end
+		if name then break end
+	end
+	pcall(tip.Hide, tip)
+	return name
+end
+
+local function PlayerBuffName(buffIndex, texture)
+	local entry = buffNameCache[buffIndex]
+	if entry and entry.texture == texture then return entry.name end
+
+	local name
+	local tip = FillScanTooltip("SetPlayerBuff", buffIndex)
+	if tip then
+		local region = _G[ENCHANT_SCAN_TOOLTIP.."TextLeft1"]
+		name = region and region:GetText()
+		pcall(tip.Hide, tip)
+	end
+	buffNameCache[buffIndex] = { texture = texture, name = name }
+	return name
+end
+
+local function HasBuffNamed(name)
+	local base = StripRank(name)
+	local i
+	for i = 0, MAX_PLAYER_BUFFS - 1 do
+		local okIdx, buffIndex = pcall(GetPlayerBuff, i, "HELPFUL")
+		if not okIdx or not buffIndex or buffIndex < 0 then return false end
+		local okTex, texture = pcall(GetPlayerBuffTexture, buffIndex)
+		if not okTex or not texture then return false end
+		local buffName = PlayerBuffName(buffIndex, texture)
+		if buffName and (buffName == name or buffName == base) then return true end
+	end
+	return false
+end
+
+function Compat.GetWeaponEnchants()
+	local list = {}
+	local ok, hasMain, mainLeft, mainCharges, hasOff, offLeft, offCharges = pcall(GetWeaponEnchantInfo)
+	if not ok then return list end
+
+	local info = {
+		{ hasMain, mainLeft, mainCharges },
+		{ hasOff, offLeft, offCharges },
+	}
+
+	local w
+	for w = 1, 2 do
+		local slot = WEAPON_SLOTS[w]
+		local texture = GetInventoryItemTexture("player", slot)
+		if Compat.bool(info[w][1]) and texture then
+			local left = tonumber(info[w][2])
+			local charges = tonumber(info[w][3]) or 0
+			local cached = enchantCache[slot]
+			if not cached or cached.texture ~= texture
+				or (left and cached.left and left > cached.left + 1000)
+				or (cached.charges and charges > cached.charges) then
+				cached = { texture = texture, name = ScanEnchantName(slot) }
+				enchantCache[slot] = cached
+			end
+			cached.left, cached.charges = left, charges
+
+			if not (cached.name and HasBuffNamed(cached.name)) then
+				local spellIcon = EnchantIcon(cached.name)
+				table.insert(list, {
+					slot = slot,
+					texture = spellIcon or texture,
+					isWeaponIcon = not spellIcon,
+					name = cached.name,
+					timeLeft = left and (left / 1000) or nil,
+					charges = charges,
+				})
+			end
+		else
+			enchantCache[slot] = nil
+		end
+	end
+	return list
+end

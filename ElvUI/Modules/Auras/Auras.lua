@@ -20,9 +20,12 @@
 -- code -- the tooltip technique (GameTooltip:SetPlayerBuff, `this`-
 -- wrapped OnEnter/OnLeave) is already correct there.
 --
+-- Temporary weapon enchants (shaman imbues, poisons, stones, oils) lead the
+-- buff row as in real ElvUI, from `ElvUI.Compat.GetWeaponEnchants` (which
+-- also drops one the client already lists as a buff). Unlike real ElvUI the
+-- charges show on the count text; right-click does not remove them.
+--
 -- Deliberate scope cuts from the real module:
---   - No weapon-enchant (temporary weapon buff) icons -- `self.offset`/
---     `GetWeaponEnchantInfo` branch, a whole separate code path.
 --   - No 8-direction `growthDirection` system (DOWN_RIGHT/UP_LEFT/etc.)
 --     -- reuses the same simple row/perrow grid already established for
 --     every unit frame's own aura grid (UnitFrames.lua), just anchored
@@ -279,6 +282,29 @@ local function KillNativeBuffFrame()
 	end
 end
 
+-- Border colour. A weapon enchant shown with the WEAPON's icon (`slot` set:
+-- an enchant without a known spell icon) takes the weapon's quality colour
+-- from uncommon up, as in real ElvUI; everything else keeps the default black
+-- border every aura has -- including an enchant shown with its spell icon,
+-- where the weapon's quality would be unrelated to the picture, and a common
+-- weapon, whose quality colour is white. The icons are pooled and re-assigned
+-- every refresh, so the colour is set on every pass, but only re-applied when
+-- it actually changes.
+local function SetEnchantBorder(icon, slot)
+	local r, g, b = 0, 0, 0
+	if slot then
+		local okQuality, quality = pcall(GetInventoryItemQuality, "player", slot)
+		if okQuality and quality and quality > 1 then
+			local okColor, qr, qg, qb = pcall(GetItemQualityColor, quality)
+			if okColor and qr then r, g, b = qr, qg, qb end
+		end
+	end
+	if icon.elvBorderR ~= r or icon.elvBorderG ~= g or icon.elvBorderB ~= b then
+		icon.elvBorderR, icon.elvBorderG, icon.elvBorderB = r, g, b
+		pcall(icon.SetBackdropBorderColor, icon, r, g, b, 1)
+	end
+end
+
 -- Comparator factory for the "TIME" sort -- nil timeLeft (no known
 -- duration) sorts as if it were effectively infinite, so auras with an
 -- unknown duration land at whichever end represents "longest remaining"
@@ -360,6 +386,23 @@ function A:UpdateHeader(header, auraType)
 
 	SortAuras(list, settings.sortMethod or "TIME", settings.sortDir or "-")
 
+	-- Temporary weapon enchants lead the buff row, main hand first and
+	-- outside the sort -- real ElvUI's order. Charges ride on the count text.
+	if auraType == "buff" then
+		local enchants = ElvUI.Compat.GetWeaponEnchants()
+		local k
+		for k = table.getn(enchants), 1, -1 do
+			local e = enchants[k]
+			table.insert(list, 1, {
+				enchantSlot = e.slot,
+				qualitySlot = e.isWeaponIcon and e.slot or nil,
+				texture = e.texture,
+				count = e.charges,
+				timeLeft = e.timeLeft,
+			})
+		end
+	end
+
 	-- Pass 2: render in sorted order, up to the wrapAfter*maxWraps ceiling.
 	local shown = 0
 	for i = 1, table.getn(list) do
@@ -395,6 +438,10 @@ function A:UpdateHeader(header, auraType)
 		icon.tooltipUnit = "player"
 		icon.tooltipIndex = aura.index
 		icon.tooltipFilter = (auraType == "buff") and "HELPFUL" or "HARMFUL"
+		-- Set for a weapon enchant (nil for a real aura): the tooltip shows
+		-- the weapon and right-click does nothing (UF:GetOrCreateAuraIcon).
+		icon.tooltipInventorySlot = aura.enchantSlot
+		SetEnchantBorder(icon, aura.qualitySlot)
 
 		ApplyTextOffsets(icon)
 

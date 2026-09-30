@@ -48,6 +48,9 @@ Two addons ship together:
   so the target frame's debuff timers are exact for your own spells too
 - UnitFrames (player/target/pet/party/etc.), Auras; debuff timers on other
   units through LibVanillaDurations-1.0 (pfUI's spell duration data)
+- Temporary weapon enchants (shaman weapon imbues, rogue poisons,
+  sharpening stones, oils) at the front of the buff row, with time left and
+  charges — the client does not list them as buffs
 - Aura bars on the player and target frames (ElvUI's `aurabar`, from retail
   ElvUI): your own timed auras as draining bars; the install wizard offers
   "Aura Bars & Icons" or "Icons Only"

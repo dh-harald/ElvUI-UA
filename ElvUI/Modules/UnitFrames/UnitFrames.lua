@@ -1390,8 +1390,21 @@ end
 -- else in WoW's UI. `self.tooltipUnit`/`Index`/`Filter` are set fresh
 -- each UpdateAuras call, matching real oUF's own approach of
 -- recomputing the tooltip data on demand rather than caching it.
+--
+-- `self.tooltipInventorySlot` marks a temporary weapon enchant (Auras.lua):
+-- it is no aura, so the tooltip is the enchanted weapon's own, which carries
+-- the enchant line and its time left.
 local function AuraIcon_OnEnter(self)
-	if not self:IsVisible() or not self.tooltipUnit then return end
+	if not self:IsVisible() then return end
+
+	if self.tooltipInventorySlot then
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
+		pcall(GameTooltip.SetInventoryItem, GameTooltip, "player", self.tooltipInventorySlot)
+		GameTooltip:Show()
+		return
+	end
+
+	if not self.tooltipUnit then return end
 
 	GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
 	if self.tooltipUnit == "player" then
@@ -1418,8 +1431,10 @@ end
 -- cached index could point at a different aura. Only RightButtonUp is
 -- registered, so there is no button name to check. CancelPlayerBuff is
 -- not protected on either client; harmful auras are skipped because the
--- client ignores them anyway.
+-- client ignores them anyway. A weapon enchant icon (`tooltipInventorySlot`)
+-- is no player buff and is left alone.
 local function AuraIcon_OnClick(self)
+	if self.tooltipInventorySlot then return end
 	if self.tooltipUnit ~= "player" or self.tooltipFilter ~= "HELPFUL" or not self.tooltipIndex then return end
 	local ok, buffIndex = pcall(GetPlayerBuff, self.tooltipIndex - 1, "HELPFUL")
 	if ok and buffIndex and buffIndex >= 0 then
