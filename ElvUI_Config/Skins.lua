@@ -50,7 +50,7 @@ E.Options.args.skins = {
 			name = L["Blizzard"],
 			guiInline = true,
 			get = function(info) return E.private.skins.blizzard[ info[getn(info)] ] end,
-			-- One group-level setter covers all 9 per-window toggles, popup
+			-- One group-level setter covers every per-window toggle, popup
 			-- included. A skin is applied once at S:Initialize and has no
 			-- teardown path, so every one of these is genuinely reload-bound.
 			set = function(info, value)
@@ -62,6 +62,21 @@ E.Options.args.skins = {
 				-- Display names copied from real ElvUI's own Skins.lua, so the
 				-- alphabetical ordering lands identically.
 				auctionhouse = { type = "toggle", name = L["Auctions"], desc = SKIN_DESC },
+				-- `bags`, `mail` and `mirrorTimers` carry their own `disabled`:
+				-- while the matching module runs, the module decides the
+				-- window's look whatever the toggle says, so the control
+				-- would be a lie. An entry-level member wins over the
+				-- group's, so each also keeps the master switch's own
+				-- disabling. Real ElvUI greys `bags` out the same way.
+				bags = {
+					type = "toggle",
+					name = L["Bags"],
+					desc = L["The Bags module replaces these windows while it is enabled. Requires /reload to take effect."],
+					disabled = function()
+						return not E.private.skins.blizzard.enable
+							or (E.private.bags and E.private.bags.enable)
+					end,
+				},
 				character = { type = "toggle", name = L["Character Frame"], desc = SKIN_DESC },
 				friends = { type = "toggle", name = L["Friends"], desc = SKIN_DESC },
 				spellbook = { type = "toggle", name = L["Spellbook"], desc = SKIN_DESC },
@@ -78,11 +93,6 @@ E.Options.args.skins = {
 				quest = { type = "toggle", name = L["Quest Frames"], desc = SKIN_DESC },
 				gossip = { type = "toggle", name = L["Gossip Frame"], desc = SKIN_DESC },
 				greeting = { type = "toggle", name = L["Greeting Frame"], desc = SKIN_DESC },
-				-- The only per-window toggle with its own `disabled`: while the
-				-- Mail module runs it skins this window itself, whatever this
-				-- says, so the control would be a lie. An entry-level member
-				-- wins over the group's, so this also keeps the master
-				-- switch's own disabling.
 				mail = {
 					type = "toggle",
 					name = L["Mail"],
@@ -93,6 +103,15 @@ E.Options.args.skins = {
 					end,
 				},
 				merchant = { type = "toggle", name = L["Merchant"], desc = SKIN_DESC },
+				mirrorTimers = {
+					type = "toggle",
+					name = L["Mirror Timers"],
+					desc = L["The Mirror Timers module already styles these bars while it is enabled. Requires /reload to take effect."],
+					disabled = function()
+						return not E.private.skins.blizzard.enable
+							or (E.private.mirrortimers and E.private.mirrortimers.enable)
+					end,
+				},
 				trade = { type = "toggle", name = L["Trade"], desc = SKIN_DESC },
 				taxi = { type = "toggle", name = L["Taxi Frame"], desc = SKIN_DESC },
 				inspect = { type = "toggle", name = L["Inspect"], desc = SKIN_DESC },

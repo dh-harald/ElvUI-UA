@@ -655,6 +655,8 @@ L["After Windfury Totem is replaced by another air totem, count down the rest of
 L["Adds bulk handling to the native mailbox: open several mails at once, pick which ones with a checkbox, and send more than one item at a time."] = "Добавляет массовые действия в стандартный почтовый ящик: открыть несколько писем сразу, выбрать нужные флажком и отправить несколько предметов за раз."
 L["With this off the mailbox is left to the Blizzard window skin instead. Requires /reload to take effect."] = "Если выключено, почтовый ящик оформляется скином окна Blizzard. Требуется /reload."
 L["The Mail module already skins this window while it is enabled. Requires /reload to take effect."] = "Модуль почты сам оформляет это окно, пока он включен. Требуется /reload."
+L["The Bags module replaces these windows while it is enabled. Requires /reload to take effect."] = "Модуль сумок заменяет эти окна, пока он включен. Требуется /reload."
+L["The Mirror Timers module already styles these bars while it is enabled. Requires /reload to take effect."] = "Модуль таймеров сам оформляет эти полосы, пока он включен. Требуется /reload."
 L["Warn About Deleted Mail"] = "Предупреждать об удаляемых письмах"
 L["Colours the expiry time of mail that will be DELETED when it runs out, instead of returned to its sender. The client only colours it by time left, so the two look alike until the last day."] = "Подсвечивает срок хранения писем, которые по истечении будут УДАЛЕНЫ, а не возвращены отправителю. Клиент окрашивает его только по оставшемуся времени, поэтому до последнего дня они выглядят одинаково."
 L["Summarize Collected Money"] = "Сводка собранных денег"

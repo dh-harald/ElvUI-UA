@@ -122,7 +122,11 @@ Two addons ship together:
   place (Character, Friends, SpellBook, Macro, Key Bindings, Main Menu,
   Interface/Video/Sound Options, Gossip/Greeting/Quest/QuestLog,
   Merchant, Trade, Taxi, Pet Stable, Talents, Trade Skills, Enchanting,
-  Trainer, Mail, Auction House, Dressing Room, Stack Split, and more)
+  Trainer, Mail, Auction House, Dressing Room, Stack Split, and more).
+  Where ElvUI has its own module for a window (Bags/Bank, Mailbox, Mirror
+  Timers), the module decides its look while it is on; with the module off,
+  the window's skin toggle takes over, so e.g. the native bags and bank can
+  still be restyled with quality-coloured slot borders
 - Mailbox: open several mails at once (all of them, or the ones ticked with
   a checkbox), send the ticked ones back to their senders, stop a run in
   progress, Shift-click or Ctrl-click a row to take or return that one mail,

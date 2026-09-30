@@ -678,6 +678,8 @@ L["After Windfury Totem is replaced by another air totem, count down the rest of
 L["Adds bulk handling to the native mailbox: open several mails at once, pick which ones with a checkbox, and send more than one item at a time."] = true
 L["With this off the mailbox is left to the Blizzard window skin instead. Requires /reload to take effect."] = true
 L["The Mail module already skins this window while it is enabled. Requires /reload to take effect."] = true
+L["The Bags module replaces these windows while it is enabled. Requires /reload to take effect."] = true
+L["The Mirror Timers module already styles these bars while it is enabled. Requires /reload to take effect."] = true
 L["Warn About Deleted Mail"] = true
 L["Colours the expiry time of mail that will be DELETED when it runs out, instead of returned to its sender. The client only colours it by time left, so the two look alike until the last day."] = true
 L["Summarize Collected Money"] = true

@@ -82,9 +82,11 @@ V.chat = { enable = true }
 
 V.cooldown = { enable = true }
 
--- Real ElvUI has no top-level `mirrortimers` -- there the feature is a skin
--- flag (`V.skins.blizzard.mirrorTimers`). Project extension, whitelisted in
--- scripts/config-exceptions.lua.
+-- The Mirror Timers MODULE switch. Real ElvUI has no top-level
+-- `mirrortimers` -- there the feature is only the skin flag
+-- `V.skins.blizzard.mirrorTimers` (declared below as well). The module adds
+-- size settings and takes precedence over the skin (Core/MirrorTimers.lua).
+-- Project extension, whitelisted in scripts/config-exceptions.lua.
 V.mirrortimers = { enable = true }
 
 -- Default `false` matches the module's permanently disabled state; the flag
@@ -95,9 +97,15 @@ V.tooltip = { enable = true }
 
 -- A master enable plus one flag per skinned window, matching real ElvUI's
 -- own `E.private.skins.blizzard.*` layout and config grouping.
+--
+-- `bags`, `mail` and `mirrorTimers` only decide while their module is off:
+-- an enabled Bags module replaces the native windows, and an enabled Mail or
+-- Mirror Timers module styles its window itself.
 V.skins = {
 	blizzard = {
 		enable = true,
+		bags = true,
+		mirrorTimers = true,
 		character = true,
 		friends = true,
 		spellbook = true,

@@ -3,6 +3,16 @@
 -- castbar; real ElvUI implements it as Modules/Skins/Blizzard/
 -- MirrorTimers.lua, part of its Skins module.
 --
+-- Two ways in, one styling pass:
+--   * the MODULE (`E.private.mirrortimers.enable`, project extension) styles
+--     the bars at the size set under General > Mirror Timers and keeps that
+--     size live;
+--   * the SKIN (`E.private.skins.blizzard.mirrorTimers`, real ElvUI's flag,
+--     Modules/Skins/Blizzard/MirrorTimers.lua) calls `E:SkinMirrorTimers()`
+--     only while the module is off, and gets real ElvUI's fixed 222x18.
+-- With both off the bars stay native. The module wins over the skin, so the
+-- skin's config toggle is greyed out while the module is on.
+--
 -- Real ElvUI's own version is a pure RESKIN, not a rebuild -- the actual
 -- breath/feign-death/exhaustion TRACKING is 100% native (Blizzard's own
 -- MirrorTimerFrame_OnUpdate keeps `frame.value`/`frame.paused`/
@@ -25,6 +35,23 @@ local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
 
 local NUM_MIRROR_TIMERS = _G.MIRRORTIMER_NUMTIMERS or 3
+
+-- Real ElvUI's MirrorTimers skin size (`E:Size(mirrorTimer, 222, 18)`).
+local SKIN_WIDTH, SKIN_HEIGHT = 222, 18
+
+local function ModuleEnabled()
+	return E.private.mirrortimers and E.private.mirrortimers.enable
+end
+
+-- The module's own size settings while it runs, the skin's fixed size
+-- otherwise.
+local function CurrentSize()
+	if ModuleEnabled() then
+		local settings = E.db.mirrortimers
+		return settings.width, settings.height
+	end
+	return SKIN_WIDTH, SKIN_HEIGHT
+end
 
 -- Real ElvUI has NO per-module statusbar field for MirrorTimers -- it
 -- reads the ONE shared `E.media.normTex` instead (`V.general.normTex`,
@@ -81,17 +108,17 @@ local function StyleMirrorTimer(i)
 	local text = _G["MirrorTimer"..i.."Text"]
 	if not frame or not statusBar or frame.elvStyled then return end
 
-	local settings = E.db.mirrortimers
+	local width, height = CurrentSize()
 
 	if text then
 		pcall(text.Hide, text)
 		text.Show = E.noop
 	end
 
-	pcall(frame.SetWidth, frame, settings.width)
-	pcall(frame.SetHeight, frame, settings.height)
-	pcall(statusBar.SetWidth, statusBar, settings.width)
-	pcall(statusBar.SetHeight, statusBar, settings.height)
+	pcall(frame.SetWidth, frame, width)
+	pcall(frame.SetHeight, frame, height)
+	pcall(statusBar.SetWidth, statusBar, width)
+	pcall(statusBar.SetHeight, statusBar, height)
 
 	-- Strips the OUTER frame's own native art (the metal-cap border/
 	-- background regions) -- live-reported via screenshot: without
@@ -146,8 +173,10 @@ end
 -- size settings could never be re-applied. This applies just the dimensions,
 -- deliberately skipping that guard, and only to frames the styling has already
 -- run on -- an unstyled frame will pick the new values up from `E.db` when it is
--- first styled anyway.
+-- first styled anyway. A no-op while the module is off: the skin path keeps
+-- its fixed size.
 function E:ResizeMirrorTimers()
+	if not ModuleEnabled() then return end
 	local settings = E.db.mirrortimers
 	local i
 	for i = 1, NUM_MIRROR_TIMERS do
@@ -179,11 +208,12 @@ local function StyleAllMirrorTimers()
 	end
 end
 
-local function Initialize()
-	-- `E.private`, NOT `V` -- V is the static defaults table, so reading the
-	-- flag from there ignores the saved value entirely and the config
-	-- checkbox does nothing.
-	if not E.private.mirrortimers.enable then return end
+-- Shared by the module and the skin. Runs once per session whichever path
+-- calls it first, so the text poll is never scheduled twice.
+local stylingStarted = false
+local function StartStyling()
+	if stylingStarted then return end
+	stylingStarted = true
 
 	StyleAllMirrorTimers()
 	E:ScheduleRepeatingTimer(UpdateAllMirrorTimers, 0.3)
@@ -191,8 +221,24 @@ local function Initialize()
 	-- Same lazily-created-region problem already found (and worked
 	-- around the same way) throughout this project -- MirrorTimer
 	-- frames may not exist as usable regions yet at the exact moment
-	-- Initialize() runs.
+	-- styling starts.
 	ElvUI.Util.ScheduleLimitedSweep(StyleAllMirrorTimers, 3, 10)
+end
+
+-- Entry point for the MirrorTimers skin (Modules/Skins/Blizzard/
+-- MirrorTimers.lua). The skin decides whether it applies; the size follows
+-- `CurrentSize`.
+function E:SkinMirrorTimers()
+	StartStyling()
+end
+
+local function Initialize()
+	-- `E.private`, NOT `V` -- V is the static defaults table, so reading the
+	-- flag from there ignores the saved value entirely and the config
+	-- checkbox does nothing.
+	if not ModuleEnabled() then return end
+
+	StartStyling()
 end
 
 E:RegisterInitialModule("MirrorTimers", Initialize)

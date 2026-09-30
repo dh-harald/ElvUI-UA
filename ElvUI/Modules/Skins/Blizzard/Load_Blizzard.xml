@@ -26,4 +26,6 @@
 	<Script file="Trainer.lua"/>
 	<Script file="AuctionHouse.lua"/>
 	<Script file="Tooltip.lua"/>
+	<Script file="MirrorTimers.lua"/>
+	<Script file="Bags.lua"/>
 </Ui>

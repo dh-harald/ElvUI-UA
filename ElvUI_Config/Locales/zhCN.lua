@@ -655,6 +655,8 @@ L["After Windfury Totem is replaced by another air totem, count down the rest of
 L["Adds bulk handling to the native mailbox: open several mails at once, pick which ones with a checkbox, and send more than one item at a time."] = "为原版邮箱添加批量操作: 一次打开多封邮件, 用复选框选择要打开的邮件, 以及一次寄送多件物品."
 L["With this off the mailbox is left to the Blizzard window skin instead. Requires /reload to take effect."] = "关闭后, 邮箱交给暴雪窗口皮肤处理. 需要 /reload 生效."
 L["The Mail module already skins this window while it is enabled. Requires /reload to take effect."] = "邮件模块启用时会自行处理此窗口的外观. 需要 /reload 生效."
+L["The Bags module replaces these windows while it is enabled. Requires /reload to take effect."] = "背包模块启用时会替换这些窗口. 需要 /reload 生效."
+L["The Mirror Timers module already styles these bars while it is enabled. Requires /reload to take effect."] = "镜像计时条模块启用时会自行处理这些计时条的外观. 需要 /reload 生效."
 L["Warn About Deleted Mail"] = "警告将被删除的邮件"
 L["Colours the expiry time of mail that will be DELETED when it runs out, instead of returned to its sender. The client only colours it by time left, so the two look alike until the last day."] = "为到期后将被删除(而非退回寄件人)的邮件的剩余时间着色。客户端只按剩余时间着色,因此两者在最后一天之前看起来完全相同."
 L["Summarize Collected Money"] = "汇总收取的金钱"
