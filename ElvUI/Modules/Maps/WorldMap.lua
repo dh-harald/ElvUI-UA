@@ -3,7 +3,8 @@
 -- Real ElvUI's own WorldMap.lua (ElvUI-vanilla/ElvUI/Modules/Maps/
 -- WorldMap.lua) does two things: a player/cursor coordinate readout
 -- (CONFIRMED WORKING in-game -- see CreateCoordsHolder/Refresh below) and
--- "Smaller World Map" (ApplySmallerWorldMap below -- untested). The map
+-- "Smaller World Map" (ApplySmallerWorldMap below: the map in a draggable
+-- window). The map
 -- window's chrome is styled separately, by Skins/Blizzard/WorldMap.lua
 -- (`E.private.skins.blizzard.worldmap`).
 --
@@ -26,8 +27,6 @@
 -- tradeoff). Parented to WorldMapButton, not WorldMapDetailFrame like real
 -- ElvUI -- WorldMapButton is UnrealUI's own UA-verified geometry anchor
 -- for this exact kind of overlay.
---
--- ApplySmallerWorldMap has NOT been tested in-game yet.
 
 local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
@@ -129,39 +128,56 @@ function M:Refresh()
 	end
 end
 
--- "Smaller World Map": pulls WorldMapFrame out of Blizzard's fullscreen-
--- modal window system so it behaves like a normal, non-blocking panel
--- (game world stays visible/interactive behind it) instead of a
--- screen-darkening exclusive overlay. Ported from real ElvUI's
--- WorldMap.lua, adapted for this project: real ElvUI reparents onto
--- `E.UIParent`, a custom top-level frame it creates for its own scaling
--- purposes -- this from-scratch project has no such thing, so plain
--- `UIParent` is used instead. Also swapped the bare `HookScript(...)`
--- global call for `E:HookScript(...)` (AceHook-3.0) -- no bare HookScript
--- global is reliably present on UA (see Core/GameMenu.lua). One-shot,
--- like real ElvUI's own `E.global.general.
--- smallerWorldMap` check (not a live-toggle -- config marks it
--- reload-required). Entirely untested -- a bigger, riskier change than
--- the coordinate readout: reparents the map frame, disables its own
--- input-blocking, and rewrites its entry in Blizzard's UIPanelWindows
--- table.
-function M:ApplySmallerWorldMap()
-	if not E.global.general.smallerWorldMap then return end
+-- "Smaller World Map": the map in a draggable window of its content's size
+-- (the 1024x768 `WorldMapPositioningGuide` holding the 1002x668 map) instead
+-- of a fullscreen overlay. `WorldMapFrame` is reparented into a holder and
+-- stays wherever the holder is: neither client moves it back on open.
+--
+-- Legacy client: real ElvUI's route (`UIPanelWindows` area "center") cannot
+-- be used, because `SetCenterFrame` re-anchors the frame to
+-- `TOPLEFT 384,-104` on every open. The frame is taken out of
+-- `UIPanelWindows` altogether instead -- `ShowUIPanel`/`HideUIPanel` then
+-- just Show()/Hide() it, and `UIParent` is no longer hidden -- and Escape
+-- closes it through `UISpecialFrames`. The holder sits under `UIParent`, so
+-- the map follows the UI scale; keyboard and mouse on the map frame are off,
+-- as in real ElvUI, so the game keeps its input around the window.
+--
+-- Unreal Azeroth: the client's panel handling does not consult
+-- `UIPanelWindows`, and opening the map hides `UIParent` regardless, so the
+-- holder has no parent (like the native `WorldMapFrame`). `SetScale` has no
+-- effect there (effective scale stays 1), so the window is always full size.
+-- The character keeps moving under the open map, so input is left as is.
+--
+-- One-shot, like real ElvUI's own `smallerWorldMap` check (the config marks
+-- it reload-required).
+local MAP_WIDTH, MAP_HEIGHT = 1024, 768
 
-	local frame = _G.WorldMapFrame
-	if not frame then return end
+local function CreateWindowHolder(isUA)
+	local parent = (not isUA) and UIParent or nil
+	local ok, holder = pcall(CreateFrame, "Frame", "ElvUIWorldMapHolder", parent)
+	if not ok or not holder then return nil end
+	holder:SetWidth(MAP_WIDTH)
+	holder:SetHeight(MAP_HEIGHT)
+	holder:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+	-- The map's own strata; the drag handle inherits it from the holder.
+	pcall(holder.SetFrameStrata, holder, "FULLSCREEN")
+	pcall(holder.SetClampedToScreen, holder, true)
+	return holder
+end
 
-	local blackout = _G.BlackoutWorld
-	if blackout then pcall(blackout.SetTexture, blackout, nil) end
-
-	pcall(frame.SetParent, frame, UIParent)
+-- Legacy-only half: out of the panel manager, Escape via UISpecialFrames,
+-- plus real ElvUI's dropdown-scale and tooltip-level fixes.
+local function DetachFromPanelManager(frame)
 	pcall(frame.SetScale, frame, 1)
 	if frame.EnableKeyboard then pcall(frame.EnableKeyboard, frame, false) end
 	if frame.EnableMouse then pcall(frame.EnableMouse, frame, false) end
 	if frame.SetToplevel then pcall(frame.SetToplevel, frame) end
 
 	if type(_G.UIPanelWindows) == "table" then
-		_G.UIPanelWindows["WorldMapFrame"] = { area = "center", pushable = 0, whileDead = 1 }
+		_G.UIPanelWindows["WorldMapFrame"] = nil
+	end
+	if type(_G.UISpecialFrames) == "table" then
+		table.insert(_G.UISpecialFrames, "WorldMapFrame")
 	end
 
 	local dropdown = _G.DropDownList1
@@ -180,6 +196,40 @@ function M:ApplySmallerWorldMap()
 		local okLevel, guideLevel = pcall(guide.GetFrameLevel, guide)
 		pcall(tooltip.SetFrameLevel, tooltip, (okLevel and guideLevel or 0) + 110)
 	end
+end
+
+function M:ApplySmallerWorldMap()
+	if not E.global.general.smallerWorldMap then return end
+
+	local frame = _G.WorldMapFrame
+	if not frame then return end
+
+	local isUA = ElvUI.Compat.isUA
+	local holder = CreateWindowHolder(isUA)
+	if not holder then return end
+
+	pcall(frame.SetParent, frame, holder)
+	pcall(frame.ClearAllPoints, frame)
+	pcall(frame.SetAllPoints, frame, holder)
+
+	-- `WorldMapFrame_OnLoad` sizes this black sheet to the whole screen from
+	-- the frame's BOTTOMLEFT; inside the holder it would spill over the game
+	-- world on the right and above.
+	local blackout = _G.BlackoutWorld
+	if blackout then
+		pcall(blackout.SetTexture, blackout, nil)
+		pcall(blackout.Hide, blackout)
+	end
+
+	if not isUA then DetachFromPanelManager(frame) end
+
+	-- Ends at the close button, so the handle never covers it.
+	local S = E:GetModule("Skins", true)
+	if S and S.MakeDraggable then
+		S:MakeDraggable(holder, _G.WorldMapFrameCloseButton)
+	end
+
+	self.windowHolder = holder
 end
 
 -- Zone dropdown in alphabetical order. Unreal Azeroth's `GetMapZones`

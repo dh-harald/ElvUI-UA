@@ -129,8 +129,8 @@ E.Options.args.maps = {
 					args = {
 						-- Global and reload-required (a one-shot Initialize check),
 						-- same as real ElvUI's own GLOBAL_RL popup on this setting.
-						-- Untested -- see Modules/Maps/WorldMap.lua's
-						-- ApplySmallerWorldMap.
+						-- The map in a draggable window, both clients. See
+						-- Modules/Maps/WorldMap.lua's ApplySmallerWorldMap.
 						smallerWorldMap = {
 							order = 1,
 							type = "toggle",
