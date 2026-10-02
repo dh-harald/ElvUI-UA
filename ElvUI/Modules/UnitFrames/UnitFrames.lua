@@ -2239,6 +2239,11 @@ function UF:UpdateFrame(frame)
 			ElvUI.Util.SetStatusBarBackgroundColor(frame.Power, POWER_BG_COLOR[1], POWER_BG_COLOR[2], POWER_BG_COLOR[3], 1)
 		end
 		ElvUI.Util.SetStatusBarTexture(frame.Power, GetBarTexture())
+
+		-- Regeneration tick spark on the player's bar (EnergyManaRegen.lua).
+		if frame.EnergyManaRegen and self.UpdateEnergyManaRegen then
+			pcall(self.UpdateEnergyManaRegen, self, frame, settings)
+		end
 	end
 
 	-- Text -- tag substitution (ApplyTags above), a subset of real ElvUI's

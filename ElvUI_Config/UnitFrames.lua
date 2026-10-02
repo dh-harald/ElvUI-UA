@@ -862,6 +862,19 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasCastba
 						if E.UnitFrames then E.UnitFrames:ResizeUnit(dbKey) end
 					end,
 				}
+				-- Retail ElvUI Classic's key, label and description; player
+				-- only, like there. Live via UF:UpdateFrame.
+				if dbKey == "player" then
+					args.EnergyManaRegen = {
+						type = "toggle",
+						name = L["Energy/Mana Regen Tick"],
+						desc = L["Enables the five-second-rule ticks for Mana classes and Energy ticks for Rogues and Druids."],
+						order = 8,
+						hidden = function() return E.myclass == "WARRIOR" end,
+						get = function() return unitTable().power.EnergyManaRegen end,
+						set = function(_, value) unitTable().power.EnergyManaRegen = value end,
+					}
+				end
 				return args
 			end)(),
 		},

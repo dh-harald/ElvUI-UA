@@ -7,6 +7,7 @@
 	<Script file="OwnAuras.lua"/>
 	<Script file="CastTracker.lua"/>
 	<Script file="ComboPoints.lua"/>
+	<Script file="EnergyManaRegen.lua"/>
 	<Script file="Threat.lua"/>
 	<Script file="AuraBars.lua"/>
 	<!-- Real 1.12.1 cannot load a <Script> from a subdirectory (silent

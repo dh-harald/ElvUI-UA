@@ -54,6 +54,7 @@ local function Construct_PlayerFrame()
 	UF:Construct_HealthBar(frame, healthHeight)
 	if settings.power and settings.power.enable then
 		UF:Construct_PowerBar(frame, settings.power.height)
+		UF:Construct_EnergyManaRegen(frame)
 	end
 	UF:Construct_NameText(frame)
 	UF:Construct_Portrait(frame, settings.portrait and settings.portrait.width or 40)

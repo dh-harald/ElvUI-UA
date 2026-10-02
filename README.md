@@ -68,6 +68,10 @@ Two addons ship together:
   for the overheal
 - Combo point bar on the target frame (rogue, and druid in Cat Form):
   filled or spaced, auto-hides at 0 points, colours per point
+- Energy/mana regeneration tick on the player power bar (ported from retail
+  ElvUI Classic, off by default): a white spark runs to the next energy or
+  mana tick, a yellow one counts down the five-second rule after mana is
+  spent
 - Resurrection icon on the party, target and your own player frame while
   someone running HealComm is resurrecting that player
 - Target castbar: the 1.12 client reports no casts of other units, so the

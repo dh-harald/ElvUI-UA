@@ -876,6 +876,8 @@ P.unitframe.units.player = {
 		xOffset = -2,
 		yOffset = 0,
 		attachTextTo = "Health",
+		-- Retail ElvUI Classic's regeneration tick spark (EnergyManaRegen.lua).
+		EnergyManaRegen = false,
 	},
 	name = {
 		text_format = "",
