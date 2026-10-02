@@ -15,15 +15,13 @@
 -- "ElvUI Norm" -- so an imported real profile's font/texture choices work, and
 -- our own defaults have no reason to deviate on availability grounds.
 --
--- Two things are NOT settled, and neither is an availability question:
---   * `SetFont` is a no-op on UA, so a font CHANGE is
---     inert on that client regardless of what is registered here. Custom
---     TEXTURES do render.
---   * SOUND playback is unverified on this client. Sound file playback only
---     recently appeared in UA's API and nothing here has been measured against
---     it, which is why the chat sound settings default to "None" rather than to
---     real ElvUI's own "ElvUI Aska" -- the registrations below are ready for
---     when it is tested, not evidence that it works.
+-- `SetFont` is a no-op on UA, so a font CHANGE is inert on that client
+-- regardless of what is registered here. Custom TEXTURES do render.
+--
+-- Sounds are registered in the standard "Interface\AddOns\..." form. UA plays
+-- an addon's sound file only from its own path form; LibSharedMedia's
+-- Fetch("sound") hands out the path the running client plays, so Chat.lua's
+-- PlaySoundFile(LSM:Fetch(...)) works on both clients. UA does not play .mp3.
 local LSM = LibStub("LibSharedMedia-3.0", true)
 if not LSM then return end
 

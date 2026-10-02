@@ -166,7 +166,7 @@ E.Options.args.chat = {
 			args = {
 				header = { type = "header", name = L["Alerts"], order = 1 },
 				whisperSound = {
-					type = "select", name = L["Whisper Alert"], order = 2,
+					type = "select", dialogControl = "LSM30_Sound", name = L["Whisper Alert"], order = 2,
 					desc = L["Sound to play on an incoming whisper. Only \"None\" is selectable until custom sounds are registered with LibSharedMedia-3.0."],
 					values = function()
 						local LSM = LibStub("LibSharedMedia-3.0", true)
@@ -186,7 +186,7 @@ E.Options.args.chat = {
 					set = function(_, value) E.db.chat.whisperSound = value end,
 				},
 				keywordSound = {
-					type = "select", name = L["Keyword Alert"], order = 3,
+					type = "select", dialogControl = "LSM30_Sound", name = L["Keyword Alert"], order = 3,
 					desc = L["Sound to play when a keyword below is spoken in chat. Only \"None\" is selectable until custom sounds are registered with LibSharedMedia-3.0."],
 					values = function()
 						local LSM = LibStub("LibSharedMedia-3.0", true)

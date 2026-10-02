@@ -513,10 +513,7 @@ P.bags = {
 -- ---------------------------------------------------------------------
 -- Chat
 -- ---------------------------------------------------------------------
--- Real ElvUI's own `P["chat"]`. `whisperSound` is the one deliberate value
--- deviation: sound PLAYBACK is unverified on UA, so the alert ships silent
--- ("None") rather than as real ElvUI's "ElvUI Aska". The media itself is
--- registered and shipped, and Chat.lua does call PlaySoundFile for it.
+-- Real ElvUI's own `P["chat"]`.
 P.chat = {
 	lockPositions = true,
 	url = true,
@@ -529,7 +526,7 @@ P.chat = {
 	fontOutline = "NONE",
 	sticky = true,
 	keywordSound = "None",
-	whisperSound = "None",
+	whisperSound = "ElvUI Aska",
 	noAlertInCombat = false,
 	chatHistory = true,
 	timeStampFormat = "NONE",
