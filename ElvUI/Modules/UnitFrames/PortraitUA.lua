@@ -28,6 +28,27 @@ local INSET = UF.INSET
 -- over the bar.
 local OVERLAY_FILL_ALPHA = 0.65
 
+-- A PlayerModel:SetUnit issued before the unit's model is loaded leaves the
+-- model empty (seen on the pet frame right after login), and UA offers no
+-- way to notice: PlayerModel has no GetModel, and neither UNIT_MODEL_CHANGED
+-- nor UNIT_PORTRAIT_UPDATE fires. So after every content refresh the 3D
+-- setup is re-applied every MODEL_RETRY_INTERVAL seconds for
+-- MODEL_RETRY_WINDOW seconds; a re-apply on an already loaded model is a
+-- no-op visually.
+local MODEL_RETRY_INTERVAL = 1
+local MODEL_RETRY_WINDOW = 10
+
+-- oUF's stock scale/position. SetCamera(0) selects the model's built-in
+-- portrait camera; without it the model is turned away from the viewer on
+-- UA. SetPortraitZoom and SetCamDistanceScale do not exist on UA's
+-- PlayerModel.
+local function ApplyModel(model, unit)
+	pcall(model.SetUnit, model, unit)
+	pcall(model.SetModelScale, model, 1)
+	pcall(model.SetPosition, model, 0, 0, 0)
+	pcall(model.SetCamera, model, 0)
+end
+
 -- frame.Portrait: a holder frame containing both a 2D Texture
 -- (SetPortraitTexture) and a 3D PlayerModel (SetUnit); `db.portrait.style`
 -- ("2D"/"3D") picks the visible one at update time.
@@ -134,17 +155,16 @@ function UF:Update_Portrait(frame, settings, unit)
 
 	if pdb.style == "3D" then
 		portrait.texture:Hide()
+		local now = GetTime()
 		if not portrait.shown3D then
-			local model = portrait.model
-			pcall(model.SetUnit, model, unit)
-			-- oUF's stock scale/position. SetCamera(0) selects the model's
-			-- built-in portrait camera; without it the model is turned away
-			-- from the viewer on UA. SetPortraitZoom and SetCamDistanceScale
-			-- do not exist on UA's PlayerModel.
-			pcall(model.SetModelScale, model, 1)
-			pcall(model.SetPosition, model, 0, 0, 0)
-			pcall(model.SetCamera, model, 0)
+			ApplyModel(portrait.model, unit)
 			portrait.shown3D = true
+			portrait.modelRetryUntil = now + MODEL_RETRY_WINDOW
+			portrait.modelNextRetry = now + MODEL_RETRY_INTERVAL
+		elseif portrait.modelRetryUntil and now < portrait.modelRetryUntil
+				and now >= portrait.modelNextRetry then
+			ApplyModel(portrait.model, unit)
+			portrait.modelNextRetry = now + MODEL_RETRY_INTERVAL
 		end
 		portrait.shown2D = false
 		portrait.model:Show()
@@ -225,3 +245,20 @@ function UF:PostUpdateHealth_Portrait(frame, bgR, bgG, bgB, a, bgTexture, r, g, 
 
 	mirror:Show()
 end
+
+-- The first refresh after login can run while the loading screen is still
+-- up, so a fixed retry window counted from it may expire before the models
+-- load. Every portrait is marked stale on PLAYER_ENTERING_WORLD, which
+-- restarts the 3D retry window on the next poll.
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:SetScript("OnEvent", function()
+	if not UF.Frames then return end
+	local id, frame
+	for id, frame in pairs(UF.Frames) do
+		local portrait = frame.Portrait
+		if portrait then
+			portrait.shown3D = false
+		end
+	end
+end)
