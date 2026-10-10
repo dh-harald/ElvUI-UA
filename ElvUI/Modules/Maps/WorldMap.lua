@@ -223,12 +223,31 @@ function M:ApplySmallerWorldMap()
 
 	if not isUA then DetachFromPanelManager(frame) end
 
+	local S = E:GetModule("Skins", true)
+
+	-- Unreal Azeroth draws the black bands either side of the window with its
+	-- own `WorldMapBlackout`, a screen-sized FULLSCREEN-strata frame (absent
+	-- on the legacy client). Faded rather than hidden, so the client's own
+	-- show/hide of it is left alone; re-applied on every map show. The game
+	-- world then shows around the window (`UIParent` stays hidden while the
+	-- map is open). Smaller World Map only: the fullscreen native map keeps
+	-- its blackout. Source: UnrealUI `modules/worldmap.lua`.
+	local worldBlackout = _G.WorldMapBlackout
+	if worldBlackout and worldBlackout.SetAlpha then
+		local function FadeWorldBlackout()
+			pcall(worldBlackout.SetAlpha, worldBlackout, 0)
+		end
+		FadeWorldBlackout()
+		if S and S.TryHookScript then
+			S:TryHookScript(frame, "OnShow", FadeWorldBlackout)
+		end
+	end
+
 	-- Ends at the close button, so the handle never covers it. The holder
 	-- stays shown with the map closed (an empty, mouse-less frame), so the
 	-- handle is reparented to the map frame: it still moves the holder, but
 	-- is hidden with the map instead of swallowing clicks in a 24px strip at
 	-- the top of the screen.
-	local S = E:GetModule("Skins", true)
 	if S and S.MakeDraggable then
 		local handle = S:MakeDraggable(holder, _G.WorldMapFrameCloseButton)
 		if handle then
