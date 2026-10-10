@@ -1,3 +1,19 @@
+# [0.11.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.10.1...v0.11.0) (2026-10-10)
+
+
+### Bug Fixes
+
+* **chat:** add LSM30_Sound for alert sound ([6c5086b](https://github.com/dh-harald/ElvUI-UA/commit/6c5086bb1f30cb7a64a5bf6ee124a81b23a77019))
+* **unitframes:** fixed 3d model on petbar, on login ([1778882](https://github.com/dh-harald/ElvUI-UA/commit/1778882943cc7ae9614c77bd20038501a9a2abb7))
+* WorldMap drag handle swallowing clicks while the map is closed ([74b94e0](https://github.com/dh-harald/ElvUI-UA/commit/74b94e08098571a7f0a7630920876f0dd8fde9e8))
+
+
+### Features
+
+* **skin:** Add QuestTimer ([37d5789](https://github.com/dh-harald/ElvUI-UA/commit/37d5789a64f1617e3aa21a6af3bad562664764df))
+* **unitframes:** Add cooldown for pet skills ([b7d1c4f](https://github.com/dh-harald/ElvUI-UA/commit/b7d1c4f70a9a3ce391638550a214ec8fb9ca79cd))
+* **unitframes:** add Energy/Mana tick inducator ([076abba](https://github.com/dh-harald/ElvUI-UA/commit/076abba8bfd9888da534320b3d968d4d3d379355))
+
 ## [0.10.1](https://github.com/dh-harald/ElvUI-UA/compare/v0.10.0...v0.10.1) (2026-09-30)
 
 
