@@ -345,7 +345,11 @@ function M:Initialize()
 	-- native functions address the buttons by global name, so they work on
 	-- the reparented buttons unchanged. PetActionBar_UpdateCooldowns is
 	-- called explicitly as well, so the cooldowns do not depend on the
-	-- client's PetActionBar_Update including that call.
+	-- client's PetActionBar_Update including that call. PetCooldown.lua
+	-- replaces that global with a version that adds combat-log emulated
+	-- cooldowns; it is looked up at call time, so both paths reach it.
+	self:InitializePetCooldowns()
+
 	local function UpdateButtons()
 		if type(_G.PetActionBar_Update) == "function" then
 			pcall(PetActionBar_Update)

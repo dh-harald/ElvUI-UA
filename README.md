@@ -41,6 +41,9 @@ Two addons ship together:
   own exports (its compressed text and its Lua table)
 - Layout (screen panels, minimap panels, mover system)
 - ActionBars, PetBar/StanceBar, Cooldown text
+- Pet ability cooldowns on Unreal Azeroth, which reports none: started from
+  the combat log when the pet uses the ability (autocast included), length
+  read from the ability's tooltip
 - Target aura time on action buttons (later ElvUI's "Target Aura"): a
   spell's button (or a macro button with `/cast`) shows how long your own
   debuff lasts on the target while the spell itself has no cooldown. Own
