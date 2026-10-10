@@ -159,7 +159,7 @@ local function CreateWindowHolder(isUA)
 	holder:SetWidth(MAP_WIDTH)
 	holder:SetHeight(MAP_HEIGHT)
 	holder:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-	-- The map's own strata; the drag handle inherits it from the holder.
+	-- The map's own strata, so the map frame and its drag handle keep it.
 	pcall(holder.SetFrameStrata, holder, "FULLSCREEN")
 	pcall(holder.SetClampedToScreen, holder, true)
 	return holder
@@ -223,10 +223,19 @@ function M:ApplySmallerWorldMap()
 
 	if not isUA then DetachFromPanelManager(frame) end
 
-	-- Ends at the close button, so the handle never covers it.
+	-- Ends at the close button, so the handle never covers it. The holder
+	-- stays shown with the map closed (an empty, mouse-less frame), so the
+	-- handle is reparented to the map frame: it still moves the holder, but
+	-- is hidden with the map instead of swallowing clicks in a 24px strip at
+	-- the top of the screen.
 	local S = E:GetModule("Skins", true)
 	if S and S.MakeDraggable then
-		S:MakeDraggable(holder, _G.WorldMapFrameCloseButton)
+		local handle = S:MakeDraggable(holder, _G.WorldMapFrameCloseButton)
+		if handle then
+			pcall(handle.SetParent, handle, frame)
+			local okLevel, level = pcall(frame.GetFrameLevel, frame)
+			pcall(handle.SetFrameLevel, handle, (okLevel and tonumber(level) or 1) + 50)
+		end
 	end
 
 	self.windowHolder = holder
