@@ -121,6 +121,7 @@ E.Options.args.skins = {
 				-- Real ElvUI's key for its small stand-alone frames; the Game Menu
 				-- and options windows it also covers have their own toggles above.
 				misc = { type = "toggle", name = L["Misc Frames"], desc = SKIN_DESC },
+				questtimer = { type = "toggle", name = L["Quest Timers"], desc = SKIN_DESC },
 				talent = { type = "toggle", name = L["Talents"], desc = SKIN_DESC },
 				tradeskill = { type = "toggle", name = L["Tradeskills"], desc = SKIN_DESC },
 				trainer = { type = "toggle", name = L["Trainer Frame"], desc = SKIN_DESC },

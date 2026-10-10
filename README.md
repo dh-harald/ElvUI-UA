@@ -133,8 +133,8 @@ Two addons ship together:
   place (Character, Friends, SpellBook, Macro, Key Bindings, Main Menu,
   Interface/Video/Sound Options, Gossip/Greeting/Quest/QuestLog,
   Merchant, Trade, Taxi, Pet Stable, Talents, Trade Skills, Enchanting,
-  Trainer, Mail, Auction House, Dressing Room, World Map, Stack Split, and
-  more).
+  Trainer, Mail, Auction House, Dressing Room, World Map, Stack Split,
+  Quest Timers (movable with `/moveui`), and more).
   Where ElvUI has its own module for a window (Bags/Bank, Mailbox, Mirror
   Timers), the module decides its look while it is on; with the module off,
   the window's skin toggle takes over, so e.g. the native bags and bank can

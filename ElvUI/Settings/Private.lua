@@ -127,6 +127,7 @@ V.skins = {
 		stable = true,
 		dressingroom = true,
 		misc = true,
+		questtimer = true,
 		talent = true,
 		tradeskill = true,
 		auctionhouse = true,
