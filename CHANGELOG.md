@@ -1,3 +1,18 @@
+# [0.12.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.11.0...v0.12.0) (2026-10-13)
+
+
+### Bug Fixes
+
+* **bags:** don't set alpha(0) on bags and bankslots ([62081a0](https://github.com/dh-harald/ElvUI-UA/commit/62081a052bcfa744eeebde5f35f52a04f8db7a7d))
+* **map:** UA: Fade WorldMapBlackout behind the smaller world map ([bec818d](https://github.com/dh-harald/ElvUI-UA/commit/bec818da487d1cce5326f91655de1368f57d28b5))
+* **skins:** add double sided questlog ([fa0a9c6](https://github.com/dh-harald/ElvUI-UA/commit/fa0a9c6fb1389e5232d0a494720e55bffb26e85d))
+* **skins:** Align skins more closely with ElvUI's look ([199e445](https://github.com/dh-harald/ElvUI-UA/commit/199e44582bfe71a02c7047c4535cef52d56cd847))
+
+
+### Features
+
+* **misc:** add PanelSlots to show 3 panels of a double and a simple one ([3e0c34a](https://github.com/dh-harald/ElvUI-UA/commit/3e0c34ab30a06f6bc4226175f6f6dc3d6631b6f9))
+
 # [0.11.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.10.1...v0.11.0) (2026-10-10)
 
 
