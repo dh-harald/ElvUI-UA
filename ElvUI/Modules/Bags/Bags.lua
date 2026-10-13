@@ -22,7 +22,7 @@
 --   * ContainerFrame_Update is called DIRECTLY from this module's own event
 --     handler, never left to ContainerFrame_OnEvent -- that one refreshes a
 --     frame only while it IsShown(), and the lending containers are parked
---     off-screen and faded out for good.
+--     off-screen for good.
 --   * Every native global that reaches ContainerFrame_GenerateFrame has to be
 --     taken over (see NATIVE_TOGGLES): that function re-anchors a container's
 --     buttons back into the native window's own layout, which would scatter
@@ -84,14 +84,19 @@ local function ApplyPanelBackdrop(frame)
 	pcall(frame.SetBackdropBorderColor, frame, border[1], border[2], border[3], border[4] or 1)
 end
 
--- Invisible, off-screen and mouse-dead, but NOT killed: the frame is still
--- the object ContainerFrame_Update is called with, and it still owns the
--- global button names that function looks its buttons up by.
+-- Off-screen and mouse-dead, but NOT killed: the frame is still the object
+-- ContainerFrame_Update is called with, and it still owns the global button
+-- names that function looks its buttons up by.
+--
+-- Not faded with SetAlpha(0): on UA a frame's SetAlpha also reaches the
+-- regions of the item buttons it lent out, even after they were reparented
+-- into our grid -- the icons and counts vanish (the buttons stay alive,
+-- tooltips still work) for as long as the resweep below keeps re-applying
+-- it. Off-screen alone keeps the native window out of sight.
 local function NeuterNativeContainer(frame)
 	if not frame then return end
 
 	pcall(frame.EnableMouse, frame, false)
-	pcall(frame.SetAlpha, frame, 0)
 	pcall(frame.SetClampedToScreen, frame, false)
 	pcall(frame.ClearAllPoints, frame)
 	pcall(frame.SetPoint, frame, "TOPLEFT", UIParent, "TOPLEFT", -5000, 5000)
@@ -520,9 +525,9 @@ function B:BorrowSlots(f, bagID, numSlots, host)
 			button:SetID(j)
 			button:SetParent(parent)
 			self:PinBorrowedButton(button, parent, f)
-			-- Both are needed after the reparent: the native containers are
-			-- faded and parked off-screen, and that state travels with the
-			-- button until it is undone here.
+			-- Both are needed after the reparent: a lent button can arrive
+			-- hidden or with a lowered alpha from its native window, and that
+			-- state travels with the button until it is undone here.
 			button:SetAlpha(1)
 			button:Show()
 			parent.slots[j] = button
@@ -2009,9 +2014,9 @@ function B:Initialize()
 	-- reason.
 	E:Delay(2, function() B:Layout() end)
 
-	-- Native containers are created at load, but their position and alpha
-	-- are re-asserted by Blizzard's own code in the first seconds after
-	-- login; a bounded resweep is this project's standard answer.
+	-- Native containers are created at load, but their position is
+	-- re-asserted by Blizzard's own code in the first seconds after login; a
+	-- bounded resweep is this project's standard answer.
 	Util.ScheduleLimitedSweep(function() B:NeuterNativeContainers() end, 3, 10)
 end
 
