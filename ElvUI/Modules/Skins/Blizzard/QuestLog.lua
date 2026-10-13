@@ -61,33 +61,59 @@
 -- colour is the entire lever available here. Nothing in this file depends
 -- on font family or size, which keeps a later font pass separable.
 --
--- SCOPE: outer chrome, the panel and hit rect, a drag handle, both scroll
--- frames and their scrollbars, the close button, text visibility, the
--- collapse glyphs on the header rows and the "All" button, and the reward
--- item slots.
+-- **Two-pane layout** (real ElvUI's): the native window stacks the quest list
+-- (6 rows) above the detail pane, both 300 wide. Here the two columns sit side
+-- by side in a 685x490 frame, the list showing `QUEST_ROW_COUNT` rows. The
+-- frame becomes a "doublewide" UI panel, like the profession and trainer
+-- windows. `QuestLog_Update` reads the `QUESTS_DISPLAYED` global for both its
+-- row loop and its FauxScrollFrame window, and addresses rows by name
+-- (`QuestLogTitle<i>`), so the extra rows are created from the native
+-- `QuestLogTitleButtonTemplate` (also done by `UnrealUI`
+-- modules/questlogextended.lua on UA). Both scroll frames get an explicit
+-- height: UA derives the scroll range from the set height, not from anchors.
 --
--- Deliberately NOT done, each its own pass: the `Track Quest` control (not
--- part of real 1.12.1 at all -- this client adds it), and real ElvUI's own layout
--- surgery (resizing the window to 685x490, re-anchoring both scroll frames,
--- `QUESTS_DISPLAYED = 25` with nineteen extra row buttons, and its
--- replacement Track button).
+-- SCOPE: outer chrome, the two-pane resize, the panel and hit rect, a drag
+-- handle, both scroll frames and their scrollbars, the bottom button row, the
+-- close button, text visibility, the collapse glyphs on the header rows and
+-- the "All" button, and the reward item slots.
+--
+-- Deliberately NOT done: the `Track Quest` control (`QuestLogTrack`) stays the
+-- native one, in its native spot in the header. Real ElvUI replaces it with a
+-- "Track" button in the bottom row.
 
 local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
--- `QuestLogFrame` is 384x512 with `HitRectInsets right=35 bottom=75`, and
--- those insets are the honest description of where the VISIBLE dialog ends:
--- the frame's own bounds run 35px further right and 75px further down than
--- anything it draws. Real ElvUI's own numbers for this window (BOTTOMRIGHT
--- -1,8) assume its layout pass has already resized the frame to 685x490;
--- without that resize they leave a wide empty slab to the right of the
--- content with the two scrollbars stranded in it, and a second one below
--- the button row. These are measured off the native frame instead.
---
--- The bottom stops just under `QuestLogFrameAbandonButton` (anchored
--- BOTTOMLEFT +17,+54, height 21, so its top edge is at 75).
-local PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM = 10, -12, -35, 46
+-- Real ElvUI's frame size and outer panel for this window.
+local FRAME_WIDTH, FRAME_HEIGHT = 685, 490
+local PANEL = { left = 10, top = -12, right = -1, bottom = 8 }
+
+-- Real ElvUI's row count. 25 rows of the 16-high template overlapping by 1
+-- take 376, which the 375-high list scroll frame holds.
+local QUEST_ROW_COUNT = 25
+
+-- Two adjacent pane surfaces 3 apart, each holding its scroll frame and that
+-- frame's scrollbar, as in TradeSkill.lua/Trainer.lua. The list pane spans
+-- x 14..345: rows and scroll frame from 19 (the native row position), 300
+-- wide, scrollbar at the template's native +6 to the right. The detail pane
+-- spans 348..680, its scroll frame from 352. Both panes end 36 above the
+-- frame bottom, just over the button row.
+local LIST_PANE = { left = 14, top = -71, right = -340, bottom = 36 }
+local DETAIL_PANE_RIGHT, DETAIL_PANE_BOTTOM = -5, 36
+local SCROLL_TOP, SCROLL_WIDTH, SCROLL_HEIGHT = -75, 300, 375
+local LIST_SCROLL_X, DETAIL_SCROLL_X = 19, 352
+
+-- Bottom row: Abandon and Share under the list pane, Exit under the detail
+-- pane's right edge.
+local BUTTON_LEFT, BUTTON_RIGHT, BUTTON_BOTTOM, BUTTON_GAP = 14, -5, 12, 3
+
+-- Header row: the "All" button lines up with the list rows' glyphs; the quest
+-- count sits at the same height at the detail pane's right edge. The native
+-- count anchors to `QuestLogCountRight`, an input-border texture the strip
+-- hides, so it is re-anchored to the frame.
+local COLLAPSE_ALL_X, COLLAPSE_ALL_Y = LIST_SCROLL_X, -44
+local QUEST_COUNT_X, QUEST_COUNT_Y = -14, -55
 
 -- Child frames whose own art is purely decorative. Everything else nested
 -- in this window carries Textures that mean something -- see the header.
@@ -369,6 +395,9 @@ local function WrapQuestLogUpdate()
 	local origUpdate = _G.QuestLog_Update
 	if type(origUpdate) == "function" then
 		_G.QuestLog_Update = function()
+			-- The native file sets QUESTS_DISPLAYED = 6 at load; asserted
+			-- here so nothing that resets it shrinks the list.
+			_G.QUESTS_DISPLAYED = QUEST_ROW_COUNT
 			origUpdate()
 			pcall(UpdateRowGlyphs)
 		end
@@ -400,6 +429,100 @@ local function StartGlyphPoll()
 	end, 0.2)
 end
 
+-- A plain child frame at QuestLogFrame's own level, so the rows (siblings of
+-- the list scroll frame, one level up) and both scroll frames draw above it.
+local function CreatePane(frame, key)
+	if frame[key] then return frame[key] end
+	local okPane, pane = pcall(CreateFrame, "Frame", nil, frame)
+	if not okPane or not pane then return nil end
+	local okLevel, level = pcall(frame.GetFrameLevel, frame)
+	pcall(pane.SetFrameLevel, pane, (okLevel and tonumber(level)) or 0)
+	frame[key] = pane
+	return pane
+end
+
+-- The list's surface is NOT parented to `QuestLogListScrollFrame`:
+-- `QuestLogTitle1..n` are children of `QuestLogFrame`, not of the
+-- FauxScrollFrame (which only drives the scrollbar), so a surface on the
+-- scroll frame would sit above the rows and cover the whole list.
+local function ApplyPanels(frame)
+	S:CreatePanel(frame, PANEL.left, PANEL.top, PANEL.right, PANEL.bottom)
+
+	if not frame.elvListPane then
+		local pane = CreatePane(frame, "elvListPane")
+		if pane then
+			pcall(pane.SetPoint, pane, "TOPLEFT", frame, "TOPLEFT", LIST_PANE.left, LIST_PANE.top)
+			pcall(pane.SetPoint, pane, "BOTTOMRIGHT", frame, "BOTTOMRIGHT", LIST_PANE.right, LIST_PANE.bottom)
+			S:CreateSurface(pane, S.PANEL_COLOR)
+		end
+	end
+	if frame.elvListPane and not frame.elvDetailPane then
+		local pane = CreatePane(frame, "elvDetailPane")
+		if pane then
+			pcall(pane.SetPoint, pane, "TOPLEFT", frame.elvListPane, "TOPRIGHT", 3, 0)
+			pcall(pane.SetPoint, pane, "BOTTOMRIGHT", frame, "BOTTOMRIGHT", DETAIL_PANE_RIGHT, DETAIL_PANE_BOTTOM)
+			S:CreateSurface(pane, S.PANEL_COLOR)
+		end
+	end
+end
+
+local function PlaceScrollFrame(scroll, frame, x)
+	if not scroll then return end
+	pcall(scroll.ClearAllPoints, scroll)
+	pcall(scroll.SetPoint, scroll, "TOPLEFT", frame, "TOPLEFT", x, SCROLL_TOP)
+	pcall(scroll.SetWidth, scroll, SCROLL_WIDTH)
+	pcall(scroll.SetHeight, scroll, SCROLL_HEIGHT)
+end
+
+-- The detail frame is natively anchored below the list; both are pinned to
+-- the frame instead, side by side.
+local function ApplyScrollFrames(frame)
+	PlaceScrollFrame(_G.QuestLogListScrollFrame, frame, LIST_SCROLL_X)
+	local detail = _G.QuestLogDetailScrollFrame
+	PlaceScrollFrame(detail, frame, DETAIL_SCROLL_X)
+	if detail then pcall(detail.UpdateScrollChildRect, detail) end
+
+	S:HandleScrollBar(_G.QuestLogListScrollFrameScrollBar)
+	S:HandleScrollBar(_G.QuestLogDetailScrollFrameScrollBar)
+end
+
+local function Reanchor(region, point, relativeTo, relativePoint, x, y)
+	if not region or not relativeTo then return end
+	pcall(region.ClearAllPoints, region)
+	pcall(region.SetPoint, region, point, relativeTo, relativePoint, x, y)
+end
+
+local function ApplyHeaderAndButtons(frame)
+	Reanchor(_G.QuestLogCollapseAllButton, "TOPLEFT", frame, "TOPLEFT", COLLAPSE_ALL_X, COLLAPSE_ALL_Y)
+	Reanchor(_G.QuestLogQuestCount, "RIGHT", frame, "TOPRIGHT", QUEST_COUNT_X, QUEST_COUNT_Y)
+	-- Natively placed relative to the title text, which now sits over the
+	-- middle of the doublewide frame, between the panes.
+	Reanchor(_G.QuestLogNoQuestsText, "CENTER", frame.elvListPane, "CENTER", 0, 0)
+
+	local abandon = _G.QuestLogFrameAbandonButton
+	Reanchor(abandon, "BOTTOMLEFT", frame, "BOTTOMLEFT", BUTTON_LEFT, BUTTON_BOTTOM)
+	-- Natively hangs off the Exit button's left edge.
+	Reanchor(_G.QuestFramePushQuestButton, "LEFT", abandon, "RIGHT", BUTTON_GAP, 0)
+	Reanchor(_G.QuestFrameExitButton, "BOTTOMRIGHT", frame, "BOTTOMRIGHT", BUTTON_RIGHT, BUTTON_BOTTOM)
+end
+
+-- The XML defines `QuestLogTitle1..6`; the rest are built from the same
+-- template, chained below the previous row exactly like the native ones.
+local function CreateExtraRows(frame)
+	local i
+	for i = 2, QUEST_ROW_COUNT do
+		if not _G["QuestLogTitle" .. i] then
+			local okBtn, btn = pcall(CreateFrame, "Button", "QuestLogTitle" .. i, frame, "QuestLogTitleButtonTemplate")
+			if okBtn and btn then
+				pcall(btn.SetID, btn, i)
+				pcall(btn.Hide, btn)
+				pcall(btn.SetPoint, btn, "TOPLEFT", _G["QuestLogTitle" .. (i - 1)], "BOTTOMLEFT", 0, 1)
+			end
+		end
+	end
+	_G.QUESTS_DISPLAYED = QUEST_ROW_COUNT
+end
+
 local function ApplyQuestLogChrome(frame)
 	S:StripTextures(frame, false)
 
@@ -408,37 +531,20 @@ local function ApplyQuestLogChrome(frame)
 		S:StripTextures(_G[STRIP_CHILDREN[i]], false)
 	end
 
-	S:CreatePanel(frame, PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM)
+	ApplyPanels(frame)
 
 	PromotePanelText()
 	ReassertDetailText()
 	StyleRewardItems()
 
-	-- ONLY the detail pane gets a field surface. The quest list must not:
-	-- `QuestLogTitle1..n` are children of `QuestLogFrame`, NOT of
-	-- `QuestLogListScrollFrame` (`QuestLogFrame.xml` -- the FauxScrollFrame
-	-- there only drives the scrollbar, the rows are siblings laid over it),
-	-- so a surface parented to the scroll frame sits at that frame's own
-	-- level with nothing of the scroll frame's own above it, and covers the
-	-- entire list. Live symptom: an empty box where the quests should be.
-	-- The detail pane is safe for the exact opposite reason -- its content
-	-- lives in `QuestLogDetailScrollChildFrame`, a real child of the scroll
-	-- frame, so it draws above the surface.
-	--
-	-- General form of this, worth remembering before adding a field to any
-	-- scroll frame: `S:CreateSurface` goes below the PARENT's children, and
-	-- a FauxScrollFrame's visible rows are typically not its children.
-	S:CreateField(_G.QuestLogDetailScrollFrame)
-
-	S:HandleScrollBar(_G.QuestLogListScrollFrameScrollBar)
-	S:HandleScrollBar(_G.QuestLogDetailScrollFrameScrollBar)
+	ApplyScrollFrames(frame)
+	ApplyHeaderAndButtons(frame)
 
 	StyleRowGlyphs()
 	UpdateRowGlyphs()
 
-	-- Re-anchored to the PANEL, not left on the frame: the native anchor is
-	-- TOPRIGHT -30 against a frame whose right edge is 35px past the visible
-	-- dialog, so the skinned button would sit outside the panel entirely.
+	-- Re-anchored to the PANEL: the native anchor (TOPRIGHT -30,-8) was cut
+	-- for the 384-wide parchment art.
 	S:StyleCloseButton(_G.QuestLogFrameCloseButton)
 	local close = _G.QuestLogFrameCloseButton
 	if close and frame.elvBackground then
@@ -460,26 +566,34 @@ local function ApplyQuestLogSkin()
 	if not frame then return end
 	questLogSkinApplied = true
 
-	-- The frame's own bounds run 35px right and 75px below anything it
-	-- draws, and it is `enableMouse="true"` and toplevel -- so without this
-	-- that dead area stays an invisible click-eater beside and under the
-	-- window. Matched to the panel. (Same fix as KeyBindingFrame.)
-	pcall(frame.SetHitRectInsets, frame, PANEL_LEFT, -PANEL_RIGHT, -PANEL_TOP, PANEL_BOTTOM)
+	-- Natively a "left" panel; at twice the width it takes the left and
+	-- centre slots, like the profession and trainer windows.
+	pcall(function()
+		UIPanelWindows["QuestLogFrame"] = { area = "doublewide", pushable = 0, whileDead = 1 }
+	end)
+
+	pcall(frame.SetWidth, frame, FRAME_WIDTH)
+	pcall(frame.SetHeight, frame, FRAME_HEIGHT)
+	-- `enableMouse="true"` and toplevel, so any part of the frame outside the
+	-- panel would be an invisible click-eater. Matched to the panel.
+	pcall(frame.SetHitRectInsets, frame, PANEL.left, -PANEL.right, -PANEL.top, PANEL.bottom)
 
 	-- `movable="true"` in the XML but with no drag script anywhere, so the
-	-- native window cannot actually be moved. The handle is pulled in to
-	-- the panel's right edge for the same reason as the hit rect above.
-	local handle = S:MakeDraggable(frame)
-	if handle then
-		pcall(handle.SetPoint, handle, "TOPRIGHT", frame, "TOPRIGHT", PANEL_RIGHT, 0)
-	end
+	-- native window cannot actually be moved.
+	S:MakeDraggable(frame, _G.QuestLogFrameCloseButton)
 	pcall(frame.SetUserPlaced, frame, true)
 
+	CreateExtraRows(frame)
 	WrapQuestLogUpdate()
 	ApplyQuestLogChrome(frame)
 	StartGlyphPoll()
 
-	local ok = S:TryHookScript(frame, "OnShow", function() ApplyQuestLogChrome(frame) end)
+	-- The doublewide override means an open profession or trainer window is
+	-- no longer replaced by the panel manager: closed here instead.
+	local ok = S:TryHookScript(frame, "OnShow", function()
+		ApplyQuestLogChrome(frame)
+		S:CloseOtherDoublewidePanels(frame)
+	end)
 	if not ok then S:ReportSkinProblem() end
 end
 
