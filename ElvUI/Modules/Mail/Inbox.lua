@@ -168,11 +168,12 @@ end
 
 -- Accent text on the widget fill, and a border recolour on hover.
 --
--- NOT `S:HandleButtonHighlight`: its gradient textures are drawn on the
--- HIGHLIGHT layer, which this client renders CONSTANTLY on a frame that has
--- no native highlight texture of its own -- the button then reads as a
--- washed-out grey slab instead of a flat one. Same client behaviour that
--- keeps `Util.SkinItemButton` from applying real ElvUI's hover overlay.
+-- NOT `S:HandleButtonHighlight`: on UA its two HIGHLIGHT-layer gradient
+-- textures render CONSTANTLY on this button, which then reads as a
+-- washed-out grey slab instead of a flat one. A plain (non-gradient)
+-- HIGHLIGHT-layer texture on a button like this one shows only on hover, so
+-- the gradient call or the preceding `SetHighlightTexture("")` is what
+-- differs; which of the two is not isolated.
 local function BuildButton(name, text, onClick)
 	local S = E:GetModule("Skins")
 

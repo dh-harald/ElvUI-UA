@@ -78,9 +78,42 @@ local function SetRankBarColor()
 	if bar then pcall(bar.SetStatusBarColor, bar, RANK_BAR_COLOR[1], RANK_BAR_COLOR[2], RANK_BAR_COLOR[3]) end
 end
 
+-- Reagent quality colour, same as TradeSkill.lua's `ColorReagents`. The
+-- selection index falls back to `GetCraftSelectionIndex` in case the hook
+-- is not handed the native argument.
+local function ColorReagents(id)
+	id = tonumber(id)
+	if not id then
+		local okSel, sel = pcall(GetCraftSelectionIndex)
+		id = okSel and tonumber(sel)
+	end
+	local count = 0
+	if id then
+		local okCount, n = pcall(GetCraftNumReagents, id)
+		count = (okCount and tonumber(n)) or 0
+	end
+	local i
+	for i = 1, REAGENT_COUNT do
+		local slot = _G["CraftReagent" .. i]
+		if slot then
+			local link, hasEnough
+			if i <= count then
+				local okLink, reagentLink = pcall(GetCraftReagentItemLink, id, i)
+				if okLink then link = reagentLink end
+				local okInfo, _, _, needed, owned = pcall(GetCraftReagentInfo, id, i)
+				needed, owned = tonumber(needed), tonumber(owned)
+				hasEnough = okInfo and needed and owned and owned >= needed
+			end
+			S:SetQuestItemSlotQuality(slot, link, hasEnough)
+		end
+	end
+end
+
 -- Post-hook on the CraftFrame_SetSelection global: re-crops the recipe icon,
--- whose NormalTexture native code sets on every selection.
-local function ApplySelectionChrome()
+-- whose NormalTexture native code sets on every selection, and colours the
+-- reagents.
+local function ApplySelectionChrome(id)
+	ColorReagents(id)
 	local icon = _G.CraftIcon
 	if icon then
 		S:CreateIconEdges(icon)
@@ -169,7 +202,7 @@ local function ApplyCraftChrome(frame)
 		if pane then
 			pcall(pane.SetPoint, pane, "TOPLEFT", frame, "TOPLEFT", LIST_LEFT, LIST_TOP)
 			pcall(pane.SetPoint, pane, "BOTTOMRIGHT", frame, "BOTTOMRIGHT", LIST_RIGHT, LIST_BOTTOM)
-			S:CreateSurface(pane, S.PANEL_COLOR)
+			S:CreateSurface(pane, S.WIDGET_COLOR)
 		end
 	end
 	if frame.elvListPane and not frame.elvDetailPane then
@@ -177,7 +210,7 @@ local function ApplyCraftChrome(frame)
 		if pane then
 			pcall(pane.SetPoint, pane, "TOPLEFT", frame.elvListPane, "TOPRIGHT", 3, 0)
 			pcall(pane.SetPoint, pane, "BOTTOMRIGHT", frame, "BOTTOMRIGHT", DETAIL_RIGHT, DETAIL_BOTTOM)
-			S:CreateSurface(pane, S.PANEL_COLOR)
+			S:CreateSurface(pane, S.WIDGET_COLOR)
 		end
 	end
 

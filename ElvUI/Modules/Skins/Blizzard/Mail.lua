@@ -356,8 +356,8 @@ local function ApplyMailChrome(frame)
 	-- BACKGROUND square the merchant's pair carries. The "Prev"/"Next"
 	-- labels beside them are kept: they are the only page affordance once
 	-- the native art is gone.
-	S:StyleSquareIconButton(_G.InboxPrevPageButton, "LEFT", 0.5)
-	S:StyleSquareIconButton(_G.InboxNextPageButton, "RIGHT", 0.5)
+	S:StyleNextPrevButton(_G.InboxPrevPageButton, "LEFT")
+	S:StyleNextPrevButton(_G.InboxNextPageButton, "RIGHT")
 
 	S:StyleTab(_G.MailFrameTab1)
 	S:StyleTab(_G.MailFrameTab2)

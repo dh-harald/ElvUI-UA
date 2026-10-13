@@ -174,10 +174,31 @@ end
 -- `TradeSkillFrame_SetSelection` is a bare global function -- the
 -- confirmed-safe hook shape on this client. Re-crops
 -- the recipe icon (a bare Button with no inherited border template) and
--- colours its border by the crafted item's quality. Reagent slots keep the
--- merchant-style black border (`S:StyleQuestItemSlot`).
+-- colours its border by the crafted item's quality. Reagent slots get the
+-- reagent's quality colour (`S:SetQuestItemSlotQuality`).
+local function ColorReagents(id)
+	local okCount, count = pcall(GetTradeSkillNumReagents, id)
+	count = (okCount and tonumber(count)) or 0
+	local i
+	for i = 1, REAGENT_COUNT do
+		local slot = _G["TradeSkillReagent" .. i]
+		if slot then
+			local link, hasEnough
+			if i <= count then
+				local okLink, reagentLink = pcall(GetTradeSkillReagentItemLink, id, i)
+				if okLink then link = reagentLink end
+				local okInfo, _, _, needed, owned = pcall(GetTradeSkillReagentInfo, id, i)
+				needed, owned = tonumber(needed), tonumber(owned)
+				hasEnough = okInfo and needed and owned and owned >= needed
+			end
+			S:SetQuestItemSlotQuality(slot, link, hasEnough)
+		end
+	end
+end
+
 local function ApplySelectionChrome(id)
 	SetRankBarColor()
+	ColorReagents(id)
 
 	local icon = _G.TradeSkillSkillIcon
 	if icon then
@@ -277,6 +298,8 @@ local function ApplyTradeSkillChrome(frame)
 	-- SAME frame -- `S:CreateSurface`'s one-elvBackground-per-frame guard
 	-- would just hand back the first one). Matches real ElvUI's own
 	-- `bg1`/`bg2` split: a visible seam between the list and detail panes.
+	-- Field tone, one step lighter than the window panel, so each pane reads
+	-- as a framed well -- the same as the auction window's column panes.
 	if not frame.elvListPane then
 		local okPane, pane = pcall(CreateFrame, "Frame", nil, frame)
 		if okPane and pane then
@@ -284,7 +307,7 @@ local function ApplyTradeSkillChrome(frame)
 			pcall(pane.SetFrameLevel, pane, (okLevel and tonumber(level)) or 0)
 			pcall(pane.SetPoint, pane, "TOPLEFT", frame, "TOPLEFT", LIST_LEFT, LIST_TOP)
 			pcall(pane.SetPoint, pane, "BOTTOMRIGHT", frame, "BOTTOMRIGHT", LIST_RIGHT, LIST_BOTTOM)
-			S:CreateSurface(pane, S.PANEL_COLOR)
+			S:CreateSurface(pane, S.WIDGET_COLOR)
 			frame.elvListPane = pane
 		end
 	end
@@ -295,7 +318,7 @@ local function ApplyTradeSkillChrome(frame)
 			pcall(pane.SetFrameLevel, pane, (okLevel and tonumber(level)) or 0)
 			pcall(pane.SetPoint, pane, "TOPLEFT", frame.elvListPane, "TOPRIGHT", 3, 0)
 			pcall(pane.SetPoint, pane, "BOTTOMRIGHT", frame, "BOTTOMRIGHT", DETAIL_RIGHT, DETAIL_BOTTOM)
-			S:CreateSurface(pane, S.PANEL_COLOR)
+			S:CreateSurface(pane, S.WIDGET_COLOR)
 			frame.elvDetailPane = pane
 		end
 	end

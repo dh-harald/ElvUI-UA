@@ -87,10 +87,25 @@ local function IsScreenSized(frame)
 	return width >= parentWidth * SCREEN_FRACTION and height >= parentHeight * SCREEN_FRACTION
 end
 
--- A group box is a Frame that carried a native `<Backdrop>` -- and is not
--- one of the two other things that can look like one.
+-- Whether a frame has any child other than this module's own surfaces.
+local function HasNativeChildren(widget)
+	local okKids, kids = pcall(function() return { widget:GetChildren() } end)
+	if not okKids or type(kids) ~= "table" then return false end
+	local i
+	for i = 1, table.getn(kids) do
+		if not kids[i].elvSurface then return true end
+	end
+	return false
+end
+
+-- A group box is a Frame that carried a native `<Backdrop>` and holds
+-- controls -- and is not one of the other things that can look like one.
 local function IsGroupBox(widget, widgetType, name)
 	if widgetType ~= "Frame" then return false end
+	-- An empty backdrop frame is not a box. UA puts one over the disabled
+	-- "Modern" tab (a 100x32 hover area that only carries a tooltip); a
+	-- surface on it draws a second box around that tab.
+	if not HasNativeChildren(widget) then return false end
 	-- Our own surfaces: `S:CreateSurface` gives them a backdrop, so without
 	-- this a re-apply pass would treat the box's own lighter surface as a
 	-- nested box and paint another one inside it.

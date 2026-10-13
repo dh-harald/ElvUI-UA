@@ -34,12 +34,10 @@ local PREFIX = "ShapeshiftButton"
 -- see that file's own comment) -- deliberately does NOT touch the
 -- CheckedTexture at all (unlike NormalTexture, which this project has
 -- already confirmed needs clearing): the checked state IS the entire
--- purpose of this bar (which stance is active), and nothing here
--- introduces a NEW custom checked texture the way the already-abandoned
--- SetPushedTexture/SetCheckedTexture styling attempt did (see
--- ActionBars.lua's own StyleButton comment on that gold-tint finding) --
--- this just leaves whatever checked-texture ShapeshiftButtonTemplate
--- ships with alone, toggled via plain SetChecked.
+-- purpose of this bar (which stance is active), and
+-- `Util.CreateButtonHoverTextures` only replaces hover and pushed -- this
+-- leaves whatever checked-texture ShapeshiftButtonTemplate ships with
+-- alone, toggled via plain SetChecked.
 local function StyleButton(button)
 	if not button then return end
 
@@ -68,6 +66,7 @@ local function StyleButton(button)
 
 	ElvUI.Util.CreateButtonBorder(button)
 	ElvUI.Util.RaiseCooldown(button)
+	ElvUI.Util.CreateButtonHoverTextures(button)
 end
 
 function M:CreateBar()

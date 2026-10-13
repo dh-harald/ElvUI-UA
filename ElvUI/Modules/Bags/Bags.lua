@@ -788,10 +788,11 @@ end
 
 -- Hovering a bag in the strip dims every slot that does NOT belong to it.
 --
--- Ported from real ElvUI's own SetSlotAlphaForBag/ResetSlotAlphaForBags, and
--- deliberately alpha-based rather than a highlight texture: alpha demonstrably
--- reaches these borrowed native buttons on both clients, while highlight/
--- pushed textures are this project's standing suspect on UA.
+-- Ported from real ElvUI's own SetSlotAlphaForBag/ResetSlotAlphaForBags:
+-- alpha on the slot button, which reaches these borrowed native buttons on
+-- both clients. The slots' hover/pushed textures keep their own alpha in the
+-- vertex colour (`Util.CreateButtonHoverTextures`), so this dimming does not
+-- overwrite it.
 function B:SetSlotAlphaForBag(f, bagID)
 	local i
 	for i = 1, table.getn(f.BagIDs) do

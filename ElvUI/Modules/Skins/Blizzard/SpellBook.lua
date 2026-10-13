@@ -351,12 +351,9 @@ local function StyleSkillLineTab(tab)
 	end
 end
 
--- "Prev"/"Next" labels next to the page arrows -- removed since the
--- arrows are self-explanatory. UNNAMED BACKGROUND-layer FontStrings
--- declared directly on each page button (confirmed in
--- `wow-ui-source/FrameXML/SpellBookFrame.xml`), killed by
--- `S:KillButtonLabel` (`Skins.lua` -- hoisted there once Merchant.lua
--- needed the identical recipe for its own page-nav buttons).
+-- The "Prev"/"Next" labels next to the page arrows (unnamed FontStrings
+-- on each page button, `SpellBookFrame.xml`) keep their native gold, as in
+-- real ElvUI.
 
 local spellButtonUpdateHooked = false
 local spellBookUpdateHooked = false
@@ -460,15 +457,8 @@ local function ApplyChrome(frame)
 
 	S:StyleCloseButton(SpellBookCloseButton)
 
-	-- 0.5 icon scale -- these page buttons are a native 32x32, twice the
-	-- size of the other `S:StyleSquareIconButton` consumers, so a
-	-- full-footprint arrow reads as oversized. Scoped to this call
-	-- site rather than changed in the shared helper, so the already-accepted
-	-- scrollbar-arrow and Unlearn-button sizes don't move.
-	S:StyleSquareIconButton(SpellBookPrevPageButton, "LEFT", 0.5)
-	S:StyleSquareIconButton(SpellBookNextPageButton, "RIGHT", 0.5)
-	S:KillButtonLabel(SpellBookPrevPageButton)
-	S:KillButtonLabel(SpellBookNextPageButton)
+	S:StyleNextPrevButton(SpellBookPrevPageButton, "LEFT")
+	S:StyleNextPrevButton(SpellBookNextPageButton, "RIGHT")
 
 	local i
 	for i = 1, 12 do

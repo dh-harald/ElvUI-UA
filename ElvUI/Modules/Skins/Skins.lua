@@ -356,7 +356,8 @@ end
 -- craft reagents), styled like the merchant window's item slots
 -- (Blizzard/Merchant.lua): a 37x37 icon with a 1px border, the name beside
 -- it, and a bordered field from just past the icon to the slot's right edge,
--- as tall as the icon. No border around the whole slot, no quality tint.
+-- as tall as the icon. No border around the whole slot; a quality tint, where
+-- the caller wants one, comes from `S:SetQuestItemSlotQuality` below.
 --
 -- Built ENTIRELY from the slot button's own texture regions, never from a
 -- frame. On the legacy client a frame created at runtime inside a scroll child
@@ -439,6 +440,43 @@ function S:StyleQuestItemSlot(slot, width, height)
 		pcall(label.ClearAllPoints, label)
 		pcall(label.SetPoint, label, "LEFT", iconBorder, "RIGHT", QUEST_ITEM_TEXT_GAP, 0)
 		pcall(label.SetDrawLayer, label, "OVERLAY")
+	end
+end
+
+-- Quality colour of an item link, read from the link's own `|cffRRGGBB`
+-- prefix rather than from `GetItemInfo`, which returns nothing for an item
+-- not yet in the client cache. Returns nothing for a nil or colourless link.
+function S:GetLinkColor(link)
+	if type(link) ~= "string" then return end
+	local hr, hg, hb = Compat.match(link, "|c%x%x(%x%x)(%x%x)(%x%x)")
+	if not hr then return end
+	return tonumber(hr, 16) / 255, tonumber(hg, 16) / 255, tonumber(hb, 16) / 255
+end
+
+-- Quality colour of a `S:StyleQuestItemSlot` slot, as real ElvUI colours the
+-- trade skill / craft reagents: icon border and field border in the item's
+-- quality colour, the name too -- unless the player lacks the reagent, in
+-- which case native code has already greyed the name and that grey is the
+-- message. `link` nil (empty slot, no link) restores the plain border.
+function S:SetQuestItemSlotQuality(slot, link, hasEnough)
+	if not slot then return end
+	local r, g, b = S:GetLinkColor(link)
+
+	local borderR, borderG, borderB = r, g, b
+	if not borderR then
+		borderR, borderG, borderB = S.BORDER_COLOR[1], S.BORDER_COLOR[2], S.BORDER_COLOR[3]
+	end
+	if slot.elvIconBorder then
+		pcall(slot.elvIconBorder.SetVertexColor, slot.elvIconBorder, borderR, borderG, borderB, 1)
+	end
+	if slot.elvFieldBorder then
+		pcall(slot.elvFieldBorder.SetVertexColor, slot.elvFieldBorder, borderR, borderG, borderB, 1)
+	end
+
+	if r and hasEnough then
+		local okName, name = pcall(slot.GetName, slot)
+		local label = okName and name and _G[name .. "Name"]
+		if label then pcall(label.SetTextColor, label, r, g, b) end
 	end
 end
 
@@ -765,36 +803,53 @@ end
 -- case the very same `WhoFrame-ColumnTabs` asset -- but it is NOT a tab, and
 -- two differences make that matter:
 --
---  * consecutive headers overlap by only 2px (`LEFT` to the previous one's
---    `RIGHT` at x=-2), not a tab's 14, so the border box is inset by 2 and
---    the boxes end up exactly touching, keeping the continuous header strip;
---    a tab's 10px inset would leave visible gaps inside one list's header row.
+--  * the header gets NO box and keeps its native label colour: real ElvUI
+--    (Who/Guild headers in Friends.lua, the auction sort tabs) only strips
+--    the art and adds `E:StyleButton`'s hover tint, so the header row reads
+--    as plain text on the panel. The hover tint is real ElvUI's recipe:
+--    an addon texture, white at 0.3 alpha inset 1, fed to the button's
+--    HighlightTexture slot, which replaces the native blue tab glow. On UA
+--    a HIGHLIGHT-layer texture is drawn permanently on a button created by
+--    an addon, but on these XML-born native headers it is shown only on
+--    hover, as on legacy; do not reuse this on an addon-created button.
 --  * the auction headers carry their SORT ARROW in the button's
---    NormalTexture (`$parentArrow`), which `S:StyleTab` blanks. The strip
---    below only clears region art, so the arrow survives -- and `elvStyled`
---    is set at the end so `S:SkinChildren`'s own tab branch (which
---    fingerprints on `_G[name.."Middle"]`, a test these headers also pass)
---    leaves the header alone instead of running `S:StyleTab` over it.
---
--- Fill is `S.TAB_COLOR` for the same reason a tab's is: a header strip sits
--- directly ON a panel and has to separate from it.
+--    NormalTexture (`$parentArrow`, ARTWORK). `GetRegions()` returns that
+--    texture too, so a region strip (`S:StripTextures`) hides the arrow;
+--    only the three named BACKGROUND pieces are killed instead, as real
+--    ElvUI does. `elvStyled` is set at the end so `S:SkinChildren`'s own
+--    tab branch (which fingerprints on `_G[name.."Middle"]`, a test these
+--    headers also pass) leaves the header alone instead of running
+--    `S:StyleTab` over it.
+local COLUMN_HEADER_ART = { "Left", "Middle", "Right" }
+local COLUMN_HEADER_HOVER_ALPHA = 0.3
+
 function S:StyleColumnHeader(header)
 	if not header then return end
-	S:StripTextures(header, false)
+	local okName, name = pcall(header.GetName, header)
+	if okName and name then
+		local i
+		for i = 1, table.getn(COLUMN_HEADER_ART) do
+			local art = _G[name..COLUMN_HEADER_ART[i]]
+			if art then S:Kill(art) end
+		end
+	end
 	-- Standing frame property, so the three art pieces stay gone through any
 	-- native re-show -- the same guarantee `S:StyleTab` relies on. The sort
-	-- arrow is a NormalTexture (ARTWORK), not on this layer.
+	-- arrow is on ARTWORK, not on this layer.
 	pcall(header.DisableDrawLayer, header, "BACKGROUND")
 
-	ElvUI.Util.CreateButtonBorder(header, 2, 0, 0)
-	if header.elvBackdrop then
-		pcall(header.elvBackdrop.SetBackdropColor, header.elvBackdrop,
-			S.TAB_COLOR[1], S.TAB_COLOR[2], S.TAB_COLOR[3], S.TAB_COLOR[4] or 1)
-	end
-
-	local okText, text = pcall(header.GetFontString, header)
-	if okText and text then
-		pcall(text.SetTextColor, text, S.ACCENT_COLOR[1], S.ACCENT_COLOR[2], S.ACCENT_COLOR[3])
+	if not header.elvHover then
+		local okHover, hover = pcall(header.CreateTexture, header, nil, "HIGHLIGHT")
+		if okHover and hover then
+			pcall(hover.SetTexture, hover, "Interface\\Buttons\\WHITE8x8")
+			-- Vertex alpha, not SetAlpha: on UA a frame's SetAlpha overwrites
+			-- its regions' own alpha (`Util.CreateButtonHoverTextures`).
+			pcall(hover.SetVertexColor, hover, 1, 1, 1, COLUMN_HEADER_HOVER_ALPHA)
+			pcall(hover.SetPoint, hover, "TOPLEFT", header, "TOPLEFT", 1, -1)
+			pcall(hover.SetPoint, hover, "BOTTOMRIGHT", header, "BOTTOMRIGHT", -1, 1)
+			pcall(header.SetHighlightTexture, header, hover)
+			header.elvHover = hover
+		end
 	end
 
 	header.elvStyled = true
@@ -1011,26 +1066,34 @@ function S:DumpSpellButton(index)
 	S:DumpButton("SpellButton" .. (tonumber(index) or 1))
 end
 
--- Shared with Blizzard/Character.lua's own close button, same reason as
--- `S:StyleTab` above -- Friends.lua needs an identical close button
--- (strip native X art, fixed 20x20, bordered, plain "X" glyph) for
--- `FriendsFrameCloseButton`.
+-- Close button for every skinned window: native X art stripped, a bordered
+-- box with a white lowercase "x" glyph. Sized to real ElvUI's visible box
+-- (`S:HandleCloseButton`: a 32x32 button whose backdrop is inset 7/8/8/8,
+-- i.e. a 17x16 box, PT Sans Narrow 16 outline glyph, 1px up). The button
+-- itself is shrunk to the box, so callers that re-anchor it by TOPRIGHT
+-- keep the box's corner where they put it.
+--
+-- The glyph colour is set on every call and the button carries `elvStyled`:
+-- without the latch the `S:SkinChildren` sweep treats it as a plain panel
+-- button and the glyph ends up in the accent colour on some windows.
 function S:StyleCloseButton(button)
 	if not button then return end
 	pcall(button.SetNormalTexture, button, "")
 	pcall(button.SetPushedTexture, button, "")
 	pcall(button.SetHighlightTexture, button, "")
-	pcall(button.SetWidth, button, 20)
-	pcall(button.SetHeight, button, 20)
+	pcall(button.SetWidth, button, 17)
+	pcall(button.SetHeight, button, 16)
 	ElvUI.Util.CreateButtonBorder(button)
+	button.elvStyled = true
 
 	if not button.elvCloseText then
 		local text = button:CreateFontString(nil, "OVERLAY")
-		E:FontTemplate(text, nil, 10, "OUTLINE")
-		pcall(text.SetText, text, "X")
-		pcall(text.SetPoint, text, "CENTER", button, "CENTER", 0, 0)
+		E:FontTemplate(text, nil, 16, "OUTLINE")
+		pcall(text.SetText, text, "x")
+		pcall(text.SetPoint, text, "CENTER", button, "CENTER", 0, 1)
 		button.elvCloseText = text
 	end
+	pcall(button.elvCloseText.SetTextColor, button.elvCloseText, 1, 1, 1)
 end
 
 -- Ported from real ElvUI's own `S:HandleButtonHighlight`
@@ -1127,11 +1190,16 @@ end
 -- Not on UA, which keeps the accent colour only: recolouring after a native
 -- state change fights the client's own state font (measured on tabs, see
 -- `InstallTabStateHooks`).
+--
+-- The accent is `UIPanelButtonTemplate`'s own `GameFontNormal` gold. A
+-- template whose native label is another colour (`GameMenuButtonTemplate`:
+-- white) sets `button.elvLabelColor` before styling, and that colour is used
+-- instead of the accent while enabled.
 function S:ColorPanelButtonText(button)
 	if not button then return end
 	local text = ButtonLabel(button)
 	if not text then return end
-	local color = S.ACCENT_COLOR
+	local color = button.elvLabelColor or S.ACCENT_COLOR
 	if not Compat.isUA then
 		local okEnabled, enabled = pcall(button.IsEnabled, button)
 		if okEnabled and not Compat.bool(enabled) then
@@ -1259,8 +1327,62 @@ function S:StyleUIPanelButton(button)
 	end
 
 	ElvUI.Util.CreateButtonBorder(button)
+	S:CreateHoverBorder(button)
 
 	S:ColorPanelButtonText(button)
+end
+
+-- Hover look of a bordered button: real ElvUI's `S:SetModifiedBackdrop`
+-- (ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua:39) recolours the border to
+-- the value colour from OnEnter/OnLeave hooks. Hooks are unreliable here (no
+-- `hooksecurefunc` on UA, and a native button's OnEnter can't be read back to
+-- chain), so the same look is drawn instead as four 1px edges on the
+-- button's own HIGHLIGHT layer, laid over `Util.CreateButtonBorder`'s edge
+-- (which sits a frame level below the button). The engine shows that layer
+-- only while the button is hovered and enabled, on both clients, native XML
+-- buttons and `CreateFrame` ones alike. `E.valueColorUpdateFuncs` recolours
+-- every edge when the value colour changes.
+local hoverEdges = {}
+
+local function HoverColor()
+	return (E.media and E.media.rgbvaluecolor) or S.ACCENT_COLOR
+end
+
+local function RecolorHoverEdges()
+	local c = HoverColor()
+	local i
+	for i = 1, table.getn(hoverEdges) do
+		pcall(hoverEdges[i].SetVertexColor, hoverEdges[i], c[1], c[2], c[3])
+	end
+end
+E.valueColorUpdateFuncs[RecolorHoverEdges] = true
+
+-- TOPLEFT and BOTTOMRIGHT offsets of each edge, relative to the matching
+-- corners of the border frame.
+local HOVER_EDGES = {
+	{ "TOPLEFT", 0, 0, "TOPRIGHT", 0, -1 },
+	{ "BOTTOMLEFT", 0, 1, "BOTTOMRIGHT", 0, 0 },
+	{ "TOPLEFT", 0, 0, "BOTTOMLEFT", 1, 0 },
+	{ "TOPRIGHT", -1, 0, "BOTTOMRIGHT", 0, 0 },
+}
+
+function S:CreateHoverBorder(button)
+	if not button or button.elvHoverBorder then return end
+	local anchor = button.elvBackdrop or button
+	local c = HoverColor()
+	local i
+	for i = 1, table.getn(HOVER_EDGES) do
+		local spec = HOVER_EDGES[i]
+		local okEdge, edge = pcall(button.CreateTexture, button, nil, "HIGHLIGHT")
+		if okEdge and edge then
+			pcall(edge.SetTexture, edge, "Interface\\Buttons\\WHITE8x8")
+			pcall(edge.SetVertexColor, edge, c[1], c[2], c[3])
+			pcall(edge.SetPoint, edge, "TOPLEFT", anchor, spec[1], spec[2], spec[3])
+			pcall(edge.SetPoint, edge, "BOTTOMRIGHT", anchor, spec[4], spec[5], spec[6])
+			table.insert(hoverEdges, edge)
+		end
+	end
+	button.elvHoverBorder = true
 end
 
 -- Shared square-icon-button recipe, ported from real ElvUI's own
@@ -1378,32 +1500,11 @@ function S:GetDisabledTexture(button)
 	return nil
 end
 
--- A page-nav button's PREV/NEXT (or similar) label is a BACKGROUND-layer
--- FontString declared directly on the button itself, with no global name
--- of its own to hand to `S:Kill` -- walk the button's own regions and kill
--- every FontString found. Safe to be blanket about it: this project's
--- page-nav buttons (SpellBook, Merchant, and any future one built the same
--- way) carry no other text. Hoisted from `SpellBook.lua`'s own
--- file-local copy once Merchant.lua became a second consumer.
-function S:KillButtonLabel(button)
-	if not button or button.elvLabelKilled then return end
-	button.elvLabelKilled = true
-
-	local ok, regions = pcall(function() return { button:GetRegions() } end)
-	if not ok or type(regions) ~= "table" then return end
-
-	local i
-	for i = 1, table.getn(regions) do
-		local region = regions[i]
-		local okType, regionType = pcall(region.GetObjectType, region)
-		if okType and regionType == "FontString" then
-			pcall(region.SetText, region, "")
-			S:Kill(region)
-		end
-	end
-end
-
 S.SQUARE_BUTTON_TEXTURE = "Interface\\AddOns\\ElvUI\\Media\\Textures\\SquareButtonTextures"
+-- Real ElvUI `S:HandleNextPrevButton`: 13x13 arrow icon, and the button
+-- itself 7 units smaller than its native size.
+S.SQUARE_ICON_SIZE = 13
+S.NEXT_PREV_SHRINK = 7
 S.SQUARE_BUTTON_TEXCOORDS = {
 	UP = { 0.453125, 0.640625, 0.015625, 0.203125 },
 	DOWN = { 0.453125, 0.640625, 0.203125, 0.015625 },
@@ -1437,6 +1538,41 @@ S.SQUARE_BUTTON_TEXCOORDS = {
 --     FRAMES are untouched -- `CreateButtonBorder`'s border frames stay
 --     fully visible on a disabled button. An overlay parented to a child
 --     frame is therefore immune, and needs no polling to stay alive.
+-- Disabled look of an icon we drew ourselves, as real ElvUI's
+-- `S:HandleNextPrevButton` marks a disabled arrow: desaturated, half alpha.
+-- Only ever called on our own texture objects -- the wrappers
+-- `GetRegions()`/`GetChildren()` hand back on UA lack `SetDesaturated`.
+local function SetIconEnabled(icon, enabled)
+	pcall(icon.SetDesaturated, icon, not enabled)
+	pcall(icon.SetAlpha, icon, enabled and 1 or 0.5)
+end
+
+-- Keeps `icon` in step with `button`'s enabled state. Native code toggles
+-- these buttons with `Enable()`/`Disable()` (page arrows, dropdowns, rank
+-- buttons), and UA has no `hooksecurefunc` to catch that, so `watcher` -- a
+-- frame of ours that is shown only while the button is -- polls
+-- `IsEnabled()` (1/0 on both clients, hence `Compat.bool`) and restyles only
+-- on a change.
+local ENABLED_POLL_INTERVAL = 0.1
+function S:WatchIconEnabled(watcher, button, icon)
+	if not watcher or not button or not icon then return end
+	watcher.elvWatchButton, watcher.elvWatchIcon = button, icon
+	if watcher.elvEnabledWatched then return end
+	watcher.elvEnabledWatched = true
+	local nextCheck = 0
+	pcall(watcher.SetScript, watcher, "OnUpdate", function()
+		local now = GetTime()
+		if now < nextCheck then return end
+		nextCheck = now + ENABLED_POLL_INTERVAL
+		local okEnabled, enabled = pcall(watcher.elvWatchButton.IsEnabled, watcher.elvWatchButton)
+		enabled = not okEnabled or Compat.bool(enabled)
+		if enabled ~= watcher.elvWatchEnabled then
+			watcher.elvWatchEnabled = enabled
+			SetIconEnabled(watcher.elvWatchIcon, enabled)
+		end
+	end)
+end
+
 function S:StyleSquareIconButton(button, iconName, iconScale)
 	if not button then return end
 
@@ -1463,13 +1599,12 @@ function S:StyleSquareIconButton(button, iconName, iconScale)
 	-- live: a disabled button still renders this icon, which is also
 	-- independent proof the child-frame reasoning above is right.
 	--
-	-- `iconScale` (optional, default 1 = fill the button, byte-identical to
-	-- the previous behaviour for every existing call site) shrinks the icon
-	-- inside the same button/border footprint. Real ElvUI's own
-	-- `S:HandleNextPrevButton` uses a FIXED 13x13 icon centered in whatever
-	-- size the button is; a scale factor is used here instead so the
-	-- already-accepted scrollbar-arrow and Unlearn-button sizes don't move
-	-- while SpellBook's own 32x32 page arrows can be toned down.
+	-- Icon size: with no `iconScale` it is real ElvUI's own
+	-- `S:HandleNextPrevButton` icon, a FIXED `S.SQUARE_ICON_SIZE` square
+	-- centered in whatever size the button is (scrollbar arrows, page
+	-- arrows, the Unlearn button). `iconScale` (0..1) instead sizes it
+	-- relative to the button, for the few non-arrow consumers whose own
+	-- size is part of the look (rank +/- buttons, TradeSkill +/-).
 	if not button.elvIcon then
 		local okLevel, level = pcall(button.GetFrameLevel, button)
 		local buttonLevel = (okLevel and tonumber(level)) or 4
@@ -1484,6 +1619,7 @@ function S:StyleSquareIconButton(button, iconName, iconScale)
 			if okIcon and icon then
 				button.elvIconHolder = holder
 				button.elvIcon = icon
+				S:WatchIconEnabled(holder, button, icon)
 			end
 		end
 	end
@@ -1496,11 +1632,12 @@ function S:StyleSquareIconButton(button, iconName, iconScale)
 
 		local scale = tonumber(iconScale)
 		if not scale or scale >= 1 then
-			-- Anchor-based, so it tracks the button even if a caller
-			-- resizes the button AFTER styling it (StyleUnlearnButton does
-			-- exactly that).
+			-- Centered, so it tracks the button even if a caller resizes the
+			-- button AFTER styling it (StyleUnlearnButton does exactly that).
 			pcall(icon.ClearAllPoints, icon)
-			pcall(icon.SetAllPoints, icon, button.elvIconHolder)
+			pcall(icon.SetWidth, icon, S.SQUARE_ICON_SIZE)
+			pcall(icon.SetHeight, icon, S.SQUARE_ICON_SIZE)
+			pcall(icon.SetPoint, icon, "CENTER", button.elvIconHolder, "CENTER", 0, 0)
 		else
 			-- Explicit size, re-asserted on every call (this whole function
 			-- re-runs on each window OnShow) so a later button resize is
@@ -1606,6 +1743,27 @@ function S:StyleSquareIconButton(button, iconName, iconScale)
 		pcall(highlightTexture.Hide, highlightTexture)
 		highlightTexture.Show = E.noop
 	end
+end
+
+-- Page/next-prev arrow button (SpellBook, Merchant, Mail inbox, Auction
+-- browse, Guild list toggle): real ElvUI's `S:HandleNextPrevButton` --
+-- the button shrunk by `S.NEXT_PREV_SHRINK` from its native size, a fixed
+-- 13x13 arrow centered in it. The shrink runs once per button (latched),
+-- since these are re-styled on every window OnShow.
+function S:StyleNextPrevButton(button, iconName)
+	if not button then return end
+	if not button.elvNextPrevSized then
+		button.elvNextPrevSized = true
+		local okW, w = pcall(button.GetWidth, button)
+		local okH, h = pcall(button.GetHeight, button)
+		w = (okW and tonumber(w)) or 0
+		h = (okH and tonumber(h)) or 0
+		if w > S.NEXT_PREV_SHRINK and h > S.NEXT_PREV_SHRINK then
+			pcall(button.SetWidth, button, w - S.NEXT_PREV_SHRINK)
+			pcall(button.SetHeight, button, h - S.NEXT_PREV_SHRINK)
+		end
+	end
+	S:StyleSquareIconButton(button, iconName)
 end
 
 -- 3D model rotate buttons (`CharacterModelFrameRotateLeftButton`/
@@ -1956,12 +2114,25 @@ function S:HandleScrollBar(frame)
 		-- possibly after our own styling code already ran" --
 		-- ActionBars/PetBar/Minimap/MirrorTimers/Chat all use the same
 		-- `(fn, 3, 10)` shape) forcing both buttons back to Enabled.
-		pcall(upBtn.Enable, upBtn)
-		pcall(downBtn.Enable, downBtn)
-		ElvUI.Util.ScheduleLimitedSweep(function()
+		--
+		-- FauxScrollFrame scrollbars ONLY. A plain `UIPanelScrollFrameTemplate`
+		-- (a quest or trainer detail pane) keeps its native arrow handling:
+		-- `OnScrollRangeChanged` enables the down arrow and `OnVerticalScroll`
+		-- disables the up arrow at the top, both measured working on UA.
+		-- Forcing Enable there leaves the up arrow lit at the top of the text
+		-- until the first scroll, because re-selecting content resets the
+		-- value to 0 without a change event. A FauxScrollFrame is recognised
+		-- by its `$parentScrollChildFrame`, the name FauxScrollFrame_Update
+		-- itself addresses.
+		local scrollName = string.gsub(name, "ScrollBar$", "")
+		if _G[scrollName.."ScrollChildFrame"] then
 			pcall(upBtn.Enable, upBtn)
 			pcall(downBtn.Enable, downBtn)
-		end, 3, 10)
+			ElvUI.Util.ScheduleLimitedSweep(function()
+				pcall(upBtn.Enable, upBtn)
+				pcall(downBtn.Enable, downBtn)
+			end, 3, 10)
+		end
 
 		if not frame.elvTrackBG then
 			local okTrackBG, trackbg = pcall(CreateFrame, "Frame", nil, frame)
@@ -2046,6 +2217,11 @@ local SLIDER_FALLBACK_STEPS = 10
 -- edge, so it can't clip the `Low`/`High` labels. Derived from the
 -- template, not tuned by eye -- see the call site.
 local SLIDER_TRACK_BOTTOM_INSET = 4
+-- Light grey while enabled (full white glares on the dark track); while
+-- disabled, the grey of a disabled label (`GRAY_FONT_COLOR`, the same 0.5 as
+-- `S.ACCENT_COLOR_DISABLED`), so the handle greys out together with the
+-- slider's own title.
+local SLIDER_HANDLE_COLOR = { 0.8, 0.8, 0.8 }
 
 function S:StyleOptionsSlider(slider)
 	if not slider then return end
@@ -2070,9 +2246,8 @@ function S:StyleOptionsSlider(slider)
 	-- instead.
 	--
 	-- OUR OWN STRIP MUST NOT EAT THE DISABLED SIGNAL. A slider's handle can
-	-- render in `ACCENT_COLOR_DISABLED` {.5,.5,.5} instead of `THUMB_COLOR`
-	-- {.6,.6,.6} on legacy while showing correctly (accent gold) on UA --
-	-- i.e. every slider on legacy reads as disabled. `ShowHandleState`
+	-- render in its disabled look on legacy while showing correctly on UA
+	-- -- i.e. every slider on legacy reads as disabled. `ShowHandleState`
 	-- reads the one signal vanilla itself uses for a disabled slider -- a
 	-- HIDDEN thumb, `OptionsFrame_DisableSlider` calls `Thumb:Hide()` --
 	-- while `S:StripTextures` two lines below hides every Texture region
@@ -2207,22 +2382,19 @@ function S:StyleOptionsSlider(slider)
 	-- So the handle becomes a texture on the track: both halves proven,
 	-- nothing new assumed. It also drops a frame, a frame level and a
 	-- backdrop from the recipe.
-	local HANDLE_WIDTH = 8
+	-- A 10x10 square, real ElvUI's `S:HandleSliderFrame` size (its 0.3 grey
+	-- is not used: it barely differs from a disabled handle). Unlike a
+	-- backdrop colour, a texture's vertex colour is NOT read as linear on UA
+	-- (measured: an accent handle drew (248,203,0)), so the same value gives
+	-- the same colour on both clients.
+	local HANDLE_WIDTH = 10
 	if track and not slider.elvThumbTex then
 		local okTex, handleTex = pcall(track.CreateTexture, track, nil, "OVERLAY")
 		if okTex and handleTex then
 			pcall(handleTex.SetTexture, handleTex, "Interface\\Buttons\\WHITE8x8")
-			-- ACCENT, not `THUMB_COLOR`: the grey reads as plain white on
-			-- the dark track. `THUMB_COLOR` stays
-			-- what it is -- it is the SCROLLBAR thumb's colour and those
-			-- are already live-accepted; this handle is a different control
-			-- and the one the user actually looks for on the bar.
-			pcall(handleTex.SetVertexColor, handleTex, S.ACCENT_COLOR[1], S.ACCENT_COLOR[2], S.ACCENT_COLOR[3], 1)
+			pcall(handleTex.SetVertexColor, handleTex, SLIDER_HANDLE_COLOR[1], SLIDER_HANDLE_COLOR[2], SLIDER_HANDLE_COLOR[3], 1)
 			pcall(handleTex.SetWidth, handleTex, HANDLE_WIDTH)
-			local okSH, sliderHeight = pcall(slider.GetHeight, slider)
-			sliderHeight = (okSH and tonumber(sliderHeight)) or 17
-			if sliderHeight > 20 then sliderHeight = 20 end
-			pcall(handleTex.SetHeight, handleTex, sliderHeight - 4)
+			pcall(handleTex.SetHeight, handleTex, HANDLE_WIDTH)
 			-- Anchored once, unconditionally, at the left end. The value
 			-- maths below only ever MOVES it: an earlier build put the only
 			-- `SetPoint` inside the positioning function, which returns
@@ -2233,13 +2405,11 @@ function S:StyleOptionsSlider(slider)
 
 			-- Mirrors the DISABLED state onto the handle, using the same
 			-- hidden-thumb signal `SetValueFromCursor` refuses drags on --
-			-- an accent-gold handle on a slider that cannot be moved would
-			-- read as a live control despite being disabled. Vanilla hides its
-			-- thumb outright here (`OptionsFrame_DisableSlider`); greying is
-			-- kept instead so the VALUE stays readable, matching how this
-			-- project already greys disabled tabs (`S.ACCENT_COLOR_DISABLED`).
-			-- Only recolors on an actual change: `PositionHandle` runs 20x a
-			-- second.
+			-- a full handle on a slider that cannot be moved would read as a
+			-- live control. Vanilla hides its thumb outright here
+			-- (`OptionsFrame_DisableSlider`); a grey handle is kept instead
+			-- so the VALUE stays readable. Only restyles on an actual change:
+			-- `PositionHandle` runs 20x a second.
 			local handleGreyed = nil
 			local function ShowHandleState()
 				-- `_G[name.."Thumb"]` was tried as a second source here and
@@ -2252,7 +2422,7 @@ function S:StyleOptionsSlider(slider)
 				local greyed = not thumbShown
 				if greyed == handleGreyed then return end
 				handleGreyed = greyed
-				local color = greyed and S.ACCENT_COLOR_DISABLED or S.ACCENT_COLOR
+				local color = greyed and S.ACCENT_COLOR_DISABLED or SLIDER_HANDLE_COLOR
 				pcall(handleTex.SetVertexColor, handleTex, color[1], color[2], color[3], 1)
 			end
 
@@ -4723,6 +4893,11 @@ local MONEY_INPUT_COINS = {
 }
 local MONEY_INPUT_COIN_SIZE = 13
 local MONEY_INPUT_COIN_ASSET = "Interface\\MoneyFrame\\UI-MoneyIcons"
+-- The field surface stops this far short of the box's right edge, so every
+-- coin sits BESIDE its field instead of inside it (the silver and copper
+-- coins are anchored inside their box natively), and grows 2 up and down.
+-- Real ElvUI `S:HandleEditBox`: backdrop BOTTOMRIGHT -12, -2 on these boxes.
+local MONEY_INPUT_FIELD_RIGHT, MONEY_INPUT_FIELD_GROW = -12, 2
 
 -- `MoneyInputFrameTemplate`'s three edit boxes carry their coin icon as an
 -- UNNAMED BACKGROUND region, the same layer as the input-border art.
@@ -4744,6 +4919,13 @@ function S:StyleMoneyInputFrame(moneyFrame)
 		local box = _G[name..coin.suffix]
 		if box then
 			S:StyleEditBox(box)
+			local field = box.elvBackground
+			if field then
+				pcall(field.ClearAllPoints, field)
+				pcall(field.SetPoint, field, "TOPLEFT", box, "TOPLEFT", 0, MONEY_INPUT_FIELD_GROW)
+				pcall(field.SetPoint, field, "BOTTOMRIGHT", box, "BOTTOMRIGHT",
+					MONEY_INPUT_FIELD_RIGHT, -MONEY_INPUT_FIELD_GROW)
+			end
 			if not box.elvCoin then
 				local okTex, tex = pcall(box.CreateTexture, box, nil, "ARTWORK")
 				if okTex and tex then
@@ -4779,6 +4961,21 @@ end
 --
 -- Width and position remain deliberately the CALLER's job (they vary per
 -- call site) -- this only handles the chrome + the arrow button.
+-- Visible box of a closed dropdown, inset from the template's 32-tall frame
+-- (or from its art, where the art is the reference -- see below). The
+-- template's frame and art include a mostly transparent 25-wide cap on each
+-- side and empty space above and below the box; real ElvUI
+-- (`S:HandleDropDownBox`) draws its box from the frame's left +20 / top -2
+-- to the arrow button's bottom-right +2 / -2, i.e. right -8 and 22 tall.
+-- Covering the full footprint instead made every box 1.4x too tall and too
+-- wide next to the edit boxes beside it.
+local DROPDOWN_BOX_LEFT, DROPDOWN_BOX_RIGHT = 20, -8
+local DROPDOWN_BOX_TOP, DROPDOWN_BOX_BOTTOM = -2, 8
+-- The bordered arrow square at the box's right end, and its inset from the
+-- box's right edge (real ElvUI: an 18 square, the box ending 2 past it).
+local DROPDOWN_ARROW_SIZE, DROPDOWN_ARROW_INSET = 18, 2
+local DROPDOWN_TEXT_GAP = 5
+
 function S:StyleDropDownBox(dd)
 	if not dd then return end
 	S:StripTextures(dd, false)
@@ -4804,6 +5001,61 @@ function S:StyleDropDownBox(dd)
 	end
 	local ddBg = S:CreateSurface(dd, S.WIDGET_COLOR, nil, nil, nil, nil, true)
 	if ddBg then pcall(ddBg.SetFrameLevel, ddBg, ddLevel - 1) end
+
+	-- The arrow as a bordered square inside the box, 2 in from its right,
+	-- top and bottom edges: real ElvUI (`S:HandleDropDownBox`) styles the
+	-- native arrow button with `S:HandleNextPrevButton` (24 - 7, +1 = 18
+	-- square, 13x13 glyph). Built as our own frame on the box surface rather
+	-- than on the native button: the button's position differs per window
+	-- and per client (displaced art, per-window layouts), and
+	-- `UIDropDownMenu_SetButtonWidth` can widen it over the whole box
+	-- (pfQuest's world map dropdown does, on every show), which would
+	-- stretch a border drawn on it. Mouse-transparent; the click target is
+	-- the overlay below.
+	if ddBg and not dd.elvArrowBox then
+		local okArrow, arrow = pcall(CreateFrame, "Frame", nil, dd)
+		if okArrow and arrow then
+			pcall(arrow.SetWidth, arrow, DROPDOWN_ARROW_SIZE)
+			pcall(arrow.SetHeight, arrow, DROPDOWN_ARROW_SIZE)
+			pcall(arrow.SetPoint, arrow, "RIGHT", ddBg, "RIGHT", -DROPDOWN_ARROW_INSET, 0)
+			pcall(arrow.EnableMouse, arrow, false)
+			pcall(arrow.SetFrameLevel, arrow, ddLevel + 1)
+			-- Windows re-strip themselves recursively on every show; without
+			-- the flag that walk hides the glyph and leaves an empty square.
+			arrow.elvSurface = true
+			if ElvUI.Util and ElvUI.Util.CreateButtonBorder then
+				ElvUI.Util.CreateButtonBorder(arrow)
+			end
+			-- The glyph sits on its own child frame one level up, the same
+			-- layering as `S:StyleSquareIconButton`, so it is drawn above the
+			-- border's backdrop child.
+			local okHolder, holder = pcall(CreateFrame, "Frame", nil, arrow)
+			local okIcon, icon
+			if okHolder and holder then
+				pcall(holder.SetAllPoints, holder, arrow)
+				pcall(holder.EnableMouse, holder, false)
+				pcall(holder.SetFrameLevel, holder, ddLevel + 2)
+				okIcon, icon = pcall(holder.CreateTexture, holder, nil, "ARTWORK")
+			end
+			if okIcon and icon then
+				pcall(icon.SetWidth, icon, S.SQUARE_ICON_SIZE)
+				pcall(icon.SetHeight, icon, S.SQUARE_ICON_SIZE)
+				pcall(icon.SetPoint, icon, "CENTER", arrow, "CENTER", 0, 0)
+				pcall(icon.SetTexture, icon, S.SQUARE_BUTTON_TEXTURE)
+				local coords = S.SQUARE_BUTTON_TEXCOORDS.DOWN
+				if coords then
+					pcall(icon.SetTexCoord, icon, coords[1], coords[2], coords[3], coords[4])
+				end
+				-- A disabled dropdown (`UIDropDownMenu_DisableDropDown`)
+				-- disables its native arrow button.
+				local nativeButton = name and _G[name .. "Button"]
+				if nativeButton and holder then
+					S:WatchIconEnabled(holder, nativeButton, icon)
+				end
+			end
+			dd.elvArrowBox = arrow
+		end
+	end
 
 	-- THE SURFACE FOLLOWS THE ART HORIZONTALLY, NOT THE FRAME -- MEASURED
 	-- (Video Options: a row of several horizontal dropdowns falls apart
@@ -4852,11 +5104,12 @@ function S:StyleDropDownBox(dd)
 	-- wider and to the right, dragging the window did not settle it), and the
 	-- text and arrow button, anchored to `$parentRight`, go with it. When the
 	-- frame is sized to the art (`UIDropDownMenu_SetWidth` has run: frame =
-	-- Middle + 50), the frame IS the art's intended rectangle, so the box, the
-	-- text and the button are anchored to the frame instead, with the
-	-- template's own offsets carried over from `$parentRight` (Right's RIGHT
-	-- point sits at the frame's RIGHT +1; text RIGHT -43,+2 from it; button
-	-- TOPRIGHT -16,-18 from Right's TOPRIGHT, which is the frame's top +17).
+	-- Middle + 50), the frame IS the art's intended rectangle, so the box and
+	-- the button are anchored to the frame instead (the text follows the box
+	-- through the arrow square), with the template's own button offset
+	-- carried over from `$parentRight` (Right's RIGHT point sits at the
+	-- frame's RIGHT +1; button TOPRIGHT -16,-18 from Right's TOPRIGHT, which
+	-- is the frame's top +17).
 	-- Wherever frame and art coincide this is the same geometry as before.
 	-- A dropdown whose frame was never sized keeps the art anchoring below.
 	local ddMiddleArt = name and _G[name .. "Middle"]
@@ -4867,14 +5120,20 @@ function S:StyleDropDownBox(dd)
 		frameW, midW = okFrameW and tonumber(frameW), okMidW and tonumber(midW)
 		sizedToArt = frameW and midW and math.abs(frameW - (midW + 50)) < 1 and true or false
 	end
-	if ddBg and sizedToArt then
+	-- A caller that sizes the dropdown FRAME itself (and anchors its text and
+	-- arrow to the frame) sets `dd.elvBoxFrameInsets = { l, t, r, b }`: the
+	-- box then follows the frame with those insets on every call, including
+	-- the sweep's later re-runs, instead of the template art.
+	local frameInsets = dd.elvBoxFrameInsets
+	if ddBg and type(frameInsets) == "table" then
 		pcall(ddBg.ClearAllPoints, ddBg)
-		pcall(ddBg.SetAllPoints, ddBg, dd)
-		local ddText = _G[name .. "Text"]
-		if ddText then
-			pcall(ddText.ClearAllPoints, ddText)
-			pcall(ddText.SetPoint, ddText, "RIGHT", dd, "RIGHT", -43, 3)
-		end
+		pcall(ddBg.SetPoint, ddBg, "TOPLEFT", dd, "TOPLEFT", frameInsets[1], frameInsets[2])
+		pcall(ddBg.SetPoint, ddBg, "BOTTOMRIGHT", dd, "BOTTOMRIGHT", frameInsets[3], frameInsets[4])
+		sizedToArt = true
+	elseif ddBg and sizedToArt then
+		pcall(ddBg.ClearAllPoints, ddBg)
+		pcall(ddBg.SetPoint, ddBg, "TOPLEFT", dd, "TOPLEFT", DROPDOWN_BOX_LEFT, DROPDOWN_BOX_TOP)
+		pcall(ddBg.SetPoint, ddBg, "BOTTOMRIGHT", dd, "BOTTOMRIGHT", DROPDOWN_BOX_RIGHT, DROPDOWN_BOX_BOTTOM)
 		local ddButton = _G[name .. "Button"]
 		if ddButton then
 			pcall(ddButton.ClearAllPoints, ddButton)
@@ -4890,10 +5149,10 @@ function S:StyleDropDownBox(dd)
 		-- this module has already hidden is safe.
 		local okAnchor = pcall(function()
 			ddBg:ClearAllPoints()
-			ddBg:SetPoint("LEFT", ddLeftArt, "LEFT", 0, 0)
-			ddBg:SetPoint("RIGHT", ddRightArt, "RIGHT", 0, 0)
-			ddBg:SetPoint("TOP", dd, "TOP", 0, 0)
-			ddBg:SetPoint("BOTTOM", dd, "BOTTOM", 0, 0)
+			ddBg:SetPoint("LEFT", ddLeftArt, "LEFT", DROPDOWN_BOX_LEFT, 0)
+			ddBg:SetPoint("RIGHT", ddRightArt, "RIGHT", DROPDOWN_BOX_RIGHT, 0)
+			ddBg:SetPoint("TOP", dd, "TOP", 0, DROPDOWN_BOX_TOP)
+			ddBg:SetPoint("BOTTOM", dd, "BOTTOM", 0, DROPDOWN_BOX_BOTTOM)
 		end)
 		-- Four single-edge anchors are a less-travelled path on this client
 		-- than a TOPLEFT/BOTTOMRIGHT pair -- and this project already has one
@@ -4906,6 +5165,20 @@ function S:StyleDropDownBox(dd)
 			pcall(ddBg.ClearAllPoints, ddBg)
 			pcall(ddBg.SetAllPoints, ddBg, dd)
 		end
+	end
+
+	-- The text ends left of the arrow square, so it follows the box wherever
+	-- the box was anchored above. Real ElvUI's gap is 2, which on UA leaves
+	-- the glyphs touching the square (its font runs past the FontString's
+	-- right edge), hence `DROPDOWN_TEXT_GAP`. A caller with
+	-- `elvBoxFrameInsets` lays out its own text and is left alone.
+	-- `UIDropDownMenu_JustifyText` re-anchors the text to the native art;
+	-- a caller whose addon runs that on every show handles it itself (see
+	-- the world map skin).
+	local ddText = name and _G[name .. "Text"]
+	if ddText and dd.elvArrowBox and type(frameInsets) ~= "table" then
+		pcall(ddText.ClearAllPoints, ddText)
+		pcall(ddText.SetPoint, ddText, "RIGHT", dd.elvArrowBox, "LEFT", -DROPDOWN_TEXT_GAP, 0)
 	end
 
 	-- OUR OWN CLICK TARGET -- the measured answer to "the
@@ -4936,10 +5209,14 @@ function S:StyleDropDownBox(dd)
 			-- (which is itself worth knowing: this client has hover
 			-- targets that the focus query can't see). Over the arrow
 			-- alone, only the arrow's own tooltip is lost -- an accepted
-			-- tradeoff -- everything else gets its hover back.
+			-- tradeoff -- everything else gets its hover back. Over the
+			-- drawn arrow square where there is one, since the native
+			-- button is not always where the square is drawn.
 			local okOverlayName, overlayParentName = pcall(dd.GetName, dd)
 			local arrowButton = okOverlayName and overlayParentName and _G[overlayParentName.."Button"]
-			if arrowButton then
+			if dd.elvArrowBox then
+				pcall(overlay.SetAllPoints, overlay, dd.elvArrowBox)
+			elseif arrowButton then
 				pcall(overlay.SetAllPoints, overlay, arrowButton)
 			else
 				pcall(overlay.SetAllPoints, overlay, dd)
@@ -4947,7 +5224,15 @@ function S:StyleDropDownBox(dd)
 			pcall(overlay.EnableMouse, overlay, true)
 			-- Above the box and its own art, so it is what the cursor meets.
 			pcall(overlay.SetFrameLevel, overlay, ddLevel + 2)
+			-- A disabled dropdown (`UIDropDownMenu_DisableDropDown`) is marked
+			-- only by its native arrow button being disabled, and
+			-- `ToggleDropDownMenu` itself never checks, so the overlay has to:
+			-- without this it opens a greyed-out dropdown's list.
 			pcall(overlay.SetScript, overlay, "OnClick", function()
+				if arrowButton then
+					local okEnabled, enabled = pcall(arrowButton.IsEnabled, arrowButton)
+					if okEnabled and not Compat.bool(enabled) then return end
+				end
 				pcall(ToggleDropDownMenu, 1, nil, dd, (okOverlayName and overlayParentName) or nil, 0, 0)
 			end)
 			dd.elvClickOverlay = overlay
@@ -5097,10 +5382,8 @@ function S:StyleDropDownBox(dd)
 		end)
 	end
 
-	local text = okName and name and _G[name.."Text"]
-	if text then
-		pcall(text.SetTextColor, text, S.ACCENT_COLOR[1], S.ACCENT_COLOR[2], S.ACCENT_COLOR[3])
-	end
+	-- The label keeps its native colour (white, grey while disabled), as in
+	-- real ElvUI: no `SetTextColor` here.
 
 	local btn = okName and name and _G[name.."Button"]
 	if btn then
@@ -5125,6 +5408,19 @@ function S:StyleDropDownBox(dd)
 		pcall(btn.SetDisabledTexture, btn, "")
 		pcall(btn.DisableDrawLayer, btn, "ARTWORK")
 
+		-- The native hover glow goes too: it is drawn over the native
+		-- button, which is not where the arrow square is wherever the
+		-- template art is displaced (Video Options on UA). Real ElvUI gives
+		-- the arrow no hover tint either (`S:HandleNextPrevButton`).
+		pcall(btn.SetHighlightTexture, btn, "")
+		local okHighlight, highlightTexture = pcall(btn.GetHighlightTexture, btn)
+		if okHighlight and highlightTexture then
+			pcall(highlightTexture.SetTexture, highlightTexture, nil)
+			pcall(highlightTexture.Hide, highlightTexture)
+			highlightTexture.Show = E.noop
+		end
+		pcall(btn.DisableDrawLayer, btn, "HIGHLIGHT")
+
 		-- Raising the dropdown's level above does not carry its children
 		-- along: a dropdown that started below level 4 (e.g. on a parentless
 		-- fullscreen frame such as `WorldMapFrame`) keeps its arrow button at
@@ -5134,24 +5430,6 @@ function S:StyleDropDownBox(dd)
 		if not btnLevel or btnLevel <= ddLevel then
 			pcall(btn.SetFrameLevel, btn, ddLevel + 1)
 		end
-
-		if not btn.elvGlyph then
-			local icon = btn:CreateTexture(nil, "OVERLAY")
-			icon:SetWidth(10)
-			icon:SetHeight(10)
-			pcall(icon.SetTexture, icon, S.SQUARE_BUTTON_TEXTURE)
-			local coords = S.SQUARE_BUTTON_TEXCOORDS.DOWN
-			if coords then
-				pcall(icon.SetTexCoord, icon, coords[1], coords[2], coords[3], coords[4])
-			end
-			btn.elvGlyph = icon
-		end
-		-- Right-aligned, not centred: the centre of the native 24px button,
-		-- but it stays at the box's right end when an addon widens the
-		-- button over the whole box via `UIDropDownMenu_SetButtonWidth`
-		-- (pfQuest's world map dropdown does, on every show).
-		pcall(btn.elvGlyph.ClearAllPoints, btn.elvGlyph)
-		pcall(btn.elvGlyph.SetPoint, btn.elvGlyph, "RIGHT", btn, "RIGHT", -7, 0)
 	end
 end
 

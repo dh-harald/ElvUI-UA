@@ -30,15 +30,12 @@
 -- - `TalentFramePortrait` is `S:Kill`'d, not left to the strip: same
 --   portrait class as every other native-NPC-ish window in this
 --   project -- fed via `SetPortraitTexture` on every panel refresh.
--- - `TalentFrameBackgroundTopLeft/TopRight/BottomLeft/BottomRight` ARE
+-- - `TalentFrameBackgroundTopLeft/TopRight/BottomLeft/BottomRight` are
 --   dynamically re-`SetTexture`'d per selected tab (`Blizzard_TalentUI.lua`
---   picks the tree-themed parchment art from `GetTalentTabInfo`'s own
---   `background` field) -- unlike `TaxiFrame`'s `TaxiMap`, this is still
---   safe to blanket-strip: it's decorative per-tree wallpaper, not
---   information, and real ElvUI's own reference strips it too (a plain
---   `E:StripTextures(TalentFrame)`, no exception carved out for these 4
---   names) -- the dark panel replaces it outright, matching the
---   established aesthetic everywhere else in this project.
+--   picks the tree-themed art from `GetTalentTabInfo`'s own `background`
+--   field). Real ElvUI keeps this wallpaper visible inside the scroll well,
+--   so the strip skips these four by name (`StripChrome`) and the well's
+--   surface is border-only.
 -- - `TalentFrameCancelButton` ("Close" button, functionally identical to
 --   the X close button) is `S:Kill`'d outright, not skinned -- matches
 --   BOTH real ElvUI (`E:Kill(TalentFrameCancelButton)`) and pfUI
@@ -111,6 +108,16 @@ local TAB_COUNT = 5
 -- server-side.
 local PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM = 13, -12, -31, 76
 
+-- The four per-tree wallpaper regions (`$parentBackgroundTopLeft` ...),
+-- kept as real ElvUI shows them. `Blizzard_TalentUI.lua` re-`SetTexture`s
+-- them on every tab switch, so they only have to survive the strip.
+local BACKGROUND_SUFFIXES = { "BackgroundTopLeft", "BackgroundTopRight",
+	"BackgroundBottomLeft", "BackgroundBottomRight" }
+
+-- The scroll well's surface: border only, so the wallpaper shows through
+-- it, as real ElvUI's "Default" backdrop on `TalentFrameScrollFrame` lets it.
+local CLEAR_FILL = { 0, 0, 0, 0 }
+
 local frameName
 
 local function ResolveTalentFrame()
@@ -168,8 +175,33 @@ local function StyleTalentButton(index)
 	S:CreateIconEdges(talent, "BACKGROUND")
 end
 
+-- `S:StripTextures(frame, false)` minus the tree wallpaper: same region
+-- walk, the four background regions are skipped by name (the DressingRoom
+-- skin's recipe).
+local function StripChrome(frame)
+	local keep = {}
+	local i
+	for i = 1, table.getn(BACKGROUND_SUFFIXES) do
+		keep[frameName .. BACKGROUND_SUFFIXES[i]] = true
+	end
+	local ok, regions = pcall(function() return { frame:GetRegions() } end)
+	if not ok or type(regions) ~= "table" then return end
+	for i = 1, table.getn(regions) do
+		local region = regions[i]
+		local okType, regionType = pcall(region.GetObjectType, region)
+		if okType and regionType == "Texture" then
+			local okName, name = pcall(region.GetName, region)
+			if not (okName and name and keep[name]) then
+				pcall(region.SetTexture, region, nil)
+				pcall(region.Hide, region)
+				region.Show = E.noop
+			end
+		end
+	end
+end
+
 local function ApplyTalentChrome(frame)
-	S:StripTextures(frame, false)
+	StripChrome(frame)
 	S:Kill(Named("Portrait"))
 	S:Kill(Named("CancelButton"))
 
@@ -206,7 +238,7 @@ local function ApplyTalentChrome(frame)
 	local scrollFrame = Named("ScrollFrame")
 	if scrollFrame then
 		S:StripTextures(scrollFrame, false)
-		S:CreateField(scrollFrame, -1, 2, 6, -2)
+		S:CreateSurface(scrollFrame, CLEAR_FILL, -1, 2, 6, -2)
 	end
 	local scrollBar = Named("ScrollFrameScrollBar")
 	if scrollBar then
@@ -229,6 +261,30 @@ local function ApplyTalentChrome(frame)
 	S:SkinChildren(frame)
 end
 
+-- An unavailable talent is drawn by the native `SetItemButtonDesaturated(
+-- button, 1, 0.65, 0.65, 0.65)`: desaturated icon times a 0.65 grey vertex
+-- colour. On UA the same pair renders far darker than on legacy (measured
+-- against a white vertex: 0.65 kept ~40% of the brightness, the native call
+-- ~10%), so the unavailable icons read as black squares. Re-applying the
+-- vertex colour raised to 1/2.2 after the native call restores the legacy
+-- look; 0.82 for the native 0.65 was checked live. UA only; legacy keeps the
+-- native value. Talent buttons only, the bag and other callers are left
+-- alone.
+local DESATURATED_GAMMA = 1 / 2.2
+
+local function FixDesaturatedTalent(button, desaturated, r, g, b)
+	if not desaturated or not button or not frameName then return end
+	local okName, name = pcall(button.GetName, button)
+	if not (okName and type(name) == "string") then return end
+	if string.find(name, frameName .. "Talent", 1, true) ~= 1 then return end
+	local icon = _G[name .. "IconTexture"]
+	if not icon then return end
+	r, g, b = tonumber(r), tonumber(g), tonumber(b)
+	if not (r and g and b) then return end
+	pcall(icon.SetVertexColor, icon,
+		r ^ DESATURATED_GAMMA, g ^ DESATURATED_GAMMA, b ^ DESATURATED_GAMMA)
+end
+
 local talentSkinApplied = false
 local function ApplyTalentSkin()
 	if talentSkinApplied then return end
@@ -245,6 +301,11 @@ local function ApplyTalentSkin()
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyTalentChrome(frame) end)
 	if not ok then S:ReportSkinProblem() end
+
+	if ElvUI.Compat.isUA then
+		local hookOk = pcall(function() S:SecureHook("SetItemButtonDesaturated", FixDesaturatedTalent) end)
+		if not hookOk then S:ReportSkinProblem() end
+	end
 end
 
 local function LoadSkin()

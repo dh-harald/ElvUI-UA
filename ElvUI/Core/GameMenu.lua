@@ -43,7 +43,7 @@ local function CreateGameMenuButton(frame, logout)
 
 	pcall(created.SetWidth, created, logout:GetWidth())
 	pcall(created.SetHeight, created, logout:GetHeight())
-	pcall(created.SetText, created, "ElvUI")
+	pcall(created.SetText, created, E.title or "ElvUI")
 
 	created:SetScript("OnClick", function()
 		E:ToggleConfig()

@@ -67,10 +67,33 @@ local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
 local S = E:GetModule("Skins")
 
+-- `GameMenuButtonTemplate` labels are `GameFontHighlight` (white), not the
+-- gold of a plain `UIPanelButtonTemplate`; real ElvUI keeps that native
+-- colour. Every child of the menu is a menu row (native, the client's own
+-- and other addons' alike), so all of them are marked before the sweep
+-- styles them. Children are resolved through their global name first:
+-- `GetChildren()` hands back stand-in objects for native children on UA,
+-- and a field set on one of those is not seen on the real button.
+local MENU_LABEL_COLOR = { 1, 1, 1 }
+
+local function MarkMenuLabels(frame)
+	local ok, kids = pcall(function() return { frame:GetChildren() } end)
+	if not ok or type(kids) ~= "table" then return end
+	local i
+	for i = 1, table.getn(kids) do
+		local kid = S:ResolveWidget(kids[i])
+		local okType, kidType = pcall(kid.GetObjectType, kid)
+		if okType and kidType == "Button" then
+			kid.elvLabelColor = MENU_LABEL_COLOR
+		end
+	end
+end
+
 local function ApplyGameMenuChrome(frame)
 	S:StripTextures(frame, false)
 
 	S:CreatePanel(frame)
+	MarkMenuLabels(frame)
 
 	-- Deliberately still the sweep ALONE, with no per-button name list: the
 	-- point of `S:SkinChildren` is that a row this file never heard of --

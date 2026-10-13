@@ -56,7 +56,7 @@
 --   region IS the content and must never be blanket-stripped --
 --   `S:CreateIconEdges`, the same treatment the trade skill recipe icon gets.
 -- - The six page buttons are 32x32 spellbook-style arrows ->
---   `S:StyleSquareIconButton` at the same 0.5 icon scale SpellBook uses.
+--   `S:StyleNextPrevButton`, the same recipe SpellBook uses.
 --
 -- Item QUALITY colouring is a poll, not a hook: real ElvUI drives it from
 -- `hooksecurefunc(name, "SetVertexColor", ...)` per row, and neither bare
@@ -79,9 +79,40 @@ local PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM = 10, -11, 0, 4
 
 local FILTER_COUNT = 15
 
--- Gap between the max-level field and the rarity dropdown's box; see
+-- Gap between the max-level field and the rarity dropdown FRAME; see
 -- `ApplyBrowseChrome` for why that anchor is ours and not the template's.
-local DROPDOWN_GAP = 10
+-- The visible box starts 20 into the frame (`S:StyleDropDownBox`), so -13
+-- leaves real ElvUI's 7 between the field and the box.
+local DROPDOWN_GAP = -13
+
+-- Browse tab search row, laid out as real ElvUI does (Blizzard/AuctionHouse.lua
+-- of the vanilla port): name field at the left, level range beside it, the
+-- two checkboxes stacked one under the other with the box LEFT of its label,
+-- and the Search button in the top-right corner. Natively the checkboxes sit
+-- right of their labels on one line with Search squeezed between them.
+-- Offsets are against `AuctionFrameBrowse`'s TOPLEFT/TOPRIGHT. Field widths
+-- and the level gap are real ElvUI's VISIBLE sizes, measured off its
+-- screen (its own numbers size the frames, and its backdrop comes out
+-- narrower than them): name field 152 wide. The level fields are wider
+-- than real ElvUI's 20 -- at 20, with the shared edit-box text insets, a
+-- two-digit level does not fit -- so they are 28 wide with 3 insets, and
+-- the gaps beside them are narrowed to keep the row's total width.
+--
+-- Vertically the whole group is one line: every field is grown from the
+-- native 16 to the dropdown box's 22 (3 up, 3 down), the dropdown is
+-- lowered by the 3 its box sits above its frame's centre, every label sits
+-- 2 above its own box, and the group's bottom edge lines up with the
+-- bottom of the "Display on Character" checkbox.
+local BROWSE_NAME_X, BROWSE_NAME_Y, BROWSE_NAME_WIDTH = 20, -56, 152
+local BROWSE_LEVEL_X = 20
+local BROWSE_LEVEL_WIDTH, BROWSE_LEVEL_GAP, BROWSE_LEVEL_INSET = 28, 12, 3
+local BROWSE_FIELD_GROW, BROWSE_LABEL_GAP = 3, 2
+local BROWSE_DROPDOWN_Y = -3
+local BROWSE_CHECK_X, BROWSE_USABLE_Y, BROWSE_SHOW_Y = 440, -40, -60
+-- Middle-art width of the rarity dropdown: a visible box of real ElvUI's
+-- 127 (`S:StyleDropDownBox` draws the box 22 wider than the middle art).
+local BROWSE_DROPDOWN_MIDDLE = 105
+local BROWSE_SEARCH_X, BROWSE_SEARCH_Y = 25, -30
 
 -- Icon crop shared by every icon this file re-frames, matching
 -- `Util.SkinItemButton`.
@@ -239,7 +270,10 @@ local function EnsurePane(host, key, tlRef, tlPoint, tlX, tlY, brRef, brPoint, b
 	pcall(pane.SetFrameLevel, pane, (okLevel and tonumber(level)) or 0)
 	pcall(pane.SetPoint, pane, "TOPLEFT", tlRef, tlPoint, tlX, tlY)
 	pcall(pane.SetPoint, pane, "BOTTOMRIGHT", brRef, brPoint, brX, brY)
-	S:CreateSurface(pane, S.PANEL_COLOR)
+	-- Field tone, one step lighter than the window panel, so each column
+	-- reads as a framed well (the merchant item fields' tone) instead of
+	-- disappearing into the window behind it.
+	S:CreateSurface(pane, S.WIDGET_COLOR)
 	host[key] = pane
 	return pane
 end
@@ -343,6 +377,66 @@ local function PollAuctionQuality()
 	ColorSellSlot()
 end
 
+local function Reanchor(region, point, relativeTo, relativePoint, x, y)
+	if not region or not relativeTo then return end
+	pcall(region.ClearAllPoints, region)
+	pcall(region.SetPoint, region, point, relativeTo, relativePoint, x, y)
+end
+
+-- Styled here rather than left to the sweep, so the field surface exists
+-- when it is regrown (`S:StyleEditBox` is latched, the sweep's later call
+-- is a no-op for the surface).
+local function GrowBrowseField(box)
+	if not box then return end
+	S:StyleEditBox(box)
+	local field = box.elvBackground
+	if not field then return end
+	pcall(field.ClearAllPoints, field)
+	pcall(field.SetPoint, field, "TOPLEFT", box, "TOPLEFT", 0, BROWSE_FIELD_GROW)
+	pcall(field.SetPoint, field, "BOTTOMRIGHT", box, "BOTTOMRIGHT", 0, -BROWSE_FIELD_GROW)
+end
+
+-- See `BROWSE_NAME_X` and friends. Each label is cleared before its checkbox
+-- is anchored to it: natively the label is free and the box hangs off it,
+-- and the reverse would make the pair circular.
+local function LayoutBrowseSearchRow(host)
+	local name = _G.BrowseName
+	Reanchor(name, "TOPLEFT", host, "TOPLEFT", BROWSE_NAME_X, BROWSE_NAME_Y)
+	if name then pcall(name.SetWidth, name, BROWSE_NAME_WIDTH) end
+	Reanchor(_G.BrowseNameText, "BOTTOMLEFT", name, "TOPLEFT", 0, BROWSE_FIELD_GROW + BROWSE_LABEL_GAP)
+
+	-- The min-level field hangs off the name field (same line by
+	-- construction); its label follows it instead of the reverse.
+	local minLevel, maxLevel = _G.BrowseMinLevel, _G.BrowseMaxLevel
+	Reanchor(minLevel, "LEFT", name, "RIGHT", BROWSE_LEVEL_X, 0)
+	Reanchor(_G.BrowseLevelText, "BOTTOMLEFT", minLevel, "TOPLEFT", -3, BROWSE_FIELD_GROW + BROWSE_LABEL_GAP)
+	if minLevel then pcall(minLevel.SetWidth, minLevel, BROWSE_LEVEL_WIDTH) end
+	if maxLevel then pcall(maxLevel.SetWidth, maxLevel, BROWSE_LEVEL_WIDTH) end
+	Reanchor(maxLevel, "LEFT", minLevel, "RIGHT", BROWSE_LEVEL_GAP, 0)
+	Reanchor(_G.BrowseLevelHyphen, "CENTER", minLevel, "RIGHT", BROWSE_LEVEL_GAP / 2, 1)
+	GrowBrowseField(name)
+	GrowBrowseField(minLevel)
+	GrowBrowseField(maxLevel)
+	if minLevel then pcall(minLevel.SetTextInsets, minLevel, BROWSE_LEVEL_INSET, BROWSE_LEVEL_INSET, 0, 0) end
+	if maxLevel then pcall(maxLevel.SetTextInsets, maxLevel, BROWSE_LEVEL_INSET, BROWSE_LEVEL_INSET, 0, 0) end
+
+	Reanchor(_G.BrowseIsUsableText, "TOPLEFT", host, "TOPLEFT", BROWSE_CHECK_X, BROWSE_USABLE_Y)
+	Reanchor(_G.IsUsableCheckButton, "RIGHT", _G.BrowseIsUsableText, "LEFT", 2, 0)
+	Reanchor(_G.BrowseShowOnCharacterText, "TOPLEFT", host, "TOPLEFT", BROWSE_CHECK_X, BROWSE_SHOW_Y)
+	Reanchor(_G.ShowOnPlayerCheckButton, "RIGHT", _G.BrowseShowOnCharacterText, "LEFT", 2, 0)
+
+	Reanchor(_G.BrowseSearchButton, "TOPRIGHT", host, "TOPRIGHT", BROWSE_SEARCH_X, BROWSE_SEARCH_Y)
+
+	-- What `UIDropDownMenu_SetWidth` does, done directly: its argument order
+	-- differs between client generations, the three widths do not.
+	local dropDown, middle, text = _G.BrowseDropDown, _G.BrowseDropDownMiddle, _G.BrowseDropDownText
+	if dropDown and middle then
+		pcall(middle.SetWidth, middle, BROWSE_DROPDOWN_MIDDLE)
+		pcall(dropDown.SetWidth, dropDown, BROWSE_DROPDOWN_MIDDLE + 50)
+		if text then pcall(text.SetWidth, text, BROWSE_DROPDOWN_MIDDLE - 25) end
+	end
+end
+
 -- Browse tab: filter column on the left, results on the right.
 local function ApplyBrowseChrome()
 	local host = _G.AuctionFrameBrowse
@@ -369,11 +463,8 @@ local function ApplyBrowseChrome()
 	-- level-range group left and insets its own backdrop by 20px -- which
 	-- this project's dropdown surface deliberately does not do, because that
 	-- inset is measured wrong on UA where the art is displaced.)
-	local dropDown, maxLevel = _G.BrowseDropDown, _G.BrowseMaxLevel
-	if dropDown and maxLevel then
-		pcall(dropDown.ClearAllPoints, dropDown)
-		pcall(dropDown.SetPoint, dropDown, "LEFT", maxLevel, "RIGHT", DROPDOWN_GAP, 0)
-	end
+	LayoutBrowseSearchRow(host)
+	Reanchor(_G.BrowseDropDown, "LEFT", _G.BrowseMaxLevel, "RIGHT", DROPDOWN_GAP, BROWSE_DROPDOWN_Y)
 
 	local i
 	for i = 1, FILTER_COUNT do
@@ -454,7 +545,7 @@ local function ApplyAuctionChrome(frame)
 		S:StyleMoneyInputFrame(_G[MONEY_FRAMES[i]])
 	end
 	for i = 1, table.getn(PAGE_BUTTONS) do
-		S:StyleSquareIconButton(_G[PAGE_BUTTONS[i].name], PAGE_BUTTONS[i].icon, 0.5)
+		S:StyleNextPrevButton(_G[PAGE_BUTTONS[i].name], PAGE_BUTTONS[i].icon)
 	end
 
 	ApplyBrowseChrome()

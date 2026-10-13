@@ -649,10 +649,6 @@ Util.RAID_TARGET_COORDS = {
 -- into a lazy per-call `E:GetModule("Skins")` lookup -- `Core/Util.lua`
 -- loads before every module (`ElvUI.toc`) and is already a dependency of
 -- both (both already call `Util.CreateButtonBorder` directly).
---
--- Deliberately does NOT touch the pushed/highlight textures: those are
--- this project's prime suspect for the gold tint seen across every button
--- on UA, and a bag grid alone is over a hundred buttons of exposure.
 function Util.SkinItemButton(button)
 	if not button or button.elvSkinned then return end
 	button.elvSkinned = true
@@ -679,66 +675,53 @@ function Util.SkinItemButton(button)
 
 	Util.CreateButtonBorder(button)
 
-	-- Real ElvUI's own hover look (E:StyleButton) is NOT applied here. Its
-	-- white 30% overlay, handed to SetHighlightTexture, renders CONSTANTLY
-	-- on UA rather than only while the mouse is over the button: every
-	-- slot in the grid turned into a washed-out grey square. The native
-	-- highlight is left in place instead. Don't retry without a
-	-- client-side change.
+	-- Real ElvUI's E:StyleButton hover/pushed look, as on its bag, merchant
+	-- and trade slots; see that function for why it is built the way it is.
+	Util.CreateButtonHoverTextures(button)
 end
 
--- Hover/pushed/checked textures -- matches real ElvUI's own
--- E:StyleButton (ElvUI-vanilla/ElvUI/Core/toolkit.lua:290-321)
--- exactly, including its solid-color SetTexture(r,g,b,a) shorthand (no
--- file needed for a flat color -- a different API than SetBackdrop, not
--- subject to the missing-edgeFile bug above).
---
--- NOT CALLED from either Modules/ActionBars.lua or Modules/PetBar.lua --
--- prime suspect for a gold/tan tint that appeared across every button on
--- UA (both modules, since both shared this call) once it reached that
--- client. The PUSHED texture's color, `{0.9, 0.8, 0.1, 0.3}`, is a literal
--- gold/yellow tone, matching the symptom exactly -- theory: on UA, the
--- pushed (and/or hover/checked) texture isn't gated to its normal
--- interaction state and instead renders constantly. Hover-highlight
--- effects are believed to work on UA elsewhere, if unconfirmed here --
--- if that holds up, SetHighlightTexture specifically is less suspect than
--- SetPushedTexture/SetCheckedTexture, and would be the first one worth
--- re-testing in isolation. Left defined here (not deleted) in case the
--- real cause turns out to be something else entirely -- don't re-wire the
--- calls back in without confirming which specific texture (if any) was
--- actually responsible.
+-- Hover and pushed look of real ElvUI's E:StyleButton
+-- (ElvUI-vanilla/ElvUI/Core/toolkit.lua:290-321): white at 0.3 alpha on
+-- hover, inset 1, and gold (0.9, 0.8, 0.1) at 0.3 alpha while pressed. Built
+-- differently from upstream because UA treats both setters differently:
+--   * HOVER: upstream creates the texture on the default (ARTWORK) layer and
+--     hands it to SetHighlightTexture. UA does not move it into the hover
+--     state, so it draws permanently and washes out every button. Created on
+--     the HIGHLIGHT layer it shows only on hover on both clients, and
+--     replaces the native blue highlight.
+--   * PUSHED: UA's SetPushedTexture ignores a texture OBJECT (it stays an
+--     ordinary, always-drawn texture). It does take a texture PATH, and the
+--     native region it fills (GetPushedTexture) can be tinted; that shows
+--     only while the button is held down. The region keeps its native
+--     full-button anchors.
+--   * CHECKED is left native: UA's action buttons have no SetCheckedTexture.
+-- Both alphas live in the VERTEX colour, not in SetAlpha: on UA a frame's
+-- SetAlpha overwrites the alpha of its regions, so the bar layout's
+-- `button:SetAlpha(1)` turned a 0.3 SetAlpha overlay into solid white.
+-- Idempotent, so a periodic restyle can call it.
+local HOVER_COLOR = { 1, 1, 1, 0.3 }
+local PUSHED_COLOR = { 0.9, 0.8, 0.1, 0.3 }
+
 function Util.CreateButtonHoverTextures(button)
 	if not button then return end
 
-	if button.SetHighlightTexture and not button.elvHoverStyled then
-		local ok, hover = pcall(button.CreateTexture, button)
+	if not button.elvHoverStyled then
+		local ok, hover = pcall(button.CreateTexture, button, nil, "HIGHLIGHT")
 		if ok and hover then
-			pcall(hover.SetTexture, hover, 1, 1, 1, 0.3)
+			pcall(hover.SetTexture, hover, "Interface\\Buttons\\WHITE8x8")
+			pcall(hover.SetVertexColor, hover, HOVER_COLOR[1], HOVER_COLOR[2], HOVER_COLOR[3], HOVER_COLOR[4])
 			pcall(hover.SetPoint, hover, "TOPLEFT", button, "TOPLEFT", 1, -1)
 			pcall(hover.SetPoint, hover, "BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
 			pcall(button.SetHighlightTexture, button, hover)
 			button.elvHoverStyled = true
 		end
 	end
-	if button.SetPushedTexture and not button.elvPushedStyled then
-		local ok, pushed = pcall(button.CreateTexture, button)
+	if not button.elvPushedStyled then
+		pcall(button.SetPushedTexture, button, "Interface\\Buttons\\WHITE8x8")
+		local ok, pushed = pcall(button.GetPushedTexture, button)
 		if ok and pushed then
-			pcall(pushed.SetTexture, pushed, 0.9, 0.8, 0.1, 0.3)
-			pcall(pushed.SetPoint, pushed, "TOPLEFT", button, "TOPLEFT", 1, -1)
-			pcall(pushed.SetPoint, pushed, "BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
-			pcall(button.SetPushedTexture, button, pushed)
+			pcall(pushed.SetVertexColor, pushed, PUSHED_COLOR[1], PUSHED_COLOR[2], PUSHED_COLOR[3], PUSHED_COLOR[4])
 			button.elvPushedStyled = true
-		end
-	end
-	if button.SetCheckedTexture and not button.elvCheckedStyled then
-		local ok, checked = pcall(button.CreateTexture, button)
-		if ok and checked then
-			pcall(checked.SetTexture, checked, 1, 1, 1)
-			pcall(checked.SetAlpha, checked, 0.3)
-			pcall(checked.SetPoint, checked, "TOPLEFT", button, "TOPLEFT", 1, -1)
-			pcall(checked.SetPoint, checked, "BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
-			pcall(button.SetCheckedTexture, button, checked)
-			button.elvCheckedStyled = true
 		end
 	end
 end

@@ -105,15 +105,9 @@ local function StyleButton(button)
 	-- ElvUI.Util.CreateButtonBorder (Core/Util.lua), so pet bar buttons
 	-- get the same treatment ActionBars' own go through instead of a
 	-- simpler flat backdrop with no border differentiation.
-	--
-	-- Util.CreateButtonHoverTextures deliberately NOT called here (also
-	-- unused in ActionBars.lua) -- prime suspect for a gold/tan tint that
-	-- appears on EVERY button on UA, including these pet buttons, once
-	-- it's used -- see ActionBars.lua's own StyleButton comment for the
-	-- full reasoning (the pushed texture's color, {0.9, 0.8, 0.1, 0.3},
-	-- is a literal gold/yellow tone).
 	ElvUI.Util.CreateButtonBorder(button)
 	ElvUI.Util.RaiseCooldown(button)
+	ElvUI.Util.CreateButtonHoverTextures(button)
 end
 
 function M:CreateBar()

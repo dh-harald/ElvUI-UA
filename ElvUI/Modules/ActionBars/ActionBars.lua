@@ -499,17 +499,7 @@ local function StyleButton(button, showGrid)
 	-- construction and design history.
 	ElvUI.Util.CreateButtonBorder(button)
 	ElvUI.Util.RaiseCooldown(button)
-
-	-- Util.CreateButtonHoverTextures (hover/pushed/checked) is deliberately
-	-- NOT called here -- prime suspect for a gold/tan tint that appears
-	-- across every button on UA once it's used (both ActionBars AND
-	-- PetBar, which share this same call). The PUSHED texture's color is
-	-- `{0.9, 0.8, 0.1, 0.3}` -- a literal gold/yellow tone, matching the
-	-- symptom. Theory: on UA, the pushed (and/or hover/checked) texture
-	-- may not be gated to its normal interaction state and instead
-	-- renders constantly, tinting every button. Left unused entirely (not
-	-- just the pushed one) to isolate the cause cleanly -- re-add only
-	-- after confirming which specific texture was responsible.
+	ElvUI.Util.CreateButtonHoverTextures(button)
 
 	-- GUARDED: icon/hotkey/macroName repositioning must not run
 	-- unconditionally on every StyleButton() call, since the periodic

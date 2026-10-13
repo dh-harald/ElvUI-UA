@@ -175,6 +175,11 @@ function DT:RegisterPanel(panel, numPoints, anchor, xOff, yOff)
 			-- box's own asymmetry -- see its note above.
 			text:SetPoint("CENTER", dataPanel, "CENTER", 0, DT.TEXT_Y_NUDGE)
 			text:SetJustifyH("CENTER")
+			-- The label half of every widget is uncoloured text, so it takes
+			-- the FontString's own colour; real ElvUI's is white. The
+			-- `GameFontNormal` template (kept for its font) is gold on the
+			-- legacy client and white on UA, so the colour is set here.
+			text:SetTextColor(1, 1, 1)
 			dataPanel.text = text
 			panel.dataPanels[pointIndex] = dataPanel
 		end

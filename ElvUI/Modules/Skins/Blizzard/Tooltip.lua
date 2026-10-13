@@ -170,7 +170,7 @@ local function SkinStatusBar()
 end
 
 -- ItemRefTooltip's close button, as real ElvUI's S:HandleCloseButton does:
--- the shared ElvUI close button (20x20, bordered "X"). The native anchor is
+-- the shared ElvUI close button (17x16, bordered "x"). The native anchor is
 -- TOPRIGHT (+1, 0), which would put the smaller button on the frame edge,
 -- outside the flat body that starts BACKDROP_INSET units in, so it is moved
 -- inside it (pfUI uses the same -6, -6).

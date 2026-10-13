@@ -13,7 +13,8 @@
 --   own `S.ACCENT_COLOR` -- and `MerchantRepairText`/every item's
 --   `$parentName` inherit `GameFontHighlightSmall`/`GameFontNormalSmall`
 --   (white/gold). `Fonts.xml`'s defaults here, not `QuestFont`'s black.
---   Nothing in this file recolours a single FontString, only chrome.
+--   The only recolouring is the item names' quality colour
+--   (`UpdateMerchantQuality`), which is information, not readability.
 -- - `MerchantFrame` itself carries one portrait (`MerchantFramePortrait`)
 --   plus four corner BORDER textures, four Buyback-tab-only ARTWORK
 --   corner textures, and two OVERLAY bottom-border textures -- ALL direct
@@ -67,9 +68,8 @@
 -- - `MerchantPrevPageButton`/`NextPageButton` are the exact same
 --   `UI-SpellbookIcon-{Prev,Next}Page-*` shape as `SpellBook.lua`'s own
 --   page arrows and `ItemTextFrame`'s (not yet built) -- same
---   `S:StyleSquareIconButton(button, "LEFT"/"RIGHT", 0.5)` +
---   `S:KillButtonLabel` pair, second real consumer of both (see each
---   helper's own header in `Skins.lua`).
+--   `S:StyleNextPrevButton(button, "LEFT"/"RIGHT")`. Their native gold
+--   "Prev"/"Next" labels stay, as in real ElvUI.
 -- - `MerchantRepairAllButton`/`RepairItemButton` are a genuinely different
 --   shape from every other icon button in this project: their
 --   `NormalTexture` is `file=""` -- EMPTY, no native border art at all --
@@ -98,6 +98,7 @@
 local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
 local S = E:GetModule("Skins")
+local Compat = ElvUI.Compat
 
 -- Native `HitRectInsets` (right=35, bottom=61) already sit almost exactly
 -- where the panel needs to end: bottom=61 is the boundary Blizzard's own
@@ -115,6 +116,7 @@ local S = E:GetModule("Skins")
 local PANEL_LEFT, PANEL_TOP, PANEL_RIGHT, PANEL_BOTTOM = 10, -11, -35, 61
 
 local ITEM_SLOT_COUNT = 12
+local BUYBACK_SLOT_COUNT = tonumber(_G.BUYBACK_ITEMS_PER_PAGE) or 12
 
 -- FontStrings sitting DIRECTLY on `MerchantFrame`. `elvBackground` is a
 -- child frame pinned to the frame's own base level, and at equal frame
@@ -209,6 +211,122 @@ local function StyleItemSlot(item, itemButton)
 	S:CreateField(item, 41, 0, 0, 7)
 end
 
+-- Quality colour of one item slot (`MerchantItem<n>` or `MerchantBuyBackItem`),
+-- as real ElvUI colours it: the name and the icon border in the item's
+-- quality colour. No colour (empty slot, unknown quality) restores the
+-- native gold name (`GameFontNormalSmall`, the same gold as
+-- `S.ACCENT_COLOR`) and the plain border, since both tabs reuse the same 12
+-- slots.
+local function SetSlotQuality(slotName, r, g, b)
+	local nameText = _G[slotName.."Name"]
+	if nameText then
+		local c = S.ACCENT_COLOR
+		pcall(nameText.SetTextColor, nameText, r or c[1], g or c[2], b or c[3])
+	end
+	local itemButton = _G[slotName.."ItemButton"]
+	local border = itemButton and itemButton.elvBackdrop
+	if border then
+		local c = S.BORDER_COLOR
+		pcall(border.SetBackdropBorderColor, border, r or c[1], g or c[2], b or c[3], 1)
+	end
+end
+
+-- Buyback items have no link on either client (`GetBuybackItemLink` does
+-- not exist). On UA `GetBuybackItemInfo` returns the quality as its 4th
+-- value (the count is the 5th); on the legacy client the 4th value is the
+-- count and there is no quality at all, so the name line of a hidden
+-- tooltip filled by `SetBuybackItem` is read instead -- the client colours
+-- it by quality.
+local scanTooltip
+local function ScanBuybackColor(index)
+	if not scanTooltip then
+		local ok, tip = pcall(CreateFrame, "GameTooltip", "ElvUIBuybackScanTooltip", nil, "GameTooltipTemplate")
+		if not ok or not tip then return end
+		scanTooltip = tip
+	end
+	pcall(scanTooltip.SetOwner, scanTooltip, _G.WorldFrame, "ANCHOR_NONE")
+	local okSet = pcall(scanTooltip.SetBuybackItem, scanTooltip, index)
+	local title = _G.ElvUIBuybackScanTooltipTextLeft1
+	local r, g, b
+	if okSet and title then
+		local okText, text = pcall(title.GetText, title)
+		if okText and text and text ~= "" then
+			local okColor, cr, cg, cb = pcall(title.GetTextColor, title)
+			if okColor then r, g, b = cr, cg, cb end
+		end
+	end
+	pcall(scanTooltip.Hide, scanTooltip)
+	return r, g, b
+end
+
+local function BuybackColor(index)
+	local ok, name, _, _, quality = pcall(GetBuybackItemInfo, index)
+	if not ok or not name or name == "" then return end
+	if Compat.isUA then
+		quality = tonumber(quality)
+		if not quality then return end
+		local okColor, r, g, b = pcall(GetItemQualityColor, quality)
+		if okColor and r then return r, g, b end
+		return
+	end
+	return ScanBuybackColor(index)
+end
+
+-- The "last sold" slot on the Merchant tab. Matched to its buyback index by
+-- name: UA reports `GetNumBuybackItems()` as 12 whatever is sold, so the
+-- native "last index" rule does not say which slot it shows there.
+local function UpdateLastBuybackQuality()
+	local nameText = _G.MerchantBuyBackItemName
+	if not nameText then return end
+	local okText, shown = pcall(nameText.GetText, nameText)
+	local r, g, b
+	if okText and shown and shown ~= "" then
+		local i
+		for i = BUYBACK_SLOT_COUNT, 1, -1 do
+			local ok, name = pcall(GetBuybackItemInfo, i)
+			if ok and name == shown then
+				r, g, b = BuybackColor(i)
+				break
+			end
+		end
+	end
+	SetSlotQuality("MerchantBuyBackItem", r, g, b)
+end
+
+-- Post-hook on `MerchantFrame_UpdateMerchantInfo` (the Merchant tab's slot
+-- fill, run on every merchant update and page turn). The link's own colour
+-- prefix is the quality, so an item missing from the client cache still
+-- gets it.
+local function UpdateMerchantQuality()
+	if type(GetMerchantItemLink) ~= "function" then return end
+	local perPage = tonumber(_G.MERCHANT_ITEMS_PER_PAGE) or 10
+	local frame = _G.MerchantFrame
+	local page = (frame and tonumber(frame.page)) or 1
+	local numItems = (GetMerchantNumItems and GetMerchantNumItems()) or 0
+	local i
+	for i = 1, perPage do
+		local index = (page - 1) * perPage + i
+		local r, g, b
+		if index <= numItems then
+			local okLink, link = pcall(GetMerchantItemLink, index)
+			if okLink then r, g, b = S:GetLinkColor(link) end
+		end
+		SetSlotQuality("MerchantItem"..i, r, g, b)
+	end
+	UpdateLastBuybackQuality()
+end
+
+-- Post-hook on `MerchantFrame_UpdateBuybackInfo`, the Buyback tab's fill of
+-- the same 12 slots.
+local function UpdateBuybackQuality()
+	local i
+	for i = 1, ITEM_SLOT_COUNT do
+		local r, g, b
+		if i <= BUYBACK_SLOT_COUNT then r, g, b = BuybackColor(i) end
+		SetSlotQuality("MerchantItem"..i, r, g, b)
+	end
+end
+
 -- `MerchantRepairAllButton` and `MerchantRepairItemButton` are structurally
 -- IDENTICAL in the FrameXML: same 36x36 size, `NormalTexture file=""`
 -- (empty, no native border art to strip), a `UI-Quickslot-Depress`
@@ -237,12 +355,10 @@ end
 -- native state textures alone -- confirmed live that
 -- `MerchantRepairItemButton`'s `PushedTexture` (`UI-Quickslot-Depress`)
 -- renders permanently, not just while actually pressed
--- (`GetPushedTexture():IsShown()` returned `true` at rest). Matches the
--- already-measured, general client fact that a `SetHighlightTexture`
--- renders CONTINUOUSLY on UA: highlight/pushed/checked state textures all
--- ignore their normal show-only-while-active gating on this client, so
--- any that would otherwise READ as a persistent extra border/tint have to
--- be blanked outright rather than left to native state gating.
+-- (`GetPushedTexture():IsShown()` returned `true` at rest), so both are
+-- blanked outright rather than left to native state gating. (A state
+-- texture of our own does gate correctly on UA when built the way
+-- `Util.CreateButtonHoverTextures` builds it.)
 --
 -- The crops below are the native XML TexCoords (each a 0.28125 x 0.5625
 -- cell: RepairItem = (0,0.28125, 0,0.5625), RepairAll = (0.28125,0.5625,
@@ -359,10 +475,8 @@ local function ApplyMerchantChrome(frame)
 	-- square doesn't keep showing behind our own border.
 	S:StripTextures(_G.MerchantPrevPageButton, false)
 	S:StripTextures(_G.MerchantNextPageButton, false)
-	S:StyleSquareIconButton(_G.MerchantPrevPageButton, "LEFT", 0.5)
-	S:StyleSquareIconButton(_G.MerchantNextPageButton, "RIGHT", 0.5)
-	S:KillButtonLabel(_G.MerchantPrevPageButton)
-	S:KillButtonLabel(_G.MerchantNextPageButton)
+	S:StyleNextPrevButton(_G.MerchantPrevPageButton, "LEFT")
+	S:StyleNextPrevButton(_G.MerchantNextPageButton, "RIGHT")
 
 	S:StyleCloseButton(_G.MerchantFrameCloseButton)
 	-- Re-anchored to the PANEL, not left on the frame: the native anchor
@@ -402,6 +516,12 @@ local function ApplyMerchantSkin()
 
 	local ok = S:TryHookScript(frame, "OnShow", function() ApplyMerchantChrome(frame) end)
 	if not ok then S:ReportSkinProblem() end
+
+	local qualityOk = pcall(function()
+		S:SecureHook("MerchantFrame_UpdateMerchantInfo", UpdateMerchantQuality)
+		S:SecureHook("MerchantFrame_UpdateBuybackInfo", UpdateBuybackQuality)
+	end)
+	if not qualityOk then S:ReportSkinProblem() end
 end
 
 local function LoadSkin()

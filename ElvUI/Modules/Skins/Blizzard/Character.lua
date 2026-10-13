@@ -134,8 +134,6 @@ S.stripSkipNames["PetResistanceFrame"] = true
 -- draws survive; the native one is still hidden deliberately there.
 S.stripSkipNames["PetPaperDollPetInfo"] = true
 
-local ACCENT_COLOR = S.ACCENT_COLOR
-
 local SLOTS = {
 	"HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot",
 	"ShirtSlot", "TabardSlot", "WristSlot",
@@ -157,7 +155,7 @@ local TAB_COUNT = 5
 -- `S:StyleCloseButton`, shared with Friends.lua (FriendsFrameTab1-4 share
 -- CharacterFrameTabButtonTemplate; FriendsFrameCloseButton is the same
 -- UIPanelCloseButton shape). Full recipe details (6-piece not 3-piece tab
--- art, the DisableDrawLayer fix, the close button's 20x20/X-glyph recipe)
+-- art, the DisableDrawLayer fix, the close button's size/glyph recipe)
 -- live in Skins.lua's own comments, not re-derived here.
 
 -- Native NormalTexture (the slot's own frame/border art) is cleared the
@@ -205,7 +203,7 @@ end
 -- recipe as StyleSlot above (this project's own ActionBar-matching
 -- border), just without the NormalTexture-clearing step this template
 -- doesn't have.
-local RESIST_FRAMES = { "MagicResFrame1", "MagicResFrame2", "MagicResFrame3", "MagicResFrame4", "MagicResFrame5" }
+local RESIST_COUNT = 5
 
 -- Even with our own border added, the icon itself still shows its
 -- baked-in ornate frame unless explicitly cropped tighter. A generic
@@ -259,9 +257,23 @@ local RESIST_TEXCOORDS = {
 -- strata/level branch, since it only partially worked. Don't re-attempt
 -- the same strata+level combination without solving the icon and
 -- tooltip gaps too.
-local function StyleResistFrame(name, index)
-	local frame = _G[name]
+-- Real ElvUI's `HandleResistanceFrame` layout: each icon a 24 square, the
+-- five stacked in one column with 1 between them (measured off its screen),
+-- and the icon filling the box up to the 1px border.
+local RESIST_SIZE, RESIST_GAP, RESIST_ICON_INSET = 24, 1, 1
+
+-- `prefix` is the frame family (`MagicResFrame`, `PetMagicResFrame`): frame
+-- `index` is stacked under frame `index - 1` of the same family.
+local function StyleResistFrame(prefix, index)
+	local frame = _G[prefix .. index]
 	if not frame then return end
+	pcall(frame.SetWidth, frame, RESIST_SIZE)
+	pcall(frame.SetHeight, frame, RESIST_SIZE)
+	local previous = index > 1 and _G[prefix .. (index - 1)]
+	if previous then
+		pcall(frame.ClearAllPoints, frame)
+		pcall(frame.SetPoint, frame, "TOP", previous, "BOTTOM", 0, -RESIST_GAP)
+	end
 	ElvUI.Util.CreateButtonBorder(frame)
 
 	if frame.elvIconCropped then return end
@@ -291,15 +303,13 @@ local function StyleResistFrame(name, index)
 		end
 	end
 
-	-- Icon inset widened 2->5px: otherwise confirmed working (the
-	-- border-baked-in-art problem is genuinely solved).
 	local coords = RESIST_TEXCOORDS[index]
 	if coords then
 		local icon = frame:CreateTexture(nil, "ARTWORK")
 		pcall(icon.SetTexture, icon, "Interface\\PaperDollInfoFrame\\UI-Character-ResistanceIcons")
 		pcall(icon.SetTexCoord, icon, coords[1], coords[2], coords[3], coords[4])
-		pcall(icon.SetPoint, icon, "TOPLEFT", frame, "TOPLEFT", 5, -5)
-		pcall(icon.SetPoint, icon, "BOTTOMRIGHT", frame, "BOTTOMRIGHT", -5, 5)
+		pcall(icon.SetPoint, icon, "TOPLEFT", frame, "TOPLEFT", RESIST_ICON_INSET, -RESIST_ICON_INSET)
+		pcall(icon.SetPoint, icon, "BOTTOMRIGHT", frame, "BOTTOMRIGHT", -RESIST_ICON_INSET, RESIST_ICON_INSET)
 	end
 end
 
@@ -591,11 +601,19 @@ local function StylePlayerTitleDropDown()
 	-- box matches the Who-frame dropdown and every edit box. The width/
 	-- position math above and the text re-anchor below stay local, because
 	-- those genuinely ARE title-dropdown-specific.
+	-- The box spans this dropdown's own 240-wide frame, not the template art
+	-- `S:StyleDropDownBox` would measure from: the frame is resized directly
+	-- above (the art keeps its native width, and on UA it is drawn displaced
+	-- from the frame), and the text and arrow below are anchored to the
+	-- frame's edges. Same 22 height as every other dropdown box, centred on
+	-- the 32-tall frame like the text and arrow. A field, so the sweep's
+	-- later `S:StyleDropDownBox` re-runs keep it too.
+	dd.elvBoxFrameInsets = { 0, -5, 0, 5 }
 	S:StyleDropDownBox(dd)
 
 	local text = _G["PlayerTitleDropDownText"]
 	if text then
-		pcall(text.SetTextColor, text, ACCENT_COLOR[1], ACCENT_COLOR[2], ACCENT_COLOR[3])
+		-- Native colour kept, like every other dropdown label.
 		-- Native default is RIGHT-justified, anchored off the (now
 		-- stripped-but-still-geometrically-present) `$parentRight` chrome
 		-- piece near the ORIGINAL narrow width -- re-anchored to the
@@ -605,14 +623,11 @@ local function StylePlayerTitleDropDown()
 		pcall(text.SetPoint, text, "LEFT", dd, "LEFT", 8, 0)
 	end
 
-	-- Deliberately NOT `S:StyleSquareIconButton` (no `CreateButtonBorder`)
-	-- this round -- a separate bordered control would duplicate the
-	-- OUTER box's own border, contradicting the "one seamless box"
-	-- reference. Just the native texture clear + a small fresh icon,
-	-- matching this file's own established idiom for the clear step,
-	-- re-anchored to the new wide box's own right edge (native anchor
-	-- was relative to `$parentRight`, which stayed at its old, narrow
-	-- position after `dd` itself was widened).
+	-- The visible arrow is the shared recipe's bordered square at the box's
+	-- right end. The native button is only the click target here: its
+	-- textures are cleared and it is re-anchored to the new wide box's own
+	-- right edge (native anchor was relative to `$parentRight`, which stayed
+	-- at its old, narrow position after `dd` itself was widened).
 	local btn = _G["PlayerTitleDropDownButton"]
 	if btn then
 		local okNormal, normalTexture = pcall(btn.GetNormalTexture, btn)
@@ -634,30 +649,11 @@ local function StylePlayerTitleDropDown()
 			highlightTexture.Show = E.noop
 		end
 
-		-- Confirmed via `S:Dump("PlayerTitleDropDownButton")`: our own
-		-- icon is there (tex=1, shownWithSize=1) but the native chrome
-		-- still renders underneath it if left alone. Same
-		-- already-established pattern as CharacterAttributesFrame's own
-		-- chrome: `SetTexture(nil)` on a pre-existing native slot doesn't
-		-- reliably stop it from rendering -- `DisableDrawLayer` as a
-		-- standing property is the actually-reliable fix. Our own icon is
-		-- on "OVERLAY" (above ARTWORK), so disabling ARTWORK here only
-		-- suppresses the native chrome, not our own icon.
+		-- `SetTexture(nil)` on a pre-existing native slot doesn't reliably
+		-- stop it from rendering (`S:Dump("PlayerTitleDropDownButton")`
+		-- still showed the native chrome) -- `DisableDrawLayer` as a
+		-- standing property is the reliable fix.
 		pcall(btn.DisableDrawLayer, btn, "ARTWORK")
-
-		if not btn.elvGlyph then
-			local icon = btn:CreateTexture(nil, "OVERLAY")
-			icon:SetWidth(10)
-			icon:SetHeight(10)
-			pcall(icon.SetTexture, icon, S.SQUARE_BUTTON_TEXTURE)
-			local coords = S.SQUARE_BUTTON_TEXCOORDS.DOWN
-			if coords then
-				pcall(icon.SetTexCoord, icon, coords[1], coords[2], coords[3], coords[4])
-			end
-			btn.elvGlyph = icon
-		end
-		pcall(btn.elvGlyph.ClearAllPoints, btn.elvGlyph)
-		pcall(btn.elvGlyph.SetPoint, btn.elvGlyph, "CENTER", btn, "CENTER", 0, 0)
 
 		pcall(btn.ClearAllPoints, btn)
 		pcall(btn.SetPoint, btn, "RIGHT", dd, "RIGHT", -8, 0)
@@ -848,13 +844,14 @@ end
 
 -- Pet's own 5 resistance icons (PetMagicResFrame1-5) use the IDENTICAL
 -- MagicResistanceFrameTemplate already solved above for Character's own
--- MagicResFrame1-5 -- StyleResistFrame already takes an explicit name/index
--- pair, so this reuses it unchanged rather than duplicating the function.
--- Icon still doesn't render here (border/number do) -- paused for now.
+-- MagicResFrame1-5 -- StyleResistFrame takes a frame-family/index pair, so
+-- the Pet column gets the identical size, stacking
+-- and icon. Its container is strip-exempt (`PetResistanceFrame` above) for
+-- the same reason as Character's.
 local function StylePetResistFrames()
 	local i
-	for i = 1, 5 do
-		StyleResistFrame("PetMagicResFrame"..i, i)
+	for i = 1, RESIST_COUNT do
+		StyleResistFrame("PetMagicResFrame", i)
 	end
 end
 
@@ -892,10 +889,53 @@ end
 --     hidden by default, only shown when actually relevant) are left
 --     completely untouched -- meaningful content/state, not decorative
 --     chrome.
+-- Real ElvUI's row geometry (`Blizzard/Character.lua` of the vanilla port):
+-- a narrower 108x13 bar starting further right (native: 137 wide at
+-- `TOPLEFT 150,-86`), the faction name in a 140-wide box 150 left of the
+-- bar, the header's +/- 175 left of it, and the at-war sword right after
+-- the bar. Only `ReputationBar1` is moved -- every later row hangs off the
+-- one above it (`BOTTOMLEFT 0,-10`). Re-applied on every call, since this
+-- client fills the list with its own code, not `ReputationFrame_Update`.
+local REP_BAR_X, REP_BAR_Y = 190, -86
+local REP_BAR_WIDTH, REP_BAR_HEIGHT = 108, 13
+local REP_NAME_X, REP_NAME_WIDTH = -150, 140
+local REP_HEADER_X = -175
+
+local function LayoutReputationRow(index, bar)
+	local name = "ReputationBar"..index
+	pcall(bar.SetWidth, bar, REP_BAR_WIDTH)
+	pcall(bar.SetHeight, bar, REP_BAR_HEIGHT)
+	if index == 1 and _G.ReputationFrame then
+		pcall(bar.ClearAllPoints, bar)
+		pcall(bar.SetPoint, bar, "TOPLEFT", _G.ReputationFrame, "TOPLEFT", REP_BAR_X, REP_BAR_Y)
+	end
+
+	local factionName = _G[name.."FactionName"]
+	if factionName then
+		pcall(factionName.SetWidth, factionName, REP_NAME_WIDTH)
+		pcall(factionName.ClearAllPoints, factionName)
+		pcall(factionName.SetPoint, factionName, "LEFT", bar, "LEFT", REP_NAME_X, 0)
+	end
+
+	local header = _G["ReputationHeader"..index]
+	if header then
+		pcall(header.ClearAllPoints, header)
+		pcall(header.SetPoint, header, "TOPLEFT", bar, "TOPLEFT", REP_HEADER_X, 0)
+	end
+
+	local atWar = _G[name.."AtWarCheck"]
+	if atWar then
+		pcall(atWar.ClearAllPoints, atWar)
+		pcall(atWar.SetPoint, atWar, "LEFT", bar, "RIGHT", 0, 0)
+	end
+end
+
 local function StyleReputationBar(index)
 	local name = "ReputationBar"..index
 	local bar = _G[name]
-	if not bar or bar.elvStyled then return end
+	if not bar then return end
+	LayoutReputationRow(index, bar)
+	if bar.elvStyled then return end
 	bar.elvStyled = true
 
 	S:Kill(_G[name.."ReputationBarLeft"])
@@ -1020,11 +1060,11 @@ end
 -- PetPaperDollCloseButton, plus a one-time repair of what the WRONG
 -- helper did to it before. This button was mistakenly run
 -- through StyleCloseButton -- the X-style handler meant for
--- CharacterFrameCloseButton -- which squashed it to 20x20 and stamped an
--- "X" FontString over its own "Close" label. Since a native Blizzard
--- frame's already-applied mutations are NOT undone by /reload on this
--- client (established elsewhere in this file: testing a Skins change
--- really off needs a full client restart), the leftover 20x20 size and
+-- CharacterFrameCloseButton -- which squashed it to the close-button size
+-- and stamped an "X" FontString over its own "Close" label. Since a native
+-- Blizzard frame's already-applied mutations are NOT undone by /reload on
+-- this client (established elsewhere in this file: testing a Skins change
+-- really off needs a full client restart), the leftover size and
 -- leftover X would otherwise survive into any session that only
 -- /reload'ed -- so both are explicitly undone here rather than relying on
 -- a restart. Size restored to the FrameXML's own 80x22
@@ -1046,9 +1086,8 @@ end
 -- `SkillDetailStatusBarUnlearnButton` -- REAL sprite icon, not an ASCII
 -- glyph. `S:HandleCloseButton` was separately checked (Skins.lua:388+)
 -- for the actual Character-frame close button convention -- real ElvUI
--- uses a plain "x" FontString there, NOT a sprite, so `StyleCloseButton`'s
--- own existing ASCII "X" already matches real ElvUI's own real convention
--- and needed no change.
+-- uses a plain "x" FontString there, NOT a sprite, which is what
+-- `StyleCloseButton` draws as well.
 -- Matches real ElvUI's OWN actual recipe exactly
 -- (`ElvUI-vanilla/ElvUI/Modules/Skins/Skins.lua`'s own
 -- `S:HandleNextPrevButton`/`S:SquareButton_SetIcon`, and
@@ -1279,7 +1318,7 @@ local function ApplySubFrameChrome()
 	-- PetPaperDollCloseButton is a UIPanelButtonTemplate with the text
 	-- "CLOSE" (FrameXML: PetPaperDollFrame.xml:276), NOT an X-style
 	-- CloseButton like CharacterFrameCloseButton -- StyleCloseButton was
-	-- squashing it to 20x20 and stamping an "X" FontString on top of its
+	-- squashing it to the close-button size and stamping an "x" FontString on top of its
 	-- own "Close" label. Real ElvUI uses its plain button handler here
 	-- too (`S:HandleButton(PetPaperDollCloseButton)`,
 	-- Blizzard/Character.lua:110) -- StyleUIPanelButton is this file's
@@ -1544,8 +1583,8 @@ local function ApplyChrome(frame)
 		StyleSlot(SLOTS[i])
 	end
 
-	for i = 1, table.getn(RESIST_FRAMES) do
-		StyleResistFrame(RESIST_FRAMES[i], i)
+	for i = 1, RESIST_COUNT do
+		StyleResistFrame("MagicResFrame", i)
 	end
 
 	ApplySubFrameChrome()

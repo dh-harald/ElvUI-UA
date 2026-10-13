@@ -64,6 +64,14 @@ local S = E:GetModule("Skins")
 
 local ACCENT_COLOR = S.ACCENT_COLOR
 
+-- Box of the Friends/Ignore toggle tabs, inset from the 32-tall
+-- `TabButtonTemplate` button as real ElvUI does (`CreateBackdrop` at
+-- TOPLEFT 3,-7 / BOTTOMRIGHT -2,-1): a 26-tall box hanging 1 below the
+-- button, nearly as wide as it. The shared tab inset (10 per side) is cut
+-- for the overlapping character-window tabs and left these boxes about
+-- two thirds of real ElvUI's width.
+local TOGGLE_TAB_INSET_X, TOGGLE_TAB_INSET_TOP, TOGGLE_TAB_INSET_BOTTOM = 3, 7, -1
+
 -- Friends/Ignore sub-tabs + both scrollframes/scrollbars + the 6 action
 -- buttons -- all of `FriendsListFrame`'s own content. Positions ported
 -- from real ElvUI's own Modules/Skins/Blizzard/Friends.lua where it
@@ -75,10 +83,10 @@ local ACCENT_COLOR = S.ACCENT_COLOR
 local function ApplyFriendsListChrome()
 	if not FriendsListFrame then return end
 
-	S:StyleTab(FriendsFrameToggleTab1)
-	S:StyleTab(FriendsFrameToggleTab2)
-	S:StyleTab(IgnoreFrameToggleTab1)
-	S:StyleTab(IgnoreFrameToggleTab2)
+	S:StyleTab(FriendsFrameToggleTab1, TOGGLE_TAB_INSET_X, TOGGLE_TAB_INSET_TOP, TOGGLE_TAB_INSET_BOTTOM)
+	S:StyleTab(FriendsFrameToggleTab2, TOGGLE_TAB_INSET_X, TOGGLE_TAB_INSET_TOP, TOGGLE_TAB_INSET_BOTTOM)
+	S:StyleTab(IgnoreFrameToggleTab1, TOGGLE_TAB_INSET_X, TOGGLE_TAB_INSET_TOP, TOGGLE_TAB_INSET_BOTTOM)
+	S:StyleTab(IgnoreFrameToggleTab2, TOGGLE_TAB_INSET_X, TOGGLE_TAB_INSET_TOP, TOGGLE_TAB_INSET_BOTTOM)
 
 	-- Row highlights -- REVERTED, live-tested and CONFIRMED BROKEN:
 	-- `S:HandleButtonHighlight` on FriendsFrameFriendButton<i> didn't
@@ -397,7 +405,7 @@ local function ApplyGuildInfoChrome()
 	end
 
 	-- Native anchor (TOPRIGHT -3,-3) is laid out for the 32x32 art and would
-	-- sit outside the inset panel at 20x20.
+	-- sit outside the inset panel at the shared close button's 17x16.
 	S:StyleCloseButton(GuildInfoCloseButton)
 	if GuildInfoCloseButton and GuildInfoFrame.elvBackground then
 		pcall(GuildInfoCloseButton.ClearAllPoints, GuildInfoCloseButton)
@@ -603,7 +611,7 @@ local function ApplyGuildChrome()
 	-- label is the button's own ButtonText, anchored natively to the left
 	-- of the arrow, and is left untouched; `GuildStatus_Update` re-anchors
 	-- the button itself, which the child-frame icon follows.
-	S:StyleSquareIconButton(GuildFrameGuildListToggleButton, "RIGHT", 0.5)
+	S:StyleNextPrevButton(GuildFrameGuildListToggleButton, "RIGHT")
 
 	-- Both popups are shown by their own buttons independently of GuildFrame's
 	-- OnShow, so they are styled on entry to the tab as well as from their own
@@ -843,7 +851,7 @@ local function ApplyOuterChrome(frame)
 	S:StyleCloseButton(FriendsFrameCloseButton)
 
 	-- Inside the panel's top-right corner. The native anchor (TOPRIGHT
-	-- -30,-8) is laid out for the native 32x32 art; at the 20x20 of
+	-- -30,-8) is laid out for the native 32x32 art; at the 17x16 of
 	-- S:StyleCloseButton it would overhang the panel's right edge (-33).
 	if FriendsFrameCloseButton and frame.elvBackground then
 		pcall(FriendsFrameCloseButton.ClearAllPoints, FriendsFrameCloseButton)

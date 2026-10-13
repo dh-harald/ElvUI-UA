@@ -34,6 +34,10 @@ AddOn.callbacks = AddOn.callbacks or LibStub("CallbackHandler-1.0"):New(AddOn)
 -- removed (see Modules/ActionBars.lua's SetNormalTexture override).
 AddOn.noop = AddOn.noop or function() end
 
+-- The addon's name as real ElvUI (vanilla port, `Core/core.lua`) shows it on
+-- its Escape-menu row: a dark blue "E" and a light grey "lvUI".
+AddOn.title = AddOn.title or "|cff175581E|r|cffC4C4C4lvUI|r"
+
 -- Heading of ElvUI's commands in the stock Key Bindings window; Bindings.xml
 -- declares them under header="ELVUI".
 BINDING_HEADER_ELVUI = "ElvUI"

@@ -112,15 +112,19 @@ local function LayoutDropDown(dd)
 	local button, text, box = _G[name .. "Button"], _G[name .. "Text"], dd.elvBackground
 	if not button then return end
 
-	-- Text offsets are taken from the button's RIGHT edge (-26 = 2px left of
-	-- the native 24px button): `UIDropDownMenu_SetButtonWidth` can widen the
+	-- The button is real ElvUI's 18 square, so the box ends 2 below and right
+	-- of it and the shared recipe's 18 arrow square lands exactly on it.
+	-- Text offsets are taken from the button's RIGHT edge (-23 = 5px left of
+	-- the arrow square, the shared recipe's text gap):`UIDropDownMenu_SetButtonWidth` can widen the
 	-- button over the whole box (pfQuest's map dropdown, on every show), and
 	-- its LEFT edge then no longer marks where the arrow is.
+	pcall(button.SetWidth, button, 18)
+	pcall(button.SetHeight, button, 18)
 	pcall(button.ClearAllPoints, button)
 	pcall(button.SetPoint, button, "RIGHT", dd, "RIGHT", -10, 3)
 	if text then
 		pcall(text.ClearAllPoints, text)
-		pcall(text.SetPoint, text, "RIGHT", button, "RIGHT", -26, 0)
+		pcall(text.SetPoint, text, "RIGHT", button, "RIGHT", -23, 0)
 	end
 	-- `UIDropDownMenu_JustifyText("RIGHT")` re-anchors the text to the
 	-- (stripped) `$parentRight` art at `RIGHT -43,+2`; pfQuest calls it on
@@ -129,7 +133,7 @@ local function LayoutDropDown(dd)
 	local rightArt = _G[name .. "Right"]
 	if rightArt then
 		pcall(rightArt.ClearAllPoints, rightArt)
-		pcall(rightArt.SetPoint, rightArt, "RIGHT", button, "RIGHT", 17, -2)
+		pcall(rightArt.SetPoint, rightArt, "RIGHT", button, "RIGHT", 20, -2)
 	end
 	if box then
 		pcall(box.ClearAllPoints, box)
