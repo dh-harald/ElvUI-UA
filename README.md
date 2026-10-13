@@ -114,6 +114,9 @@ Two addons ship together:
   character, guild and the time away, with whispers and guild chat listed
   in the corner; a key press or click brings the UI back and clears AFK (General →
   General → AFK Mode)
+- Side-by-side windows: a window such as Character or Spellbook opens next
+  to a double-width one (Quest Log, Trade Skill, Trainer) instead of
+  closing it, and up to three single windows stay open side by side
 - Tooltip: class/reaction-coloured unit tooltips, guild rank,
   level/classification line, target and "targeted by" info, movable anchor
   or cursor anchor, flat ElvUI skin, health bar with health text, sell

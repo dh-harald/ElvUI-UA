@@ -79,12 +79,13 @@
 --   this project's own "movable=true but no drag script -> add
 --   `S:MakeDraggable`" rule only fires when the native XML actually
 --   claims the frame is movable in the first place.
--- - `UIPanelWindows[frameName]` gets the exact override real ElvUI's own
---   `Blizzard/Talent.lua` applies (`pushable = 0` vs vanilla's own
---   default `6`) -- keeps this panel from being shoved aside when another
---   left-docked panel opens alongside it. Keyed off the RESOLVED name,
---   not a hardcoded `"TalentFrame"` string, for the same reason as
---   everything else in this file.
+-- - `UIPanelWindows[frameName]` keeps the native `pushable = 6`
+--   (Blizzard_TalentUI.lua). Real ElvUI's own `Blizzard/Talent.lua`
+--   lowers it to 0, which makes the talent window and any other
+--   non-pushable left panel (Spellbook, Quest Log, ...) replace each other
+--   instead of opening side by side. Keyed off the RESOLVED name, not a
+--   hardcoded `"TalentFrame"` string, for the same reason as everything
+--   else in this file.
 --
 -- SCOPE: outer chrome, panel background, close button, cancel-button
 -- removal, tabs, scroll frame + scrollbar, all talent buttons.
@@ -292,10 +293,9 @@ local function ApplyTalentSkin()
 	if not frame then return end
 	talentSkinApplied = true
 
-	-- Keeps this panel from being shoved aside when another left-docked
-	-- panel (Character, SpellBook, ...) opens alongside it -- matches
-	-- real ElvUI's own override of vanilla's default `pushable = 6`.
-	pcall(function() UIPanelWindows[frameName] = { area = "left", pushable = 0, whileDead = 1 } end)
+	-- The native entry, also written for the PlayerTalentFrame name shape
+	-- (see the header).
+	pcall(function() UIPanelWindows[frameName] = { area = "left", pushable = 6, whileDead = 1 } end)
 
 	ApplyTalentChrome(frame)
 

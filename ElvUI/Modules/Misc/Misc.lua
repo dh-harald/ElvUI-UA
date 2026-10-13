@@ -2,9 +2,10 @@
 -- don't earn a module of their own (ElvUI-vanilla/ElvUI/Modules/
 -- Misc/). Ported so far: the solo loot window, the raid marker ring, the
 -- group loot roll bars, auto repair, interrupt announce, the totem
--- tracker and the AFK screen (a module of its own in real ElvUI), plus two
+-- tracker and the AFK screen (a module of its own in real ElvUI), plus three
 -- features real ElvUI does not have: leaving Druid form
--- when it blocks an action (CancelForm.lua) and the colour
+-- when it blocks an action (CancelForm.lua), a third UI panel slot beside
+-- doublewide windows (PanelSlots.lua) and the colour
 -- picker replacement (real ElvUI keeps that one in Modules/Blizzard/, a
 -- module this project does not have); the rest of that folder's surface
 -- (enhanced PvP messages, auto invite, error-frame toggle,
@@ -59,6 +60,7 @@ function M:Initialize()
 	self:LoadCancelForm()
 	self:LoadAutoTrackReputation()
 	self:LoadAFK()
+	self:LoadPanelSlots()
 
 	-- AceEvent passes no event arguments on UA; none are needed.
 	self:RegisterEvent("MERCHANT_SHOW", function() M:AutoRepair() end)
