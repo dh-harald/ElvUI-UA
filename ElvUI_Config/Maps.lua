@@ -142,6 +142,22 @@ E.Options.args.maps = {
 								E:RequestReload("global")
 							end,
 						},
+						-- Retail ElvUI's range (50-90%); applies live to the open
+						-- or next-opened window.
+						smallerWorldMapScale = {
+							order = 2,
+							type = "range",
+							name = L["Smaller World Map Scale"],
+							min = 0.5, max = 0.9, step = 0.01,
+							isPercent = true,
+							disabled = function() return not E.global.general.smallerWorldMap end,
+							get = function() return E.global.general.smallerWorldMapScale end,
+							set = function(_, value)
+								E.global.general.smallerWorldMapScale = value
+								local WM = E:GetModule("WorldMap", true)
+								if WM and WM.UpdateWorldMapScale then WM:UpdateWorldMapScale() end
+							end,
+						},
 					},
 				},
 				spacer = {

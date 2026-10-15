@@ -13,6 +13,7 @@ local E, L, V, P, G = unpack(ElvUI)
 
 G.general = {
 	smallerWorldMap = true,
+	smallerWorldMapScale = 0.9,
 	WorldMapCoordinates = {
 		enable = true,
 		position = "BOTTOMLEFT",

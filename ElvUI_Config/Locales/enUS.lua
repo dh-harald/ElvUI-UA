@@ -649,6 +649,7 @@ L["Note: the calendar icon was invisible near the minimap on UA (a frame-stackin
 L["Map"] = true
 L["World Map"] = true
 L["Smaller World Map"] = true
+L["Smaller World Map Scale"] = true
 L["Opens the World Map as a normal panel instead of a fullscreen, input-blocking window. Requires /reload -- untested."] = true
 L["World Map Coordinates"] = true
 L["Puts coordinates on the world map. Requires /reload to take effect -- checked once at login, no live toggle."] = true

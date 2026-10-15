@@ -144,13 +144,32 @@ end
 --
 -- Unreal Azeroth: the client's panel handling does not consult
 -- `UIPanelWindows`, and opening the map hides `UIParent` regardless, so the
--- holder has no parent (like the native `WorldMapFrame`). `SetScale` has no
--- effect there (effective scale stays 1), so the window is always full size.
--- The character keeps moving under the open map, so input is left as is.
+-- holder has no parent (like the native `WorldMapFrame`); `UIParent` is shown
+-- again from the map's OnShow, so the HUD stays up beside the window. The
+-- map frame is keyboard-enabled natively and would swallow every key
+-- (movement, bindings) while open; with the keyboard off, M and Escape still
+-- close it.
+--
+-- Both clients: the map is scaled by `smallerWorldMapScale` (retail ElvUI's
+-- key and default), applied to `WorldMapFrame` itself as retail does. The
+-- frame keeps its native 1024x768 size, centred in the holder, and the
+-- holder is sized to the scaled map so the drag handle and screen clamp
+-- follow the visible window. The native OnShow calls
+-- `SetupFullscreenScale(this)` on every open, which resets the scale on
+-- both clients; on Unreal Azeroth re-applying the scale from an OnShow hook
+-- does not survive it. The global is therefore wrapped to skip
+-- `WorldMapFrame` (the native script looks it up by name on every call);
+-- the other callers (cinematics, UI options) are passed through.
 --
 -- One-shot, like real ElvUI's own `smallerWorldMap` check (the config marks
--- it reload-required).
+-- it reload-required); the scale applies live.
 local MAP_WIDTH, MAP_HEIGHT = 1024, 768
+
+local function GetMapScale()
+	local scale = tonumber(E.global.general.smallerWorldMapScale) or 1
+	if scale < 0.5 then scale = 0.5 elseif scale > 1 then scale = 1 end
+	return scale
+end
 
 local function CreateWindowHolder(isUA)
 	local parent = (not isUA) and UIParent or nil
@@ -165,10 +184,20 @@ local function CreateWindowHolder(isUA)
 	return holder
 end
 
+-- The frame's scale is relative to the holder, so the holder takes the
+-- scaled size in its own units.
+function M:UpdateWorldMapScale()
+	local holder, frame = self.windowHolder, _G.WorldMapFrame
+	if not holder or not frame then return end
+	local scale = GetMapScale()
+	pcall(frame.SetScale, frame, scale)
+	pcall(holder.SetWidth, holder, MAP_WIDTH * scale)
+	pcall(holder.SetHeight, holder, MAP_HEIGHT * scale)
+end
+
 -- Legacy-only half: out of the panel manager, Escape via UISpecialFrames,
 -- plus real ElvUI's dropdown-scale and tooltip-level fixes.
 local function DetachFromPanelManager(frame)
-	pcall(frame.SetScale, frame, 1)
 	if frame.EnableKeyboard then pcall(frame.EnableKeyboard, frame, false) end
 	if frame.EnableMouse then pcall(frame.EnableMouse, frame, false) end
 	if frame.SetToplevel then pcall(frame.SetToplevel, frame) end
@@ -210,7 +239,19 @@ function M:ApplySmallerWorldMap()
 
 	pcall(frame.SetParent, frame, holder)
 	pcall(frame.ClearAllPoints, frame)
-	pcall(frame.SetAllPoints, frame, holder)
+	pcall(frame.SetWidth, frame, MAP_WIDTH)
+	pcall(frame.SetHeight, frame, MAP_HEIGHT)
+	pcall(frame.SetPoint, frame, "CENTER", holder, "CENTER", 0, 0)
+	self.windowHolder = holder
+	self:UpdateWorldMapScale()
+
+	local nativeFullscreenScale = _G.SetupFullscreenScale
+	if type(nativeFullscreenScale) == "function" then
+		_G.SetupFullscreenScale = function(target)
+			if target == frame then return end
+			return nativeFullscreenScale(target)
+		end
+	end
 
 	-- `WorldMapFrame_OnLoad` sizes this black sheet to the whole screen from
 	-- the frame's BOTTOMLEFT; inside the holder it would spill over the game
@@ -225,22 +266,33 @@ function M:ApplySmallerWorldMap()
 
 	local S = E:GetModule("Skins", true)
 
+	if isUA and frame.EnableKeyboard then
+		pcall(frame.EnableKeyboard, frame, false)
+	end
+
 	-- Unreal Azeroth draws the black bands either side of the window with its
 	-- own `WorldMapBlackout`, a screen-sized FULLSCREEN-strata frame (absent
 	-- on the legacy client). Faded rather than hidden, so the client's own
 	-- show/hide of it is left alone; re-applied on every map show. The game
-	-- world then shows around the window (`UIParent` stays hidden while the
-	-- map is open). Smaller World Map only: the fullscreen native map keeps
-	-- its blackout. Source: UnrealUI `modules/worldmap.lua`.
+	-- world and the HUD then show around the window. Smaller World Map only:
+	-- the fullscreen native map keeps its blackout. Source: UnrealUI
+	-- `modules/worldmap.lua`.
 	local worldBlackout = _G.WorldMapBlackout
-	if worldBlackout and worldBlackout.SetAlpha then
-		local function FadeWorldBlackout()
+	local function FadeWorldBlackout()
+		if worldBlackout and worldBlackout.SetAlpha then
 			pcall(worldBlackout.SetAlpha, worldBlackout, 0)
 		end
-		FadeWorldBlackout()
-		if S and S.TryHookScript then
-			S:TryHookScript(frame, "OnShow", FadeWorldBlackout)
-		end
+	end
+	FadeWorldBlackout()
+
+	if S and S.TryHookScript then
+		S:TryHookScript(frame, "OnShow", function()
+			M:UpdateWorldMapScale()
+			if isUA then
+				FadeWorldBlackout()
+				pcall(UIParent.Show, UIParent)
+			end
+		end)
 	end
 
 	-- Ends at the close button, so the handle never covers it. The holder

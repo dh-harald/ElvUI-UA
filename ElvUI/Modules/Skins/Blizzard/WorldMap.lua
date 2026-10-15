@@ -33,7 +33,8 @@
 --   button are anchored frame-relative, so that needs no re-apply.
 --
 -- The art is static (nothing native re-textures it on show), so the skin is
--- applied once, with no OnShow hook.
+-- applied once. Only the UI font pass re-runs on every show (see
+-- `ApplyWorldMapSkin`).
 
 local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
@@ -57,6 +58,52 @@ local function PromoteTitle(frame)
 			pcall(region.SetDrawLayer, region, "OVERLAY")
 		end
 	end
+end
+
+-- The window title and the two dropdown labels are unnamed FontStrings. On
+-- Unreal Azeroth they cannot take the UI font: GetRegions returns a stripped
+-- object without SetFont, and there is no global name to resolve it through
+-- (Core/Fonts.lua). Hide does work on that object, so each is hidden and
+-- redrawn as an own FontString with the native text, size, colour and
+-- anchor. The legacy client's native labels follow the Font objects and are
+-- left alone.
+local function HideUnnamedLabels(frame)
+	local ok, regions = pcall(function() return { frame:GetRegions() } end)
+	if not ok or type(regions) ~= "table" then return end
+	local i
+	for i = 1, table.getn(regions) do
+		local region = regions[i]
+		local okType, regionType = pcall(region.GetObjectType, region)
+		if okType and regionType == "FontString" then
+			local okName, name = pcall(region.GetName, region)
+			if not (okName and type(name) == "string" and _G[name]) then
+				pcall(region.Hide, region)
+			end
+		end
+	end
+end
+
+local function ReplaceUnnamedLabel(frame, text, size, point, x, y)
+	if not frame or type(text) ~= "string" then return end
+	HideUnnamedLabels(frame)
+	local ok, label = pcall(frame.CreateFontString, frame, nil, "OVERLAY")
+	if not ok or not label then return end
+	E:FontTemplate(label, nil, size)
+	pcall(label.SetTextColor, label, 1, 0.82, 0)
+	pcall(label.SetPoint, label, point, frame, point, x, y)
+	pcall(label.SetText, label, text)
+end
+
+-- Native anchors and sizes from `FrameXML/WorldMapFrame.xml`: the title is
+-- GameFontNormal (12) at the frame's `CENTER 0,372`, the labels
+-- GameFontNormalSmall (10) at their dropdown's `TOPLEFT 20,10`.
+local function ReplaceUnnamedLabels(frame)
+	if not (ElvUI.Compat and ElvUI.Compat.isUA) then return end
+	local private = E.private and E.private.general
+	if not private or not private.replaceBlizzFonts then return end
+	ReplaceUnnamedLabel(frame, _G.WORLD_MAP, 12, "CENTER", 0, 372)
+	ReplaceUnnamedLabel(_G.WorldMapContinentDropDown, _G.CONTINENT, 10, "TOPLEFT", 20, 10)
+	ReplaceUnnamedLabel(_G.WorldMapZoneDropDown, _G.ZONE, 10, "TOPLEFT", 20, 10)
 end
 
 -- The map canvas inside the 1024x768 guide (`WorldMapDetailFrame`, 1002x668
@@ -239,6 +286,15 @@ local function ApplyWorldMapSkin()
 	LayoutDropDown(_G.WorldMapContinentDropDown)
 	LayoutDropDown(_G.WorldMapZoneDropDown)
 	LayoutControlRow()
+	ReplaceUnnamedLabels(frame)
+
+	-- The skin runs at login with the map closed, so the font pass's button
+	-- state poll (hover/disabled label fonts) stops at once and nothing
+	-- restarts it; strings other addons add later (pfQuest's map dropdown)
+	-- would be missed too. Re-running the pass on every show covers both.
+	S:TryHookScript(frame, "OnShow", function()
+		pcall(E.ApplyNativeFonts, E, frame)
+	end)
 end
 
 S:AddBlizzardSkin("worldmap", ApplyWorldMapSkin)

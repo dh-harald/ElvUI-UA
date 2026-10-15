@@ -626,6 +626,7 @@ L["Note: the calendar icon was invisible near the minimap on UA (a frame-stackin
 L["Map"] = "地图"
 L["World Map"] = "世界地图"
 L["Smaller World Map"] = "缩小世界地图"
+L["Smaller World Map Scale"] = "小型世界地图缩放"
 L["Opens the World Map as a normal panel instead of a fullscreen, input-blocking window. Requires /reload -- untested."] = "以普通面板方式打开世界地图,而不是全屏且阻挡输入的窗口。需要 /reload——未经测试。"
 L["World Map Coordinates"] = "世界地图坐标"
 L["Puts coordinates on the world map. Requires /reload to take effect -- checked once at login, no live toggle."] = "在世界地图上显示坐标。需要 /reload 才能生效——仅在登录时检查一次,无法即时切换。"

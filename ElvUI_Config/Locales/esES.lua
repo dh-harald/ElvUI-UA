@@ -626,6 +626,7 @@ L["Note: the calendar icon was invisible near the minimap on UA (a frame-stackin
 L["Map"] = "Mapa"
 L["World Map"] = "Mapa del mundo"
 L["Smaller World Map"] = "Smaller World Map"
+L["Smaller World Map Scale"] = "Escala de Mapa del Mundo Más Pequeña"
 L["Opens the World Map as a normal panel instead of a fullscreen, input-blocking window. Requires /reload -- untested."] = "Abre el Mapa del Mundo como un panel normal en lugar de una ventana a pantalla completa que bloquea la entrada. Requiere /reload -- sin probar."
 L["World Map Coordinates"] = "World Map Coordinates"
 L["Puts coordinates on the world map. Requires /reload to take effect -- checked once at login, no live toggle."] = "Añade coordenadas en el mapa del mundo. Requiere /reload para tener efecto -- se comprueba una sola vez al iniciar sesión, sin cambio en vivo."
