@@ -1,3 +1,12 @@
+## [0.12.1](https://github.com/dh-harald/ElvUI-UA/compare/v0.12.0...v0.12.1) (2026-10-15)
+
+
+### Bug Fixes
+
+* add some workaround for missing default fonts ([bef9fb1](https://github.com/dh-harald/ElvUI-UA/commit/bef9fb1efbd788813dbecd509b2e543507bfe760))
+* remove tooltip workaround on UA ([838f478](https://github.com/dh-harald/ElvUI-UA/commit/838f478afec11a92d3eb1761ce64962af13aa1b1))
+* smaller worldmap for UA ([3676a11](https://github.com/dh-harald/ElvUI-UA/commit/3676a117a7ea709061047bf3f7a6098500d3594a))
+
 # [0.12.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.11.0...v0.12.0) (2026-10-13)
 
 
