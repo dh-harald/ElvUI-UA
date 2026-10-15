@@ -3,11 +3,12 @@
 -- clients.
 --
 -- Real ElvUI drives the unit rewrite from SecureHook(GameTooltip, "SetUnit")
--- and its item additions from the other GameTooltip setters. On UA none of
--- GameTooltip's content setters can be hooked: neither AceHook's
--- object+method SecureHook nor replacing the method takes effect
--- (UnrealUI/modules/itemprice.lua measured a replaced setter never
--- running). This file uses only:
+-- and its item additions from the other GameTooltip setters. Neither client
+-- has hooksecurefunc; replacing a setter method on GameTooltip works on both
+-- (UA calls the replaced SetBagItem, SetAction and SetUnit through Lua), so
+-- item additions wrap the setters. World units are the exception: UA fills
+-- a world unit's tooltip natively, without calling GameTooltip:SetUnit.
+-- Besides the setter wrappers, this file uses:
 --   * UPDATE_MOUSEOVER_UNIT for world units. Measured on UA: it fires on
 --     every mouseover-unit change, including a sweep between two overlapping
 --     NPC models where GameTooltip never hides (so its OnShow does not fire),
@@ -27,10 +28,9 @@
 --     event, OnShow or status bar change reliably marking it.
 --
 -- Item tooltips get sell price, item count and item id lines (TT:AddItemLines)
--- from GameTooltip setter wrappers on the legacy client and from per-surface
--- hover hooks on UA -- see "Item hover sources". The same item, while Shift is
--- held, gets the equipped item(s) of its slot shown beside GameTooltip -- see
--- "Item comparison".
+-- from GameTooltip setter wrappers -- see "Item hover sources". The same
+-- item, while Shift is held, gets the equipped item(s) of its slot shown
+-- beside GameTooltip -- see "Item comparison".
 --
 -- Visibility (TT:IsSuppressed / TT:ApplyVisibility) hides a tooltip by owner
 -- category unless the chosen modifier is held, or always while in combat:
@@ -899,14 +899,6 @@ function TT:AddItemLines(tip, link, count)
 	end
 end
 
--- For a hover path that is not a GameTooltip setter (our own loot slots).
--- Skipped where the setters are hooked, which already covered that fill.
-function TT:AddItemLinesForSurface(tip, link, count)
-	if self.itemSettersHooked then return end
-	self:AddItemLines(tip, link, count)
-	self:SetCompareItem(link)
-end
-
 -- FrameXML's SetItemRef inserts the link into the edit box on Shift and opens
 -- the dressing room on Ctrl, showing no tooltip in either case.
 function TT:SetItemRef(link)
@@ -1522,8 +1514,8 @@ end
 
 -- Called with the item GameTooltip has just been filled for.
 -- A bag button re-runs its OnEnter every frame while it owns GameTooltip
--- (FrameXML ContainerFrameItemButton_OnUpdate, its throttle commented out), and
--- the legacy client's setter wrappers see the same per-frame refill. Showing
+-- (FrameXML ContainerFrameItemButton_OnUpdate, its throttle commented out), so
+-- the setter wrappers see a per-frame refill. Showing
 -- the comparison again refills its frames at native size and throws away the
 -- heading's layout, so an item already being compared is left alone; Shift
 -- presses reach OnModifierStateChanged through LibModifierState instead.
@@ -1550,17 +1542,13 @@ end
 -- ---------------------------------------------------------------------------
 -- Item hover sources
 --
--- Legacy client: real ElvUI's approach, the GameTooltip item setters are
--- wrapped, so every surface calling them is covered. On UA replacing those
--- methods does not take effect (see the file header), so the item is resolved
--- from the hovered surface instead: FrameXML hover globals where the native
--- button calls one (bags, character slots), a chained OnEnter script where the
--- handler is inline XML (bank, merchant, quest rewards, trade window, trade
--- skill and craft reagents), a post-hook on the AuctionFrameItem_OnEnter
--- global for auction rows, and a direct call from our own loot window. The
--- trade skill, craft and auction buttons come from load-on-demand addons and
--- are hooked once those have loaded. Action buttons are not covered on UA: no
--- API returns the item of an action slot.
+-- Real ElvUI's approach on both clients: the GameTooltip item setters are
+-- wrapped, so every surface calling them is covered (UA calls a replaced
+-- setter method through Lua as well). Besides the wrappers, the bag and bank
+-- hover hooks carry the `bags` visibility check, and on UA a post-hook on
+-- AuctionFrameItem_OnEnter adds a comparison where UA's native one stays
+-- empty. Action buttons get no item lines: no API returns the item of an
+-- action slot.
 -- ---------------------------------------------------------------------------
 
 local ITEM_SETTERS = {
@@ -1568,8 +1556,15 @@ local ITEM_SETTERS = {
 		local _, count = GetContainerItemInfo(bag, slot)
 		return GetContainerItemLink(bag, slot), count
 	end,
+	-- The bank's own slots arrive as inventory ids 40-63
+	-- (BankButtonIDToInvSlotID). UA's GetInventoryItemLink returns links for
+	-- equipment slots only, so these are read through the bank container.
 	SetInventoryItem = function(unit, slot)
 		if type(slot) ~= "number" or slot < 0 then return end
+		if slot > 39 and slot <= 39 + (NUM_BANKGENERIC_SLOTS or 24) then
+			local _, bankCount = GetContainerItemInfo(BANK_KEY, slot - 39)
+			return GetContainerItemLink(BANK_KEY, slot - 39), bankCount
+		end
 		local count = 1
 		if slot < 20 or (slot > 39 and slot < 68) then
 			count = GetInventoryItemCount(unit, slot)
@@ -1627,11 +1622,15 @@ local ITEM_SETTERS = {
 	end,
 }
 
+-- The setters are called from inline XML OnEnter handlers that read the
+-- `this` global after the call; on UA a script fired synchronously by the
+-- added lines (tip:Show() -> OnShow) leaves `this` changed, so it is put back.
 local function WrapSetter(tt, name, resolve)
 	local original = tt[name]
 	if type(original) ~= "function" then return end
 
 	tt[name] = function(self, a, b, c, d)
+		local caller = this
 		local r1, r2, r3 = original(self, a, b, c, d)
 		local ok, link, count = pcall(resolve, a, b, c, d)
 		if ok and link then
@@ -1640,6 +1639,7 @@ local function WrapSetter(tt, name, resolve)
 				pcall(TT.SetCompareItem, TT, link)
 			end
 		end
+		this = caller
 		return r1, r2, r3
 	end
 end
@@ -1652,7 +1652,6 @@ function TT:HookItemSetters()
 	for name, resolve in pairs(ITEM_SETTERS) do
 		WrapSetter(tt, name, resolve)
 	end
-	self.itemSettersHooked = true
 end
 
 -- Chains `handler(frame)` after the frame's existing script, keeping the
@@ -1678,152 +1677,27 @@ end
 function TT:OnContainerItemEnter(button)
 	if not button or not TooltipShown() then return end
 	self:TrackHover(button, "bag")
-	if self:ApplyVisibility(GameTooltip, "bags") then return end
-	if not ElvUI.Compat.isUA then return end
-	local bag = button:GetParent():GetID()
-	if bag == KEYRING_CONTAINER then return end
-	local slot = button:GetID()
-	local _, count = GetContainerItemInfo(bag, slot)
-	local link = GetContainerItemLink(bag, slot)
-	self:AddItemLines(GameTooltip, link, count)
-	self:SetCompareItem(link)
-end
-
-function TT:OnInventorySlotEnter(button)
-	if not button or not TooltipShown() then return end
-	local slot = button:GetID()
-	self:AddItemLines(GameTooltip, GetInventoryItemLink("player", slot), 1)
+	self:ApplyVisibility(GameTooltip, "bags")
 end
 
 function TT:OnBankItemEnter(button)
 	if not TooltipShown() then return end
 	self:TrackHover(button, "bank")
-	if self:ApplyVisibility(GameTooltip, "bags") then return end
-	if not ElvUI.Compat.isUA then return end
-	local slot = button:GetID()
-	local _, count = GetContainerItemInfo(BANK_KEY, slot)
-	local link = GetContainerItemLink(BANK_KEY, slot)
-	self:AddItemLines(GameTooltip, link, count)
-	self:SetCompareItem(link)
+	self:ApplyVisibility(GameTooltip, "bags")
 end
 
-function TT:OnMerchantItemEnter(button)
-	if not TooltipShown() or not MerchantFrame or MerchantFrame.selectedTab ~= 1 then return end
-	local index = button:GetID()
-	local _, _, _, count = GetMerchantItemInfo(index)
-	local link = GetMerchantItemLink(index)
-	self:AddItemLines(GameTooltip, link, count)
-	self:SetCompareItem(link)
-end
-
--- A hovered button whose item `resolve(button)` returns as link, count. The
--- resolvers reuse ITEM_SETTERS with the arguments the native OnEnter passes to
--- the matching setter.
-function TT:OnSurfaceItemEnter(button, resolve)
-	if not button or not TooltipShown() then return end
-	local link, count = resolve(button)
-	if not link then return end
-	self:AddItemLines(GameTooltip, link, count)
-	self:SetCompareItem(link)
-end
-
-local function HookSurfaceButton(name, resolve)
-	local button = _G[name]
-	if not button then return end
-	PostHookScript(button, "OnEnter", function(frame) TT:OnSurfaceItemEnter(frame, resolve) end)
-end
-
--- QuestFrame.lua and QuestLogFrame.lua store the list on the button (`type`:
--- "choice", "reward" or "required") and, for rewards, its kind (`rewardType`:
--- "item" or "spell"). Required items get no rewardType.
-local function QuestItemLink(button)
-	if button.rewardType == "spell" then return end
-	return ITEM_SETTERS.SetQuestItem(button.type, button:GetID())
-end
-
-local function QuestLogItemLink(button)
-	if button.rewardType ~= "item" then return end
-	return ITEM_SETTERS.SetQuestLogItem(button.type, button:GetID())
-end
-
-local function TradeSkillProductLink()
-	local index = GetTradeSkillSelectionIndex()
-	if not index or index == 0 then return end
-	return ITEM_SETTERS.SetTradeSkillItem(index)
-end
-
-local function TradeSkillReagentLink(button)
-	return ITEM_SETTERS.SetTradeSkillItem(GetTradeSkillSelectionIndex(), button:GetID())
-end
-
--- The craft window's own icon shows the craft spell, not an item.
-local function CraftReagentLink(button)
-	return ITEM_SETTERS.SetCraftItem(GetCraftSelectionIndex(), button:GetID())
-end
-
-function TT:HookQuestSurfaces()
-	local i
-	for i = 1, 10 do
-		HookSurfaceButton("QuestDetailItem" .. i, QuestItemLink)
-		HookSurfaceButton("QuestRewardItem" .. i, QuestItemLink)
-		HookSurfaceButton("QuestLogItem" .. i, QuestLogItemLink)
-	end
-	for i = 1, 6 do
-		HookSurfaceButton("QuestProgressItem" .. i, QuestItemLink)
-	end
-end
-
--- The trade slot index is the item frame's id; it is taken from the frame name
--- rather than from GetParent() on the button.
-function TT:HookTradeSurfaces()
-	local i
-	for i = 1, 7 do
-		local id = i
-		HookSurfaceButton("TradePlayerItem" .. i .. "ItemButton",
-			function() return ITEM_SETTERS.SetTradePlayerItem(id) end)
-		HookSurfaceButton("TradeRecipientItem" .. i .. "ItemButton",
-			function() return ITEM_SETTERS.SetTradeTargetItem(id) end)
-	end
-end
-
-function TT:HookTradeSkillSurfaces()
-	HookSurfaceButton("TradeSkillSkillIcon", TradeSkillProductLink)
-	local i
-	for i = 1, 8 do
-		HookSurfaceButton("TradeSkillReagent" .. i, TradeSkillReagentLink)
-	end
-end
-
-function TT:HookCraftSurfaces()
-	local i
-	for i = 1, 8 do
-		HookSurfaceButton("CraftReagent" .. i, CraftReagentLink)
-	end
-end
-
--- This hook is UA-only (`HookItemSurfaces` returns early on the legacy
--- client). An earlier version of this comment said the item lines were all
--- that was needed here, because "AuctionFrameItem_OnEnter fills the native
--- auction comparison itself" -- and a later one over-corrected, claiming UA
--- has no auction comparison at all. Measured, both are half right: UA's
--- `SetAuctionCompareItem` DOES fill `ShoppingTooltip1/2`, but only where the
--- hovered item's slot actually holds something (a weapon against the equipped
--- weapon, live; a wand against an empty ranged slot, nothing). So the rows
--- fall into two groups, and only the second had no comparison at all.
---
--- Where the native one filled, it is left alone: it re-fills on EVERY frame
--- (the row template's own OnUpdate calls this OnEnter again while hovered),
--- so a comparison of ours put on top of it is overwritten the next frame,
--- leaving the native content plus a second "Currently Equipped" heading of
--- ours -- which is exactly what a live screenshot showed. Taking those rows
--- over means re-asserting every frame, which `SetCompareItem` deliberately
--- does not do (re-showing refills the frames at native size and throws the
--- heading's layout away). Adding the stat block to the NATIVE comparison
--- instead is the open item, and it applies to both clients equally.
+-- UA only. UA's `SetAuctionCompareItem` fills `ShoppingTooltip1/2` only where
+-- the hovered item's slot holds something (a weapon against the equipped
+-- weapon; a wand against an empty ranged slot gets nothing). Those native
+-- comparisons are left alone: the row template's OnUpdate calls this OnEnter
+-- again every frame, so the native one re-fills on top of anything put there,
+-- and `SetCompareItem` deliberately does not re-assert per frame (re-showing
+-- refills the frames at native size and drops the heading's layout). Rows
+-- with no native comparison get ours. The item lines come from the
+-- SetAuctionItem wrapper.
 function TT:OnAuctionItemEnter(auctionType, index)
 	if not TooltipShown() then return end
-	local link, count = ITEM_SETTERS.SetAuctionItem(auctionType, index)
-	self:AddItemLines(GameTooltip, link, count)
+	local link = ITEM_SETTERS.SetAuctionItem(auctionType, index)
 
 	local native = _G.ShoppingTooltip1
 	local okShown, shown = false, false
@@ -1858,10 +1732,8 @@ local function WhenGlobalExists(name, hook)
 	end
 end
 
--- The bag and bank hooks run on both clients: they carry the visibility
--- check everywhere, and the item lines only on UA (the legacy client gets
--- those from the setter wrappers). Every other surface hook exists for the
--- item lines alone, so those are installed on UA only.
+-- The bag and bank hover hooks carry the `bags` visibility check on both
+-- clients; the auction row hook is UA only (see OnAuctionItemEnter).
 function TT:HookItemSurfaces()
 	pcall(function()
 		TT:SecureHook("ContainerFrameItemButton_OnEnter", function(button)
@@ -1879,34 +1751,14 @@ function TT:HookItemSurfaces()
 		end
 	end
 
-	if not ElvUI.Compat.isUA then return end
-
-	pcall(function()
-		TT:SecureHook("PaperDollItemSlotButton_OnEnter", function()
-			local caller = this
-			pcall(TT.OnInventorySlotEnter, TT, caller)
-			this = caller
-		end)
-	end)
-	for i = 1, 12 do
-		local button = _G["MerchantItem" .. i .. "ItemButton"]
-		if button then
-			PostHookScript(button, "OnEnter", function(frame) TT:OnMerchantItemEnter(frame) end)
-		end
+	if ElvUI.Compat.isUA then
+		WhenGlobalExists("AuctionFrameItem_OnEnter", function() TT:HookAuctionSurfaces() end)
 	end
-
-	self:HookQuestSurfaces()
-	self:HookTradeSurfaces()
-	WhenGlobalExists("TradeSkillFrame", function() TT:HookTradeSkillSurfaces() end)
-	WhenGlobalExists("CraftFrame", function() TT:HookCraftSurfaces() end)
-	WhenGlobalExists("AuctionFrameItem_OnEnter", function() TT:HookAuctionSurfaces() end)
 end
 
 function TT:HookItemSources()
+	self:HookItemSetters()
 	self:HookItemSurfaces()
-	if not ElvUI.Compat.isUA then
-		self:HookItemSetters()
-	end
 end
 
 -- ---------------------------------------------------------------------------
