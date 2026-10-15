@@ -1275,6 +1275,34 @@ function CH:ChatEdit_OnEnterPressed()
 	end
 end
 
+-- Unreal Azeroth draws a line black when AddMessage gets its colour passed
+-- explicitly as nil (`AddMessage(text, nil, nil, nil)`) and in the native
+-- default colour (white) only when the colour is omitted. Any fixed-arity
+-- AddMessage wrapper from another addon (pfQuest's quest-link colouring
+-- forwards `text, a1..a5`) therefore turns every uncoloured print black.
+-- Each chat window's AddMessage is wrapped to fill in white when no colour is
+-- given; wherever this wrapper ends up in a chain of such wrappers, the
+-- client's own method receives a real colour. Arguments after the colour are
+-- forwarded exactly as given.
+function CH:FillDefaultMessageColor()
+	if not Compat.isUA then return end
+
+	local i
+	for i = 1, (NUM_CHAT_WINDOWS or 10) do
+		local frame = _G["ChatFrame"..i]
+		if frame and not frame.elvDefaultColorInner and type(frame.AddMessage) == "function" then
+			local inner = frame.AddMessage
+			frame.elvDefaultColorInner = inner
+			frame.AddMessage = function(self, text, r, g, b, ...)
+				if r == nil and g == nil and b == nil then
+					r, g, b = 1, 1, 1
+				end
+				return inner(self, text, r, g, b, Compat.argUnpack(arg))
+			end
+		end
+	end
+end
+
 -- The client's global `ChatFrame_OnEvent` can be wrapped to hide messages
 -- that are really data, e.g. a server's own UI addon talking to itself over
 -- CHAT_MSG_SYSTEM ("PRESTIGEUI <name> <value>" on Project Legacy). The OnEvent
@@ -1286,14 +1314,17 @@ end
 -- `channelList`, which a dry run would duplicate. Every failure path (a
 -- different handler signature, an instance field that does not shadow the
 -- method) answers "not suppressed", so a message is never lost by accident.
+-- The value put back is the frame's AddMessage as read through normal
+-- indexing, not `rawget`: on Unreal Azeroth the `rawget` result is not
+-- another addon's instance-level AddMessage hook (e.g. pfQuest's quest-link
+-- colouring), so restoring it would silently remove that hook.
 local function SuppressedByClientHandler(frame, event)
 	local handler = ChatFrame_OnEvent
 	if type(handler) ~= "function" then return false end
 
 	local printed = false
 	local stub = function() printed = true end
-	local okRaw, prior = pcall(rawget, frame, "AddMessage")
-	if not okRaw then prior = nil end
+	local prior = frame.AddMessage
 	if not pcall(function() frame.AddMessage = stub end) then return false end
 	if frame.AddMessage ~= stub then
 		pcall(function() frame.AddMessage = prior end)
@@ -1663,6 +1694,7 @@ function CH:Initialize()
 	self:HideNativeChatButtons()
 	self:StyleAllChatTabs()
 	self:WireMessagePipeline()
+	self:FillDefaultMessageColor()
 
 	pcall(ChatFrame1.SetTimeVisible, ChatFrame1, 100)
 

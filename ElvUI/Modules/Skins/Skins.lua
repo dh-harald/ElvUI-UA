@@ -3839,6 +3839,10 @@ function S:SkinChildren(frame, depth)
 		-- Blizzard/UIOptions.lua, whose tabs sit apart instead of
 		-- overlapping. nil means "use `S.TAB_INSET_X`".
 		sweepTabInsetX = tonumber(frame.elvTabInsetX)
+		-- The UI font on the window's own text (Unreal Azeroth only, see
+		-- Core/Fonts.lua). The sweep re-runs on every show, which also
+		-- catches strings a window creates later.
+		pcall(E.ApplyNativeFonts, E, frame)
 	end
 	-- Every window skinned so far is at most ~5 levels deep; the cap is
 	-- pure insurance against a cyclic/absurd hierarchy, not a tuning knob.
