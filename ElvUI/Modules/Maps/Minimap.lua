@@ -258,6 +258,15 @@ local function StepZoom(step)
 
 	lastZoomTime = now
 	local newZoom = zoom + step
+	-- Zoom runs 0 .. GetZoomLevels() - 1 (6 levels, max 5, on both clients).
+	-- The client clamps an out-of-range SetZoom itself, but the value passed
+	-- here would still be saved as the zoom level, so a step past either end
+	-- is dropped.
+	local okLevels, levels = pcall(Minimap.GetZoomLevels, Minimap)
+	if not okLevels or type(levels) ~= "number" or levels < 1 then levels = 6 end
+	if newZoom < 0 or newZoom > levels - 1 then
+		return
+	end
 	pcall(Minimap.SetZoom, Minimap, newZoom)
 	-- Instant response for our OWN zoom changes, not waiting on the next
 	-- poll tick -- the poll (above) still exists as the catch-all for
