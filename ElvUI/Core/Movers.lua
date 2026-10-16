@@ -161,10 +161,18 @@ end
 -- less across a resolution change than a large offset from a single fixed
 -- point would.
 --
--- Ported directly from real ElvUI's own E:CalculateMoverPoints
--- (ElvUI-vanilla/ElvUI/Core/movers.lua:244-306) -- same thirds/
--- halves thresholds, same GetCenter/GetLeft/GetRight/GetTop/GetBottom
--- reads. Deliberately NOT using GetPoint() here at all (unlike
+-- Ported from real ElvUI's own E:CalculateMoverPoints
+-- (ElvUI-vanilla/ElvUI/Core/movers.lua:244-306) -- same horizontal
+-- thirds, same GetCenter/GetLeft/GetRight/GetTop/GetBottom reads. One
+-- deliberate difference: real ElvUI splits the screen vertically into
+-- halves (TOP/BOTTOM only), this splits it into thirds like the
+-- horizontal axis, so a frame in the middle third is anchored to the
+-- vertical centre (LEFT, CENTER, RIGHT). Otherwise a centred frame keeps a
+-- large offset from the top or bottom edge and drifts off centre whenever
+-- the screen height in UI units changes (a UI scale or resolution change).
+-- The stored string stays in real ElvUI's format; LEFT/CENTER/RIGHT are
+-- ordinary anchor points real ElvUI also loads.
+-- Deliberately NOT using GetPoint() here at all (unlike
 -- CaptureFramePositionParts above): GetCenter/GetLeft/GetRight/GetTop/
 -- GetBottom are measured against UIParent, so the point they produce is
 -- independent of whatever anchor the frame currently carries. Real
@@ -182,7 +190,8 @@ local function CalculateMoverPoint(frame)
 
 	local LEFT = screenWidth / 3
 	local RIGHT = screenWidth * 2 / 3
-	local TOP = screenHeight / 2
+	local TOP = screenHeight * 2 / 3
+	local BOTTOM = screenHeight / 3
 
 	local point, x, y
 
@@ -190,10 +199,13 @@ local function CalculateMoverPoint(frame)
 		point = "TOP"
 		local okFrameTop, frameTop = pcall(frame.GetTop, frame)
 		y = -(screenHeight - (okFrameTop and frameTop or cy))
-	else
+	elseif cy <= BOTTOM then
 		point = "BOTTOM"
 		local okBottom, bottom = pcall(frame.GetBottom, frame)
 		y = okBottom and bottom or cy
+	else
+		point = ""
+		y = cy - screenHeight / 2
 	end
 
 	if cx >= RIGHT then
@@ -207,6 +219,8 @@ local function CalculateMoverPoint(frame)
 	else
 		x = cx - screenWidth / 2
 	end
+
+	if point == "" then point = "CENTER" end
 
 	return point, E:Round(x), E:Round(y)
 end
