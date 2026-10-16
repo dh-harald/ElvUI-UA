@@ -5455,6 +5455,17 @@ function S:InstallStaticPopupSkin()
 			S:StyleUIPanelButton(_G["StaticPopup"..i.."Button2"])
 			S:StyleEditBox(_G["StaticPopup"..i.."EditBox"])
 			S:StyleEditBox(_G["StaticPopup"..i.."WideEditBox"])
+
+			-- The UI font on the dialog's text (Unreal Azeroth only, see
+			-- Core/Fonts.lua); no sweep runs here to do it. Applied once now,
+			-- so the first show already sizes the dialog to the UI font, and
+			-- again on every show, which restarts the button state poll
+			-- (hover/disabled label fonts) that stops while the dialog is
+			-- hidden.
+			pcall(E.ApplyNativeFonts, E, popup)
+			S:TryHookScript(popup, "OnShow", function()
+				pcall(E.ApplyNativeFonts, E, popup)
+			end)
 		end
 	end
 end

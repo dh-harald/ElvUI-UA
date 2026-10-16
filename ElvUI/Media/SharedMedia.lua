@@ -18,10 +18,9 @@
 -- `SetFont` is a no-op on UA, so a font CHANGE is inert on that client
 -- regardless of what is registered here. Custom TEXTURES do render.
 --
--- Sounds are registered in the standard "Interface\AddOns\..." form. UA plays
--- an addon's sound file only from its own path form; LibSharedMedia's
--- Fetch("sound") hands out the path the running client plays, so Chat.lua's
--- PlaySoundFile(LSM:Fetch(...)) works on both clients. UA does not play .mp3.
+-- Sounds are registered in the standard "Interface\AddOns\..." form, which
+-- both clients play; Chat.lua plays PlaySoundFile(LSM:Fetch(...)). UA does
+-- not play .mp3.
 local LSM = LibStub("LibSharedMedia-3.0", true)
 if not LSM then return end
 
