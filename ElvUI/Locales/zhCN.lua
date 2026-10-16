@@ -38,6 +38,7 @@ L["Keep Both"] = "保留两者"
 L["One or more of the changes you have made require a ReloadUI."] = "你做出的一个或多个更改需要重载界面才能生效。"
 L["One or more of the changes you have made will effect all characters using this addon. You will have to reload the user interface to see the changes you have made."] = "你做出的一个或多个更改会影响使用本插件的所有角色。你需要重载界面才能看到这些更改。"
 L["A setting you have changed will change an option for this character only. This setting that you have changed will be uneffected by changing user profiles. Changing this setting requires that you reload your User Interface."] = "你更改的设置只对本角色生效。此设置不会因切换配置方案而改变。更改此设置需要重载界面。"
+L["INCOMPATIBLE_ADDON"] = "%s 与 %s 不兼容\n请选择需要使用的插件/模块"
 
 --Tooltip
 L["Targeted By:"] = "被以下目标选中:"

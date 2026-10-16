@@ -80,6 +80,7 @@ L["Keep Both"] = true
 L["One or more of the changes you have made require a ReloadUI."] = true
 L["One or more of the changes you have made will effect all characters using this addon. You will have to reload the user interface to see the changes you have made."] = true
 L["A setting you have changed will change an option for this character only. This setting that you have changed will be uneffected by changing user profiles. Changing this setting requires that you reload your User Interface."] = true
+L["INCOMPATIBLE_ADDON"] = "%s is not compatible with %s.\nPlease select the addon/module to use."
 
 --Tooltip
 L["Targeted By:"] = true

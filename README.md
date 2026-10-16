@@ -39,6 +39,9 @@ Two addons ship together:
   settings; exports only hold what differs from the defaults, and an import
   drops settings this addon does not know. Import also reads ElvUI-vanilla's
   own exports (its compressed text and its Lua table)
+- Incompatible addon check (as real ElvUI): when a bag addon (Bagzen,
+  EH_Bag, AllBags, Bagnon, …) runs alongside ElvUI's bags, a popup asks which one to
+  use and switches the other off
 - Layout (screen panels, minimap panels, mover system)
 - ActionBars, PetBar/StanceBar, Cooldown text
 - Pet ability cooldowns on Unreal Azeroth, which reports none: started from

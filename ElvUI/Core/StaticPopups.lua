@@ -98,7 +98,9 @@ end
 
 RegisterPopups()
 
--- `which` is the UNPREFIXED name, matching real ElvUI's call sites.
+-- `which` is the UNPREFIXED name, matching real ElvUI's call sites. The two
+-- text arguments fill the `%s` slots of the entry's `text`, as with the native
+-- StaticPopup_Show.
 --
 -- pcall'd, because a popup failing must never take down the config setter that
 -- asked for it: a dialog that cannot be shown is a cosmetic loss, the setting
@@ -106,12 +108,12 @@ RegisterPopups()
 -- and timeout rules are Blizzard's own, driven by the `whileDead`/`timeout`
 -- fields on each entry -- upstream reimplements those checks because it also
 -- reimplements the frames; here the native code applies them for us.)
-function E:StaticPopup_Show(which)
+function E:StaticPopup_Show(which, textArg1, textArg2)
 	if not E.PopupDialogs[which] then return end
 	if type(StaticPopup_Show) ~= "function" then return end
 
 	RegisterPopups()
-	pcall(StaticPopup_Show, KEY_PREFIX..which)
+	pcall(StaticPopup_Show, KEY_PREFIX..which, textArg1, textArg2)
 end
 
 -- Convenience for the common case, and the reason this file exists: a config

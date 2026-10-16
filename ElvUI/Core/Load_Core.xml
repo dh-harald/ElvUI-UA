@@ -5,6 +5,7 @@
 	<Script file="Fonts.lua"/>
 	<Script file="DebugTools.lua"/>
 	<Script file="StaticPopups.lua"/>
+	<Script file="Incompatible.lua"/>
 	<Script file="Movers.lua"/>
 	<Script file="Profiles.lua"/>
 	<Script file="Cooldowns.lua"/>

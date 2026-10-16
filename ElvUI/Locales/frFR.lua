@@ -38,6 +38,7 @@ L["Keep Both"] = "Garder les deux"
 L["One or more of the changes you have made require a ReloadUI."] = "Une ou plusieurs modifications que vous avez effectuées nécessitent un rechargement de l'interface."
 L["One or more of the changes you have made will effect all characters using this addon. You will have to reload the user interface to see the changes you have made."] = "Un ou plusieurs changement(s) que vous avez effectué a une incidence sur tous les personnages qui utilisent cet Addon. Vous devriez recharger l'interface utilisateur pour voir le(s) changement(s) apporté(s)."
 L["A setting you have changed will change an option for this character only. This setting that you have changed will be uneffected by changing user profiles. Changing this setting requires that you reload your User Interface."] = "Un réglage que vous avez modifié ne s'appliquera que pour ce personnage. La modification de ce réglage ne sera pas affecté par un changement de profil. Changer ce réglage requiert de relancer l'interface."
+L["INCOMPATIBLE_ADDON"] = "%s n'est pas compatible avec %s.\nVeuillez sélectionner l'addon/module à utiliser."
 
 --Tooltip
 L["Targeted By:"] = "Ciblé par:"
