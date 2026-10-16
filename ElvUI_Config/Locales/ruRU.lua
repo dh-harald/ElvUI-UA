@@ -444,6 +444,8 @@ L["Talents"] = "Таланты"
 L["Tradeskills"] = "Ремесла"
 L["Trainer Frame"] = "Тренер"
 L["Debug Tools"] = "Инструменты отладки"
+L["AddOns"] = "Модификации"
+L["Skins every LibConfig-1.0 options window, this one included (LibConfig-1.0 replaces the Ace3 configuration dialog here). Requires /reload to take effect."] = "Переоформляет все окна настроек LibConfig-1.0, включая это (LibConfig-1.0 здесь заменяет диалог настроек Ace3). Требует /reload для применения."
 
 --UnitFrames
 L["UnitFrames"] = "Рамки юнитов"

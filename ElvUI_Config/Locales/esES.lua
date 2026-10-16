@@ -444,6 +444,8 @@ L["Talents"] = "Talentos"
 L["Tradeskills"] = "Hab. comerciales"
 L["Trainer Frame"] = "Entrenador"
 L["Debug Tools"] = "Herramientas de Depuración"
+L["AddOns"] = "Addons"
+L["Skins every LibConfig-1.0 options window, this one included (LibConfig-1.0 replaces the Ace3 configuration dialog here). Requires /reload to take effect."] = "Restiliza todas las ventanas de opciones de LibConfig-1.0, incluida esta (LibConfig-1.0 sustituye aquí al diálogo de configuración de Ace3). Requiere /reload para tener efecto."
 
 --UnitFrames
 L["UnitFrames"] = "Marco de Unidad"

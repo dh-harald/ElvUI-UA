@@ -444,6 +444,8 @@ L["Talents"] = "天赋"
 L["Tradeskills"] = "商业技能"
 L["Trainer Frame"] = "训练师"
 L["Debug Tools"] = "除错工具"
+L["AddOns"] = "插件"
+L["Skins every LibConfig-1.0 options window, this one included (LibConfig-1.0 replaces the Ace3 configuration dialog here). Requires /reload to take effect."] = "美化所有 LibConfig-1.0 设置窗口,包括本窗口(LibConfig-1.0 在此替代 Ace3 设置对话框)。需要 /reload 才能生效。"
 
 --UnitFrames
 L["UnitFrames"] = "单位框体"

@@ -1,0 +1,5 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="Bagzen.lua"/>
+	<Script file="LibConfig.lua"/>
+	<Script file="PunyAuras.lua"/>
+</Ui>

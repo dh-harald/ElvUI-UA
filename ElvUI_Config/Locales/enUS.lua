@@ -467,6 +467,8 @@ L["Talents"] = true
 L["Tradeskills"] = true
 L["Trainer Frame"] = true
 L["Debug Tools"] = true
+L["AddOns"] = true
+L["Skins every LibConfig-1.0 options window, this one included (LibConfig-1.0 replaces the Ace3 configuration dialog here). Requires /reload to take effect."] = true
 
 --UnitFrames
 L["UnitFrames"] = true

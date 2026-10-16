@@ -22,9 +22,44 @@ local function FetchFont(name)
 	return (LSM and name and LSM:Fetch("font", name)) or FALLBACK_FONT
 end
 
+-- The client's Font objects that inherit one of the objects restyled below
+-- (FrameXML Fonts.xml) and declare no font, height or outline of their own,
+-- by parent. On the 1.12.1 client such a child follows its parent's SetFont;
+-- on Unreal Azeroth it keeps the client font (measured: GameFontHighlightSmall,
+-- the font of LibConfig's and most addons' edit boxes, stayed the client font
+-- after GameFontNormalSmall was restyled; after a SetFont on
+-- GameFontHighlightSmall itself, the edit boxes built from then on showed the
+-- UI font). So on UA each child is given its parent's arguments too. TextStatusBarText (a NumberFontNormal child) is left out: it
+-- is restyled explicitly, after its parent. NumberFontNormalSmallGray is left
+-- out as it declares an outline of its own.
+local INHERITED_FONTS = {
+	GameFontNormal = { "GameFontHighlight", "GameFontDisable", "GameFontGreen", "GameFontRed", "CombatLogFont" },
+	GameFontNormalSmall = { "GameFontHighlightSmall", "GameFontDisableSmall", "GameFontDarkGraySmall",
+		"GameFontGreenSmall", "GameFontRedSmall", "GameFontHighlightSmallOutline" },
+	GameFontNormalLarge = { "GameFontHighlightLarge", "GameFontDisableLarge", "GameFontGreenLarge",
+		"GameFontRedLarge", "ErrorFont" },
+	GameFontBlack = { "GameFontWhite", "QuestFontNormalSmall" },
+	NumberFontNormal = { "NumberFontNormalYellow" },
+	DialogButtonNormalText = { "DialogButtonHighlightText" },
+}
+
 local function SetFont(obj, font, size, style)
 	if not obj or not obj.SetFont then return end
 	pcall(obj.SetFont, obj, font, size, style)
+	if not (ElvUI.Compat and ElvUI.Compat.isUA) then return end
+	local parent, children
+	for parent, children in pairs(INHERITED_FONTS) do
+		if _G[parent] == obj then
+			local i
+			for i = 1, table.getn(children) do
+				local child = _G[children[i]]
+				if child and child.SetFont then
+					pcall(child.SetFont, child, font, size, style)
+				end
+			end
+			return
+		end
+	end
 end
 
 -- Real ElvUI's `E:FontTemplate` (Core/toolkit.lua): gives one of the addon's

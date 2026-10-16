@@ -3,4 +3,5 @@
 	<!-- Subdirectory <Script> does not load on real 1.12.1; see the
 	     comment in Modules\UnitFrames\Load_UnitFrames.xml. -->
 	<Include file="Blizzard\Load_Blizzard.xml"/>
+	<Include file="AddOns\Load_AddOns.xml"/>
 </Ui>

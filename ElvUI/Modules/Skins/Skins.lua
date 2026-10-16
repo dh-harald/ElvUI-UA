@@ -4276,6 +4276,48 @@ function S:AddBlizzardSkin(key, func)
 	list[table.getn(list) + 1] = func
 end
 
+-- Skins for other addons' windows, after real ElvUI's AddOnSkins plugin.
+-- Keyed by the addon's folder name; the skin runs once at login when that
+-- addon is loaded and its `E.private.skins.addons` flag (the folder name in
+-- lower case) is not off. Not gated by the Blizzard skin switches: these are
+-- not native windows.
+S.addOnSkins = S.addOnSkins or {}
+function S:AddAddOnSkin(addon, func)
+	self.addOnSkins[addon] = func
+end
+
+-- Skins for embedded libraries (no folder of their own), keyed by LibStub
+-- major name. The skin runs once at login with the library object, when any
+-- loaded addon carries it. Login is late enough for LibStub to have settled
+-- on the newest copy: an upgrade re-runs the library file and would drop
+-- state set on an older copy.
+S.librarySkins = S.librarySkins or {}
+function S:AddLibrarySkin(major, func)
+	self.librarySkins[major] = func
+end
+
+function S:IsAddOnSkinEnabled(addon)
+	local flags = E.private.skins and E.private.skins.addons
+	return not (flags and flags[string.lower(addon)] == false)
+end
+
+function S:InitializeAddOnSkins()
+	local addon, func
+	for addon, func in pairs(self.addOnSkins) do
+		if self:IsAddOnSkinEnabled(addon) and ElvUI.Compat.bool(IsAddOnLoaded(addon)) then
+			if not pcall(func) then S:ReportSkinProblem() end
+		end
+	end
+
+	local major
+	for major, func in pairs(self.librarySkins) do
+		local lib = LibStub and LibStub(major, true)
+		if lib then
+			if not pcall(func, lib) then S:ReportSkinProblem() end
+		end
+	end
+end
+
 -- ===================================================================
 -- `S:WaitForGlobal(name, func)` -- LoadOnDemand windows without the flash
 -- ===================================================================
@@ -6168,6 +6210,7 @@ end
 
 local function InitializeCallback()
 	S:Initialize()
+	S:InitializeAddOnSkins()
 end
 
 E:RegisterInitialModule(S:GetName(), InitializeCallback)

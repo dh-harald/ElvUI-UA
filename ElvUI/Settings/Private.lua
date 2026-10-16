@@ -101,7 +101,19 @@ V.tooltip = { enable = true }
 -- `bags`, `mail` and `mirrorTimers` only decide while their module is off:
 -- an enabled Bags module replaces the native windows, and an enabled Mail or
 -- Mirror Timers module styles its window itself.
+--
+-- `ace3` is real ElvUI's switch for the skin of its configuration dialog;
+-- here it gates the LibConfig-1.0 skin, the library that replaces
+-- AceConfigDialog. `addons` holds one flag per skinned addon, keyed by the
+-- addon's folder name in lower case.
 V.skins = {
+	ace3 = {
+		enable = true,
+	},
+	addons = {
+		bagzen = true,
+		punyauras = true,
+	},
 	blizzard = {
 		enable = true,
 		bags = true,

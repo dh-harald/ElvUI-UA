@@ -148,6 +148,10 @@ Two addons ship together:
   Timers), the module decides its look while it is on; with the module off,
   the window's skin toggle takes over, so e.g. the native bags and bank can
   still be restyled with quality-coloured slot borders
+- Skins for other addons: Bagzen's bag and bank windows, every
+  LibConfig-1.0 options window (ElvUI's own config included) and the
+  PunyAuras options window take ElvUI's border, backdrop and value colours
+  and the UI font; each can be switched off under Skins (Ace3, AddOns)
 - Mailbox: open several mails at once (all of them, or the ones ticked with
   a checkbox), send the ticked ones back to their senders, stop a run in
   progress, Shift-click or Ctrl-click a row to take or return that one mail,

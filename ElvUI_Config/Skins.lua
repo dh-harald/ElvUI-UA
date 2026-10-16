@@ -6,6 +6,12 @@ local getn = ElvUI.Compat.getn
 -- a per-window sentence.
 local SKIN_DESC = L["Requires /reload to take effect."]
 
+-- Addon folder of each `skins.addons` toggle.
+local ADDON_FOLDERS = {
+	bagzen = "Bagzen",
+	punyauras = "PunyAuras",
+}
+
 E.Options.args.skins = {
 	type = "group",
 	name = L["Skins"],
@@ -28,6 +34,21 @@ E.Options.args.skins = {
 			get = function() return E.private.skins.blizzard.enable end,
 			set = function(_, value)
 				E.private.skins.blizzard.enable = value
+				E:RequestReload("private")
+			end,
+		},
+		-- Real ElvUI's switch for the skin of its Ace3 configuration dialog, at
+		-- its own key, order and literal name. LibConfig-1.0 stands in for
+		-- AceConfigDialog here, so the switch gates the LibConfig skin
+		-- (Modules/Skins/AddOns/LibConfig.lua).
+		ace3 = {
+			order = 3,
+			type = "toggle",
+			name = "Ace3",
+			desc = L["Skins every LibConfig-1.0 options window, this one included (LibConfig-1.0 replaces the Ace3 configuration dialog here). Requires /reload to take effect."],
+			get = function() return E.private.skins.ace3.enable end,
+			set = function(_, value)
+				E.private.skins.ace3.enable = value
 				E:RequestReload("private")
 			end,
 		},
@@ -129,6 +150,30 @@ E.Options.args.skins = {
 				-- Gates the ElvUI Lua error window (Core/DebugTools.lua); off
 				-- leaves the client's own error display in place.
 				debug = { type = "toggle", name = L["Debug Tools"], desc = SKIN_DESC },
+			},
+		},
+		-- One toggle per addon skin (Modules/Skins/AddOns/), keyed like
+		-- `E.private.skins.addons`: the addon's folder name in lower case,
+		-- which ADDON_FOLDERS maps back for the loaded check. Names are the
+		-- addons' own titles, not translated. A toggle is greyed out while
+		-- its addon is not loaded.
+		addons = {
+			order = 101,
+			type = "group",
+			name = L["AddOns"],
+			guiInline = true,
+			get = function(info) return E.private.skins.addons[ info[getn(info)] ] end,
+			set = function(info, value)
+				E.private.skins.addons[ info[getn(info)] ] = value
+				E:RequestReload("private")
+			end,
+			disabled = function(info)
+				local folder = ADDON_FOLDERS[ info[getn(info)] ]
+				return folder ~= nil and not ElvUI.Compat.bool(IsAddOnLoaded(folder))
+			end,
+			args = {
+				bagzen = { type = "toggle", name = "Bagzen", desc = SKIN_DESC },
+				punyauras = { type = "toggle", name = "PunyAuras", desc = SKIN_DESC },
 			},
 		},
 	},
