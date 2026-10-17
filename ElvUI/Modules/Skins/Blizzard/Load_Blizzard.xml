@@ -30,4 +30,5 @@
 	<Script file="Tooltip.lua"/>
 	<Script file="MirrorTimers.lua"/>
 	<Script file="Bags.lua"/>
+	<Script file="NamePlates.lua"/>
 </Ui>

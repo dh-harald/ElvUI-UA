@@ -124,6 +124,9 @@ E.Options.args.skins = {
 					end,
 				},
 				merchant = { type = "toggle", name = L["Merchant"], desc = SKIN_DESC },
+				-- No upstream key: real ElvUI replaces the nameplates with its
+				-- module instead of skinning them.
+				nameplates = { type = "toggle", name = L["NamePlates"], desc = SKIN_DESC },
 				mirrorTimers = {
 					type = "toggle",
 					name = L["Mirror Timers"],

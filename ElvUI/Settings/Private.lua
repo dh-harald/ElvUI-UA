@@ -152,5 +152,6 @@ V.skins = {
 		trainer = true,
 		tooltip = true,
 		debug = true,
+		nameplates = true,
 	},
 }

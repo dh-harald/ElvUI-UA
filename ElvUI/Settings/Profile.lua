@@ -643,6 +643,7 @@ P.datatexts = {
 -- `width`/`healthHeight` are project additions -- this module's own
 -- simplified bar geometry.
 P.nameplates = {
+	statusbar = "ElvUI Norm",
 	font = "PT Sans Narrow",
 	fontSize = 11,
 	fontOutline = "OUTLINE",
@@ -653,6 +654,8 @@ P.nameplates = {
 	targetScale = 1.15,
 	nonTargetTransparency = 0.40,
 	lowHealthThreshold = 0.4,
+	targetGlow = "style2",
+	glowColor = {r = 77/255, g = 179/255, b = 255/255, a = 1},
 	showLevel = true,
 	showHealthText = true,
 	width = 150,

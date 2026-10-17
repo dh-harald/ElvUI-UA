@@ -144,7 +144,7 @@ Two addons ship together:
   Interface/Video/Sound Options, Gossip/Greeting/Quest/QuestLog,
   Merchant, Trade, Taxi, Pet Stable, Talents, Trade Skills, Enchanting,
   Trainer, Mail, Auction House, Dressing Room, World Map, Stack Split,
-  Quest Timers (movable with `/moveui`), and more).
+  Quest Timers (movable with `/moveui`), Nameplates, and more).
   Where ElvUI has its own module for a window (Bags/Bank, Mailbox, Mirror
   Timers), the module decides its look while it is on; with the module off,
   the window's skin toggle takes over, so e.g. the native bags and bank can
@@ -168,8 +168,9 @@ Two addons ship together:
   action slot)
 - A handful of native windows not yet reskinned (Tabard and a few more
   niche ones)
-- Nameplate customization — blocked by a client-side limitation on
-  Unreal Azeroth, parked until that changes
+- The full NamePlates module (castbar, auras, threat and class colours,
+  target scaling, per-unit-type settings); for now the native nameplates are
+  restyled in ElvUI's look by a skin
 - Heal prediction: channelled heals (Tranquility, Mend Pet, bandages) are not
   predicted, Chain Heal only on its first target, and another player's
   heal-over-time only by estimate until its first tick (the HealComm protocol
