@@ -1,3 +1,18 @@
+# [0.13.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.12.1...v0.13.0) (2026-10-17)
+
+
+### Bug Fixes
+
+* **minimap:** fix proper zoom ranges ([f3715d2](https://github.com/dh-harald/ElvUI-UA/commit/f3715d2fd7722ac2a8103723d93fbcaf97ce7896))
+* **moveui:** vertical position can anchor to middle ([c48c7a7](https://github.com/dh-harald/ElvUI-UA/commit/c48c7a7a45c226b9e51efe5d602b4dfcb688cb31))
+* **popup:** change fonts ([391b139](https://github.com/dh-harald/ElvUI-UA/commit/391b139f73dd1a43d219ee7e879ac8708cc5b6e3))
+
+
+### Features
+
+* add Incompatible Addons module for bags ([0225242](https://github.com/dh-harald/ElvUI-UA/commit/0225242fb6a20b59ac22d72c7a96ed727bf7fcee))
+* **addonskin:** initial commit for Bagzen, LibConfig, PunyAuras ([097860d](https://github.com/dh-harald/ElvUI-UA/commit/097860dee6b383eecc90d88034dc833b46dad1b2))
+
 ## [0.12.1](https://github.com/dh-harald/ElvUI-UA/compare/v0.12.0...v0.12.1) (2026-10-15)
 
 
