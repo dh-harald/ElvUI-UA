@@ -3839,10 +3839,6 @@ function S:SkinChildren(frame, depth)
 		-- Blizzard/UIOptions.lua, whose tabs sit apart instead of
 		-- overlapping. nil means "use `S.TAB_INSET_X`".
 		sweepTabInsetX = tonumber(frame.elvTabInsetX)
-		-- The UI font on the window's own text (Unreal Azeroth only, see
-		-- Core/Fonts.lua). The sweep re-runs on every show, which also
-		-- catches strings a window creates later.
-		pcall(E.ApplyNativeFonts, E, frame)
 	end
 	-- Every window skinned so far is at most ~5 levels deep; the cap is
 	-- pure insurance against a cyclic/absurd hierarchy, not a tuning knob.
@@ -5497,17 +5493,6 @@ function S:InstallStaticPopupSkin()
 			S:StyleUIPanelButton(_G["StaticPopup"..i.."Button2"])
 			S:StyleEditBox(_G["StaticPopup"..i.."EditBox"])
 			S:StyleEditBox(_G["StaticPopup"..i.."WideEditBox"])
-
-			-- The UI font on the dialog's text (Unreal Azeroth only, see
-			-- Core/Fonts.lua); no sweep runs here to do it. Applied once now,
-			-- so the first show already sizes the dialog to the UI font, and
-			-- again on every show, which restarts the button state poll
-			-- (hover/disabled label fonts) that stops while the dialog is
-			-- hidden.
-			pcall(E.ApplyNativeFonts, E, popup)
-			S:TryHookScript(popup, "OnShow", function()
-				pcall(E.ApplyNativeFonts, E, popup)
-			end)
 		end
 	end
 end

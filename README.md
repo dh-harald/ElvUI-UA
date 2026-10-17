@@ -131,8 +131,7 @@ Two addons ship together:
   and an options page for all of these
 - Fonts: the General → Media default font and size, combat text and name
   fonts, and "Apply Font To All" — applied to the native Blizzard text,
-  ElvUI's own text and the tooltip text (on Unreal Azeroth the native text
-  is restyled only in windows ElvUI skins)
+  ElvUI's own text and the tooltip text
 - Install Wizard
 - Lua error window: collects script errors (repeats merged with a count),
   pages through them, the text can be selected and copied, stays closed in
@@ -162,9 +161,7 @@ Two addons ship together:
   the people you have written to before
 
 **Missing / not yet started:**
-- Tooltip item level, inspect info and spell IDs; on Unreal Azeroth the
-  item comparison tooltips keep the client font, and the item
-  lines are not yet
+- Tooltip item level, inspect info and spell IDs; the item lines are not yet
   shown on action buttons (the client offers no way to read the item of an
   action slot)
 - A handful of native windows not yet reskinned (Tabard and a few more

@@ -1775,7 +1775,6 @@ end
 -- and on the money frame texts. Not ported: `ShowCompare` swaps the Font
 -- object of comparison lines 1-2 (`SetLineFont`), which would compete with a
 -- per-string font, and the money texts stay on their native font.
-local LINE_FONT_TOOLTIPS = { "GameTooltip", "ItemRefTooltip" }
 
 function TT:SetTooltipFonts()
 	local db = self.db
@@ -1797,53 +1796,6 @@ function TT:SetTooltipFonts()
 		if obj and obj.SetFont then
 			pcall(obj.SetFont, obj, path, size, outline)
 		end
-	end
-
-	if ElvUI.Compat.isUA then
-		self.lineFont = {
-			path = path, outline = outline,
-			header = db.headerFontSize, text = db.textFontSize,
-			gen = (self.lineFont and self.lineFont.gen or 0) + 1,
-		}
-		for i = 1, table.getn(LINE_FONT_TOOLTIPS) do
-			self:ApplyLineFonts(_G[LINE_FONT_TOOLTIPS[i]])
-		end
-	end
-end
-
--- On Unreal Azeroth a Font object's SetFont does not reach the FontStrings
--- that inherit it (neither native nor addon-created ones, and SetFontObject
--- does not re-bind them either), while a FontString's own SetFont works and
--- survives every later fill of the tooltip. So on UA every line of these
--- tooltips is given the tooltip font itself: line 1 at the header size, the
--- others at the text size. All existing lines are set when the fonts are
--- applied; a line the client creates later is caught from the tooltip's
--- OnShow. `elvFontGen` marks the settings generation a line was given, so
--- each line is set once per settings change.
---
--- The comparison tooltips (ShoppingTooltip1/2) are not included: the
--- comparison heading switches their first two lines between Font objects
--- with SetFontObject.
-function TT:ApplyLineFonts(tip)
-	local font = self.lineFont
-	if not font or not tip or not tip.GetName then return end
-	local name = tip:GetName()
-	if not name then return end
-
-	local i = 1
-	while true do
-		local left = _G[name .. "TextLeft" .. i]
-		if not left then break end
-		if left.elvFontGen ~= font.gen then
-			local size = (i == 1) and font.header or font.text
-			local right = _G[name .. "TextRight" .. i]
-			pcall(left.SetFont, left, font.path, size, font.outline)
-			left.elvFontGen = font.gen
-			if right then
-				pcall(right.SetFont, right, font.path, size, font.outline)
-			end
-		end
-		i = i + 1
 	end
 end
 
@@ -1889,13 +1841,6 @@ function TT:Initialize()
 	end)
 	if ElvUI.Compat.isUA then
 		PostHookScript(GameTooltip, "OnShow", function() TT:OnTooltipShow() end)
-		local i
-		for i = 1, table.getn(LINE_FONT_TOOLTIPS) do
-			local tip = _G[LINE_FONT_TOOLTIPS[i]]
-			if tip then
-				PostHookScript(tip, "OnShow", function(frame) TT:ApplyLineFonts(frame) end)
-			end
-		end
 	end
 
 	self:SetupHealthBar()

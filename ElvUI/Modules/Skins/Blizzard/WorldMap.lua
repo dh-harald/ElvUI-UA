@@ -287,14 +287,6 @@ local function ApplyWorldMapSkin()
 	LayoutDropDown(_G.WorldMapZoneDropDown)
 	LayoutControlRow()
 	ReplaceUnnamedLabels(frame)
-
-	-- The skin runs at login with the map closed, so the font pass's button
-	-- state poll (hover/disabled label fonts) stops at once and nothing
-	-- restarts it; strings other addons add later (pfQuest's map dropdown)
-	-- would be missed too. Re-running the pass on every show covers both.
-	S:TryHookScript(frame, "OnShow", function()
-		pcall(E.ApplyNativeFonts, E, frame)
-	end)
 end
 
 S:AddBlizzardSkin("worldmap", ApplyWorldMapSkin)

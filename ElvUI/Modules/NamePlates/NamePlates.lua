@@ -57,7 +57,6 @@
 -- Settings/Profile.lua:202+) is DELIBERATELY NOT attempted this pass.
 
 local E, L, V, P, G = unpack(ElvUI)
-local _G = _G or getfenv()
 local NP = E:NewModule("NamePlates", "AceEvent-3.0")
 E.NamePlates = NP
 
@@ -729,43 +728,24 @@ end
 -- comment on the freeze this avoids), but still capped by maxVisit as a
 -- safety ceiling regardless of how large the live UI tree turns out to
 -- be.
---
--- Enumerated regions and children are stripped-down objects on Unreal
--- Azeroth (no GetText on a FontString from GetRegions), so every object is
--- resolved through its global name before it is read. Without a `root` it
--- walks WorldFrame and then UIParent: they are separate top-level trees.
-local function ResolveByName(object)
-	local name = Call1(object, "GetName")
-	if type(name) == "string" and name ~= "" and _G[name] then
-		return _G[name]
-	end
-	return object
-end
-
 function NP:FindByTextDeep(needle, root, maxVisit)
 	if type(needle) ~= "string" or needle == "" then
 		E:Print("usage: /run ElvUI[1].NamePlates:FindByTextDeep(\"Mob Name\")")
 		return
 	end
-	if not root then
-		self:FindByTextDeep(needle, WorldFrame, maxVisit)
-		self:FindByTextDeep(needle, UIParent, maxVisit)
-		return
-	end
+	root = root or UIParent
 	maxVisit = maxVisit or 5000
 	local visited, found = 0, 0
 
 	local function Walk(frame, depth)
 		if visited >= maxVisit then return end
 		visited = visited + 1
-		frame = ResolveByName(frame)
 
 		local ok, regions = pcall(function() return { frame:GetRegions() } end)
 		if ok and type(regions) == "table" then
 			for j = 1, table.getn(regions) do
-				local region = ResolveByName(regions[j])
-				if ObjectType(region) == "FontString" then
-					local text = Call1(region, "GetText")
+				if ObjectType(regions[j]) == "FontString" then
+					local text = Call1(regions[j], "GetText")
 					if type(text) == "string" and string.find(text, needle, 1, true) then
 						found = found + 1
 						E:Print(string.format("depth=%d %s(%s)", depth,

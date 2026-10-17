@@ -24,13 +24,6 @@ local S = E:GetModule("Skins")
 -- Border and backdrop colours are read once, at login, as on every other
 -- ElvUI surface. An addon loaded on demand that brings a newer LibConfig
 -- copy re-runs the library file and resets its theme.
---
--- Fonts: on Unreal Azeroth a FontString takes its Font object's font only when
--- it is created, so LibConfig text built after ElvUI restyled GameFontNormal
--- already shows the UI font. The window chrome (LibConfigPanel's title and
--- the LibConfigClose button) is built once, possibly while an addon loaded
--- before ElvUI registers its options, and is given the UI font here. Both
--- strings are unnamed, so E:ApplyNativeFonts cannot reach them.
 
 local function DBColor(key, fallback)
 	local c = E.db.general and E.db.general[key]
@@ -56,25 +49,6 @@ function S:GetLibConfigTheme()
 	}
 end
 
-local function ApplyChromeFonts()
-	if not (ElvUI.Compat and ElvUI.Compat.isUA) then return end
-	local private = E.private and E.private.general
-	local path = E.media and E.media.normFont
-	if not (private and private.replaceBlizzFonts and path) then return end
-	local panel, close = _G.LibConfigPanel, _G.LibConfigClose
-	local strings = { panel and panel.title or false, close and close.label or false }
-	local i
-	for i = 1, 2 do
-		local fs = strings[i]
-		if fs and fs.SetFont then
-			local ok, _, size, flags = pcall(fs.GetFont, fs)
-			if ok and type(size) == "number" and size > 0 then
-				pcall(fs.SetFont, fs, path, size, flags or "")
-			end
-		end
-	end
-end
-
 local skinned
 
 local function ValueColorUpdate(hex, r, g, b)
@@ -89,7 +63,6 @@ local function LoadSkin(lib)
 	if type(lib.SetTheme) ~= "function" then return end
 	lib:SetTheme(S:GetLibConfigTheme())
 	skinned = lib
-	ApplyChromeFonts()
 end
 
 S:AddLibrarySkin("LibConfig-1.0", LoadSkin)
