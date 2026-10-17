@@ -1,3 +1,16 @@
+# [0.14.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.13.0...v0.14.0) (2026-10-17)
+
+
+### Bug Fixes
+
+* remove workaround for default fonts ([b224e3e](https://github.com/dh-harald/ElvUI-UA/commit/b224e3e57b402193150f98e17efab37d21f238c6))
+
+
+### Features
+
+* **misc:** add chatbubbles module ([649d4e0](https://github.com/dh-harald/ElvUI-UA/commit/649d4e02cf4d79ac951e4ae347da3d85d2cb1211))
+* **skin:** add nameplates skin ([ee26e83](https://github.com/dh-harald/ElvUI-UA/commit/ee26e83303f9a5eae8831db486a656aee1bb6681))
+
 # [0.13.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.12.1...v0.13.0) (2026-10-17)
 
 
