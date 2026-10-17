@@ -682,6 +682,17 @@ L["Show the time until the totem's next pulse, for totems that act at an interva
 L["Windfury Twist Timer"] = true
 L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."] = true
 
+--Chat Bubbles
+L["Chat Bubbles"] = true
+L["Chat Bubbles Style"] = true
+L["Skin the blizzard chat bubbles."] = true
+L["Skin Backdrop"] = true
+L["Remove Backdrop"] = true
+L["Skin Backdrop (No Borders)"] = true
+L["Disable"] = true
+L["Chat Bubble Names"] = true
+L["Display the name of the unit on the chat bubble."] = true
+
 --Mail
 L["Adds bulk handling to the native mailbox: open several mails at once, pick which ones with a checkbox, and send more than one item at a time."] = true
 L["With this off the mailbox is left to the Blizzard window skin instead. Requires /reload to take effect."] = true

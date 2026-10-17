@@ -10,4 +10,5 @@
 	<Script file="AutoTrackReputation.lua"/>
 	<Script file="AFK.lua"/>
 	<Script file="PanelSlots.lua"/>
+	<Script file="ChatBubbles.lua"/>
 </Ui>

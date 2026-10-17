@@ -659,6 +659,17 @@ L["Show the time until the totem's next pulse, for totems that act at an interva
 L["Windfury Twist Timer"] = "Temporizador de twist de Viento Furioso"
 L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."] = "Cuando el Tótem Viento Furioso se sustituye por otro tótem de aire, muestra en el botón de aire la cuenta atrás del resto de su ventana de 10 segundos, para calcular el siguiente Viento Furioso."
 
+--Chat Bubbles
+L["Chat Bubbles"] = "Burbujas de chat"
+L["Chat Bubbles Style"] = "Estilo de las burbujas de chat"
+L["Skin the blizzard chat bubbles."] = "Modificar la apariencia de las Burbujas de Chat de Blizzard"
+L["Skin Backdrop"] = "Apariencia del Fondo"
+L["Remove Backdrop"] = "Quitar Fondo"
+L["Skin Backdrop (No Borders)"] = "Apariencia del Fondo (sin bordes)"
+L["Disable"] = "Desactivar"
+L["Chat Bubble Names"] = "Nombres en las burbujas de chat"
+L["Display the name of the unit on the chat bubble."] = "Muestra el nombre de la unidad en la burbuja de chat."
+
 --Mail
 L["Adds bulk handling to the native mailbox: open several mails at once, pick which ones with a checkbox, and send more than one item at a time."] = "Añade gestión masiva al buzón nativo: abrir varios correos a la vez, elegir cuáles con una casilla, y enviar más de un objeto a la vez."
 L["With this off the mailbox is left to the Blizzard window skin instead. Requires /reload to take effect."] = "Si está desactivado, el buzón queda en manos del skin de ventana de Blizzard. Requiere /reload para aplicarse."

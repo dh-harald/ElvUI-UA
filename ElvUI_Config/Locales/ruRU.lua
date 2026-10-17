@@ -659,6 +659,17 @@ L["Show the time until the totem's next pulse, for totems that act at an interva
 L["Windfury Twist Timer"] = "Таймер твиста Неистовства ветра"
 L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."] = "После замены тотема Неистовства ветра другим тотемом воздуха кнопка воздуха отсчитывает остаток его 10-секундного окна, чтобы вовремя поставить следующий тотем Неистовства ветра."
 
+--Chat Bubbles
+L["Chat Bubbles"] = "Облачка сообщений"
+L["Chat Bubbles Style"] = "Стиль облачков сообщений"
+L["Skin the blizzard chat bubbles."] = "Стилизовать облачка сообщения Blizzard"
+L["Skin Backdrop"] = "Стилизовать фон"
+L["Remove Backdrop"] = "Скрыть фон"
+L["Skin Backdrop (No Borders)"] = "Стилизовать фон (без границ)"
+L["Disable"] = "Выключить"
+L["Chat Bubble Names"] = "Имена на облачках сообщений"
+L["Display the name of the unit on the chat bubble."] = "Отображать имя юнита на облачках сообщений."
+
 --Mail
 L["Adds bulk handling to the native mailbox: open several mails at once, pick which ones with a checkbox, and send more than one item at a time."] = "Добавляет массовые действия в стандартный почтовый ящик: открыть несколько писем сразу, выбрать нужные флажком и отправить несколько предметов за раз."
 L["With this off the mailbox is left to the Blizzard window skin instead. Requires /reload to take effect."] = "Если выключено, почтовый ящик оформляется скином окна Blizzard. Требуется /reload."

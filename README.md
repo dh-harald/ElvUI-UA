@@ -132,6 +132,8 @@ Two addons ship together:
 - Fonts: the General → Media default font and size, combat text and name
   fonts, and "Apply Font To All" — applied to the native Blizzard text,
   ElvUI's own text and the tooltip text
+- Chat bubbles: ElvUI-style backdrop (with or without border, or text only),
+  own font settings, and optionally the speaker's name above the bubble
 - Install Wizard
 - Lua error window: collects script errors (repeats merged with a count),
   pages through them, the text can be selected and copied, stays closed in

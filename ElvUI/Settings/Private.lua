@@ -43,6 +43,12 @@ V.general = {
 	lootUnderMouse = false,
 	-- Totem tracker switch (Modules/Misc/Totems.lua), real ElvUI's key.
 	totemTracker = true,
+	-- Chat bubble skin (Modules/Misc/ChatBubbles.lua), real ElvUI's keys.
+	chatBubbles = "backdrop",
+	chatBubbleFont = "PT Sans Narrow",
+	chatBubbleFontSize = 14,
+	chatBubbleFontOutline = "NONE",
+	chatBubbleName = false,
 	minimap = {
 		enable = true,
 		hideCalendar = true,

@@ -659,6 +659,17 @@ L["Show the time until the totem's next pulse, for totems that act at an interva
 L["Windfury Twist Timer"] = "风怒图腾轮换计时"
 L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."] = "风怒图腾被其他空气图腾替换后,在空气按钮上倒数其10秒窗口的剩余时间,以便掌握下一次放置风怒图腾的时机."
 
+--Chat Bubbles
+L["Chat Bubbles"] = "聊天气泡"
+L["Chat Bubbles Style"] = "聊天气泡样式"
+L["Skin the blizzard chat bubbles."] = "美化暴雪对话泡泡"
+L["Skin Backdrop"] = "美化背景"
+L["Remove Backdrop"] = "去除背景"
+L["Skin Backdrop (No Borders)"] = "美化背景(无边框)"
+L["Disable"] = "禁用"
+L["Chat Bubble Names"] = "聊天气泡名字"
+L["Display the name of the unit on the chat bubble."] = "在聊天气泡上显示单位的名字."
+
 --Mail
 L["Adds bulk handling to the native mailbox: open several mails at once, pick which ones with a checkbox, and send more than one item at a time."] = "为原版邮箱添加批量操作: 一次打开多封邮件, 用复选框选择要打开的邮件, 以及一次寄送多件物品."
 L["With this off the mailbox is left to the Blizzard window skin instead. Requires /reload to take effect."] = "关闭后, 邮箱交给暴雪窗口皮肤处理. 需要 /reload 生效."

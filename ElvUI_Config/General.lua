@@ -34,6 +34,15 @@ local function FONT_VALUES()
 	return list
 end
 
+-- Real ElvUI's chat bubble option names -> the private keys they edit.
+local CHAT_BUBBLE_KEYS = {
+	style = "chatBubbles",
+	name = "chatBubbleName",
+	font = "chatBubbleFont",
+	fontSize = "chatBubbleFontSize",
+	fontOutline = "chatBubbleFontOutline",
+}
+
 -- Writes `value` only into a key the profile already declares: every declared
 -- default is merged into E.db, so an undeclared key reads nil.
 local function SetDeclared(tbl, key, value)
@@ -490,6 +499,81 @@ E.Options.args.general = {
 					type = "toggle",
 					name = L["Windfury Twist Timer"],
 					desc = L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."],
+				},
+			},
+		},
+		-- Real ElvUI's chat bubble group: entry names and orders are its own,
+		-- so the leaves map onto the `chatBubble*` private keys through the
+		-- group-level get/set below. Read by Modules/Misc/ChatBubbles.lua at
+		-- login, hence the reload prompt.
+		chatBubbles = {
+			order = 6,
+			type = "group",
+			name = L["Chat Bubbles"],
+			get = function(info) return E.private.general[ CHAT_BUBBLE_KEYS[ info[getn(info)] ] ] end,
+			set = function(info, value)
+				E.private.general[ CHAT_BUBBLE_KEYS[ info[getn(info)] ] ] = value
+				E:RequestReload("private")
+			end,
+			args = {
+				header = {
+					order = 1,
+					type = "header",
+					name = L["Chat Bubbles"],
+				},
+				style = {
+					order = 2,
+					type = "select",
+					name = L["Chat Bubbles Style"],
+					desc = L["Skin the blizzard chat bubbles."],
+					values = {
+						backdrop = L["Skin Backdrop"],
+						nobackdrop = L["Remove Backdrop"],
+						backdrop_noborder = L["Skin Backdrop (No Borders)"],
+						disabled = L["Disable"],
+					},
+				},
+				name = {
+					order = 3,
+					type = "toggle",
+					name = L["Chat Bubble Names"],
+					desc = L["Display the name of the unit on the chat bubble."],
+					disabled = function()
+						local style = E.private.general.chatBubbles
+						return style == "nobackdrop" or style == "disabled"
+					end,
+				},
+				spacer = {
+					order = 4,
+					type = "description",
+					name = "",
+				},
+				font = {
+					order = 5,
+					type = "select",
+					dialogControl = "LSM30_Font",
+					name = L["Font"],
+					values = FONT_VALUES,
+					disabled = function() return E.private.general.chatBubbles == "disabled" end,
+				},
+				fontSize = {
+					order = 6,
+					type = "range",
+					name = L["Font Size"],
+					min = 4, max = 33, step = 1,
+					disabled = function() return E.private.general.chatBubbles == "disabled" end,
+				},
+				fontOutline = {
+					order = 7,
+					type = "select",
+					name = L["Font Outline"],
+					values = {
+						NONE = L["None"],
+						OUTLINE = L["Outline"],
+						MONOCHROMEOUTLINE = L["Monochrome Outline"],
+						THICKOUTLINE = L["Thick Outline"],
+					},
+					disabled = function() return E.private.general.chatBubbles == "disabled" end,
 				},
 			},
 		},
