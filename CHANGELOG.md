@@ -1,3 +1,11 @@
+## [0.14.1](https://github.com/dh-harald/ElvUI-UA/compare/v0.14.0...v0.14.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* disabled buttons should shown as disabled ([f895d14](https://github.com/dh-harald/ElvUI-UA/commit/f895d1465f9e9c9b3e904cd3bc2b419514abe003))
+* **unitframes:** tag fixes ([f3760b2](https://github.com/dh-harald/ElvUI-UA/commit/f3760b262eca9d1c4fd081698a21bc98d808c468))
+
 # [0.14.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.13.0...v0.14.0) (2026-10-17)
 
 
