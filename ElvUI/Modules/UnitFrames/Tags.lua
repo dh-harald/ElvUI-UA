@@ -1,7 +1,7 @@
 -- Unit frame tags beyond the ones UF:UpdateFrame fills itself from its own
 -- health/power values (health:current, health:current-percent,
--- health:percent, health:deficit, health:max, healthcolor, power:current,
--- power:max, power:percent, powercolor, name, level).
+-- health:percent, health:deficit, health:max, healthcolor, the power:* tags
+-- of UF:FillPowerTags, powercolor, name, level).
 --
 -- Real ElvUI renders `text_format` through oUF's tag system; this addon has
 -- no oUF, so a text is built by replacing every [tag] from one table per
@@ -120,6 +120,19 @@ local SHORT_CLASSIFICATION = { rare = "R", rareelite = "R+", elite = "+", worldb
 Methods["shortclassification"] = function(unit)
 	local ok, classification = pcall(UnitClassification, unit)
 	return ok and SHORT_CLASSIFICATION[classification] or ""
+end
+
+-- ElvUI-vanilla's `classificationcolor`: orange for rare and elite units, red
+-- for rare elites and world bosses, empty otherwise.
+Methods["classificationcolor"] = function(unit)
+	local ok, classification = pcall(UnitClassification, unit)
+	if not ok then return "" end
+	if classification == "rare" or classification == "elite" then
+		return Hex(1, 0.5, 0.25)
+	elseif classification == "rareelite" or classification == "worldboss" then
+		return Hex(1, 0, 0)
+	end
+	return ""
 end
 
 -- The player's combo points on the target, whatever frame shows the tag
@@ -337,7 +350,8 @@ end
 local BASE_TAGS = {
 	"health:current", "health:current-percent", "health:percent", "health:deficit",
 	"health:max", "healthcolor", "power:current", "power:max", "power:percent",
-	"powercolor", "name", "level",
+	"power:current-max", "power:current-percent", "power:current-max-percent",
+	"power:deficit", "powercolor", "name", "level",
 }
 
 -- Every tag name a text_format can use, sorted (the options window lists them).

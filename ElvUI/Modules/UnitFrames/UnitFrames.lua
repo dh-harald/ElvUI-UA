@@ -98,6 +98,39 @@ local function PercentFormat()
 	return "%." .. math.floor(dec) .. "f%%"
 end
 
+-- The power tags, after ElvUI-vanilla's (Modules/UnitFrames/Tags.lua with
+-- E:GetFormattedText): every current-value tag gives a single space while the
+-- unit has no power, so a power text stays empty on units without a power bar
+-- (and at 0 rage / energy). `power:max` does the same for a unit without
+-- power at all, where real ElvUI shows "0". The combined forms show only the
+-- current value while it equals the maximum; the deficit is empty when full.
+function UF:FillPowerTags(tags, power, powerMax)
+	local percent = string.format(PercentFormat(), power / ((powerMax > 0) and powerMax or 1) * 100)
+	local current = E:ShortValue(power)
+	local max = E:ShortValue(powerMax)
+	if power == 0 then
+		tags["power:current"] = " "
+		tags["power:percent"] = " "
+		tags["power:current-max"] = " "
+		tags["power:current-percent"] = " "
+		tags["power:current-max-percent"] = " "
+	else
+		tags["power:current"] = current
+		tags["power:percent"] = percent
+		if power >= powerMax then
+			tags["power:current-max"] = current
+			tags["power:current-percent"] = current
+			tags["power:current-max-percent"] = current
+		else
+			tags["power:current-max"] = current .. " - " .. max
+			tags["power:current-percent"] = current .. " - " .. percent
+			tags["power:current-max-percent"] = current .. " - " .. max .. " | " .. percent
+		end
+	end
+	tags["power:max"] = (powerMax > 0) and max or " "
+	tags["power:deficit"] = (powerMax > power) and ("-" .. E:ShortValue(powerMax - power)) or ""
+end
+
 -- `text_format` follows oUF's tag syntax (real ElvUI's tag engine):
 --   [tag]                the tag's value; an unknown or empty tag gives "".
 --   [prefix>tag<suffix]  prefix and suffix are shown only when the tag is
@@ -2287,9 +2320,7 @@ function UF:UpdateFrame(frame)
 	-- single built-in health/power `text_format` can't do that alone,
 	-- but two Custom Text entries each using one of these tags can.
 	tags["health:max"] = E:ShortValue(healthMax)
-	tags["power:current"] = E:ShortValue(power)
-	tags["power:max"] = E:ShortValue(powerMax)
-	tags["power:percent"] = string.format(PercentFormat(), (powerMax > 0) and (power / powerMax * 100) or 0)
+	self:FillPowerTags(tags, power, powerMax)
 	local powerColors = E.db.unitframe.colors.power
 	local pcTag = powerColors[powerToken] or powerColors.MANA
 	tags["powercolor"] = E:RGBToHex(pcTag.r, pcTag.g, pcTag.b)
