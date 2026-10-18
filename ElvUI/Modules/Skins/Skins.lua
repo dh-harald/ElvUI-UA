@@ -1180,16 +1180,14 @@ end
 -- `S.ACCENT_COLOR_DISABLED` while the button is disabled. `IsEnabled()` is
 -- 1/0 on legacy, hence `Compat.bool`.
 --
--- On the legacy client an addon-set FontString colour survives
--- Enable()/Disable() (see `ColorTab`), so a label coloured once keeps reading
--- as usable after native code disables the button -- e.g. the Guild tab's
--- Add Member / Guild Control, which `GuildStatus_Update` disables without
--- invite / leader rights. `WrapPanelButtonState` therefore recolours after
--- every state change, whoever makes it.
---
--- Not on UA, which keeps the accent colour only: recolouring after a native
--- state change fights the client's own state font (measured on tabs, see
--- `InstallTabStateHooks`).
+-- On both clients an addon-set FontString colour replaces the colour of every
+-- button state and survives Enable()/Disable() (measured on Unreal Azeroth: a
+-- label set white stays white when disabled, set grey while disabled stays
+-- grey when enabled again), so a label coloured once keeps reading as usable
+-- after native code disables the button -- e.g. the Guild tab's Add Member /
+-- Guild Control, which `GuildStatus_Update` disables without invite / leader
+-- rights. `WrapPanelButtonState` therefore recolours after every state
+-- change, whoever makes it.
 --
 -- The accent is `UIPanelButtonTemplate`'s own `GameFontNormal` gold. A
 -- template whose native label is another colour (`GameMenuButtonTemplate`:
@@ -1200,11 +1198,9 @@ function S:ColorPanelButtonText(button)
 	local text = ButtonLabel(button)
 	if not text then return end
 	local color = button.elvLabelColor or S.ACCENT_COLOR
-	if not Compat.isUA then
-		local okEnabled, enabled = pcall(button.IsEnabled, button)
-		if okEnabled and not Compat.bool(enabled) then
-			color = S.ACCENT_COLOR_DISABLED
-		end
+	local okEnabled, enabled = pcall(button.IsEnabled, button)
+	if okEnabled and not Compat.bool(enabled) then
+		color = S.ACCENT_COLOR_DISABLED
 	end
 	pcall(text.SetTextColor, text, color[1], color[2], color[3])
 end
@@ -1213,7 +1209,7 @@ end
 -- A field on the widget shadows the metatable method, so native FrameXML
 -- calls (`GuildFrameAddMemberButton:Disable()`) go through it too.
 local function WrapPanelButtonState(button)
-	if Compat.isUA or button.elvStateWrapped then return end
+	if button.elvStateWrapped then return end
 	button.elvStateWrapped = true
 	local enable, disable = button.Enable, button.Disable
 	if type(enable) == "function" then
