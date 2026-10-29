@@ -56,10 +56,19 @@ local COMBATLOG_EVENTS = {
 	"CHAT_MSG_SPELL_CREATURE_VS_CREATURE_BUFF",
 }
 
+-- caster name -> GetTime() of the last cast that ended early, for displays
+-- that show "Interrupted" without being called back (the nameplates).
+local breaks = {}
+local BREAK_MEMORY = 10
+
 local function PurgeEnded(now)
 	local name, cast
 	for name, cast in pairs(casts) do
 		if cast.endTime <= now then casts[name] = nil end
+	end
+	local brokeAt
+	for name, brokeAt in pairs(breaks) do
+		if now - brokeAt > BREAK_MEMORY then breaks[name] = nil end
 	end
 end
 
@@ -87,6 +96,7 @@ local function BreakCast(caster, spell)
 	if spell and not (UF.castInterrupts and UF.castInterrupts[spell]) then return end
 
 	casts[caster] = nil
+	breaks[caster] = GetTime()
 	if caster == UnitName("target") then UF:InterruptTargetCastbar() end
 end
 
@@ -159,6 +169,22 @@ function UF:GetUnitCast(unit)
 		return nil
 	end
 	return cast.spell, cast.startTime, cast.endTime, cast.icon
+end
+
+-- The same by caster name, for displays without a unit id (the nameplates).
+function UF:GetCastByName(name)
+	local cast = name and casts[name]
+	if not cast then return nil end
+	if cast.endTime <= GetTime() then
+		casts[name] = nil
+		return nil
+	end
+	return cast.spell, cast.startTime, cast.endTime, cast.icon
+end
+
+-- GetTime() of the last early end of `name`'s cast, or nil.
+function UF:GetCastBreak(name)
+	return name and breaks[name]
 end
 
 -- Plain frames rather than the module's AceEvent registrations: UF already

@@ -284,10 +284,40 @@ local function ConvertItemCount(tooltip)
 	end
 end
 
+-- ElvUI-vanilla keeps the target indicator colour in `nameplates.glowColor`,
+-- retail ElvUI (and this addon) in `nameplates.colors.glowColor`. A colour
+-- already under the retail key wins.
+local function MoveGlowColor(nameplates)
+	local color = nameplates.glowColor
+	if color == nil then return end
+	nameplates.glowColor = nil
+	if type(color) ~= "table" then return end
+	if type(nameplates.colors) ~= "table" then nameplates.colors = {} end
+	if nameplates.colors.glowColor == nil then nameplates.colors.glowColor = color end
+end
+
+-- ElvUI-vanilla keeps the target indicator style in `nameplates.targetGlow`,
+-- retail ElvUI (and this addon) in `nameplates.units.TARGET.glowStyle`. A
+-- style already under the retail key wins.
+local function MoveTargetGlow(nameplates)
+	local style = nameplates.targetGlow
+	if style == nil then return end
+	nameplates.targetGlow = nil
+	if type(style) ~= "string" then return end
+	if type(nameplates.units) ~= "table" then nameplates.units = {} end
+	if type(nameplates.units.TARGET) ~= "table" then nameplates.units.TARGET = {} end
+	if nameplates.units.TARGET.glowStyle == nil then nameplates.units.TARGET.glowStyle = style end
+end
+
 function E:MigrateProfileData(profile)
 	if type(profile) ~= "table" then return end
 
 	TranslateOutlines(profile)
+
+	if type(profile.nameplates) == "table" then
+		MoveGlowColor(profile.nameplates)
+		MoveTargetGlow(profile.nameplates)
+	end
 
 	local tooltip = profile.tooltip
 	if type(tooltip) == "table" then
@@ -381,8 +411,33 @@ local function MigrateReputationBarSize(stored)
 	rep.height = nil
 end
 
+-- The target indicator colour's default became retail ElvUI's white (it was
+-- ElvUI-vanilla's blue 77/179/255). Init.lua saves the whole profile, so a
+-- stored profile holds that blue without the player having picked it: it is
+-- dropped, and the new default applies. Any other colour moves to the retail
+-- key. A player who had picked exactly that blue gets white as well.
+local function NearlyEqual(a, b)
+	return type(a) == "number" and math.abs(a - b) < 0.002
+end
+
+local function MigrateGlowColor(stored)
+	local nameplates = type(stored) == "table" and stored.nameplates
+	if type(nameplates) ~= "table" then return end
+	local c = nameplates.glowColor
+	if type(c) == "table" and NearlyEqual(c.r, 77 / 255) and NearlyEqual(c.g, 179 / 255)
+		and NearlyEqual(c.b, 1) and (c.a == nil or NearlyEqual(c.a, 1)) then
+		nameplates.glowColor = nil
+		return
+	end
+	MoveGlowColor(nameplates)
+end
+
 function E:MigrateStoredProfile(stored)
 	MigrateReputationBarSize(stored)
+	MigrateGlowColor(stored)
+	if type(stored) == "table" and type(stored.nameplates) == "table" then
+		MoveTargetGlow(stored.nameplates)
+	end
 	if not IsPreAuraBarProfile(stored) then return end
 	local units = stored.unitframe.units
 	local player = units.player
@@ -399,6 +454,25 @@ function E:MigrateStoredProfile(stored)
 	if type(target.debuffs) ~= "table" then target.debuffs = {} end
 	target.debuffs.enable = true
 	target.debuffs.attachTo = "BUFFS"
+end
+
+-- One-off migrations of a stored private profile, before Init.lua merges the
+-- defaults in. `done` is the profile's record of the steps already applied,
+-- kept in ElvPrivateDB outside the profile data (an export carries none of
+-- it).
+--
+-- nameplates.enable: the NamePlates module could not be switched on before
+-- it was rebuilt, and its default was false then, so every stored private
+-- profile from that time holds false without the player having chosen it.
+-- It is set to the current default once; a later choice is kept.
+function E:MigrateStoredPrivate(stored, done)
+	if not done.nameplatesEnable then
+		local nameplates = type(stored) == "table" and stored.nameplates
+		if type(nameplates) == "table" and nameplates.enable == false then
+			nameplates.enable = true
+		end
+		done.nameplatesEnable = true
+	end
 end
 
 -- Export / Import

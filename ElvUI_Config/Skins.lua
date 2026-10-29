@@ -125,8 +125,17 @@ E.Options.args.skins = {
 				},
 				merchant = { type = "toggle", name = L["Merchant"], desc = SKIN_DESC },
 				-- No upstream key: real ElvUI replaces the nameplates with its
-				-- module instead of skinning them.
-				nameplates = { type = "toggle", name = L["NamePlates"], desc = SKIN_DESC },
+				-- module instead of skinning them. Greyed out while that module
+				-- runs, like `bags`.
+				nameplates = {
+					type = "toggle",
+					name = L["NamePlates"],
+					desc = L["The NamePlates module replaces the nameplates while it is enabled. Requires /reload to take effect."],
+					disabled = function()
+						return not E.private.skins.blizzard.enable
+							or (E.private.nameplates and E.private.nameplates.enable)
+					end,
+				},
 				mirrorTimers = {
 					type = "toggle",
 					name = L["Mirror Timers"],

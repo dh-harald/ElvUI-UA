@@ -29,6 +29,7 @@ local E, L, V, P, G = unpack(ElvUI)
 --
 -- `zoomLevel` is a project addition -- persisted minimap zoom.
 V.general = {
+	classCache = true,
 	normTex = "ElvUI Norm",
 	glossTex = "ElvUI Norm",
 
@@ -95,9 +96,7 @@ V.cooldown = { enable = true }
 -- Project extension, whitelisted in scripts/config-exceptions.lua.
 V.mirrortimers = { enable = true }
 
--- Default `false` matches the module's permanently disabled state; the flag
--- no longer gates anything, NP:Initialize() hard-disables regardless.
-V.nameplates = { enable = false }
+V.nameplates = { enable = true }
 
 V.tooltip = { enable = true }
 

@@ -11,6 +11,9 @@
 
 local E, L, V, P, G = unpack(ElvUI)
 
+-- Core/ClassCache.lua: realm -> player name -> class file name.
+G.classCache = {}
+
 G.general = {
 	smallerWorldMap = true,
 	smallerWorldMapScale = 0.9,

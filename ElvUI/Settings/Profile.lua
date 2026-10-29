@@ -83,6 +83,7 @@ P.movers = {}
 -- so nil is the intended "off" default and declaring it would be an EXTRA
 -- key. Waived in scripts/config-exceptions.lua's `reads` table.
 P.general = {
+	classCacheStoreInDB = true,
 	bordercolor = { r = 0, g = 0, b = 0 },
 	backdropcolor = { r = 0.1, g = 0.1, b = 0.1 },
 	backdropfadecolor = { r = 0.06, g = 0.06, b = 0.06, a = 0.8 },
@@ -636,12 +637,12 @@ P.datatexts = {
 -- ---------------------------------------------------------------------
 -- NamePlates
 -- ---------------------------------------------------------------------
--- The subset of real ElvUI's `P["nameplates"]` this module reads. Its much
--- larger `units[UNIT_TYPE].{healthbar,castbar,buffs,debuffs,comboPoints,
--- name}` per-unit-type tree is NOT ported.
---
--- `width`/`healthHeight` are project additions -- this module's own
--- simplified bar geometry.
+-- The subset of real ElvUI's `P["nameplates"]` (ElvUI-vanilla
+-- Settings/Profile.lua:202) that the NamePlates module and skin read, with
+-- real ElvUI's values. Of the per-unit-type `units` tree the health bar, cast
+-- bar, debuff, name and level parts are declared; buffs, combo points and the
+-- elite icon come with their elements. Of a `filters.priority` string only
+-- the tokens "Personal" and "blockNoDuration" are read (no aura lists).
 P.nameplates = {
 	statusbar = "ElvUI Norm",
 	font = "PT Sans Narrow",
@@ -654,20 +655,169 @@ P.nameplates = {
 	targetScale = 1.15,
 	nonTargetTransparency = 0.40,
 	lowHealthThreshold = 0.4,
-	targetGlow = "style2",
-	glowColor = {r = 77/255, g = 179/255, b = 255/255, a = 1},
-	showLevel = true,
-	showHealthText = true,
-	width = 150,
-	healthHeight = 10,
-	-- Real ElvUI's own default reaction palette
-	-- (ElvUI-vanilla/ElvUI/Settings/Profile.lua:239-245), verbatim.
+	-- Retail ElvUI's key and default (white); ElvUI-vanilla keeps a blue
+	-- `nameplates.glowColor`, which E:MigrateProfileData moves here.
+	colors = {
+		glowColor = {r = 1, g = 1, b = 1, a = 1},
+	},
+	nameColoredGlow = false,
+	alwaysShowTargetHealth = true,
+	showFriendlyCombat = "DISABLED",
+	showEnemyCombat = "DISABLED",
+	-- The transition colours (status 1 / 2) need LibVanillaThreat-1.0; the
+	-- tanked-by-a-tank colour has no source on this client.
+	threat = {
+		goodColor = {r = 75/255, g = 175/255, b = 76/255},
+		badColor = {r = 0.78, g = 0.25, b = 0.25},
+		goodTransition = {r = 218/255, g = 197/255, b = 92/255},
+		badTransition = {r = 235/255, g = 163/255, b = 40/255},
+		beingTankedByTankColor = {r = .8, g = 0.1, b = 1},
+		beingTankedByTank = true,
+		goodScale = 0.8,
+		badScale = 1.2,
+		useThreatColor = true,
+	},
+	castColor = {r = 1, g = 208/255, b = 0},
+	castNoInterruptColor = {r = 0.78, g = 0.25, b = 0.25},
+	comboPoints = true,
+	comboBar = {
+		colors = {
+			[1] = {r = 0.69, g = 0.31, b = 0.31},
+			[2] = {r = 0.69, g = 0.31, b = 0.31},
+			[3] = {r = 0.65, g = 0.63, b = 0.35},
+			[4] = {r = 0.65, g = 0.63, b = 0.35},
+			[5] = {r = 0.33, g = 0.59, b = 0.33},
+		},
+	},
 	reactions = {
 		friendlyPlayer = {r = 0.31, g = 0.45, b = 0.63},
 		tapped = {r = 0.6, g = 0.6, b = 0.6},
 		good = {r = 75/255, g = 175/255, b = 76/255},
 		neutral = {r = 218/255, g = 197/255, b = 92/255},
 		bad = {r = 0.78, g = 0.25, b = 0.25},
+	},
+	units = {
+		-- Retail ElvUI's target indicator settings: the style (ElvUI-vanilla's
+		-- `nameplates.targetGlow`, moved here by E:MigrateProfileData) and the
+		-- arrow texture, scale and spacing.
+		TARGET = {
+			glowStyle = "style2",
+			arrow = "Arrow9",
+			arrowScale = 0.8,
+			arrowSpacing = 3,
+		},
+		FRIENDLY_PLAYER = {
+			healthbar = {
+				enable = false,
+				height = 10,
+				width = 150,
+				text = { enable = false, format = "CURRENT" },
+				useClassColor = true,
+			},
+			castbar = {
+				enable = true,
+				height = 8,
+				offset = 1,
+				hideSpellName = false,
+				hideTime = false,
+				castTimeFormat = "CURRENT",
+				channelTimeFormat = "CURRENT",
+				timeToHold = 0,
+				iconPosition = "RIGHT",
+			},
+			debuffs = {
+				enable = true,
+				numAuras = 4,
+				baseHeight = 18,
+				filters = { minDuration = 0, maxDuration = 0, priority = "Blacklist,blockNoDuration,Personal,CCDebuffs" },
+			},
+			showName = true,
+			showLevel = false,
+			name = { useClassColor = true },
+		},
+		ENEMY_PLAYER = {
+			healthbar = {
+				enable = true,
+				height = 10,
+				width = 150,
+				text = { enable = false, format = "CURRENT" },
+				useClassColor = true,
+			},
+			castbar = {
+				enable = true,
+				height = 8,
+				offset = 1,
+				hideSpellName = false,
+				hideTime = false,
+				castTimeFormat = "CURRENT",
+				channelTimeFormat = "CURRENT",
+				timeToHold = 0,
+				iconPosition = "RIGHT",
+			},
+			debuffs = {
+				enable = true,
+				numAuras = 4,
+				baseHeight = 18,
+				filters = { minDuration = 0, maxDuration = 0, priority = "Blacklist,blockNoDuration,Personal,CCDebuffs,RaidDebuffs" },
+			},
+			showName = true,
+			showLevel = true,
+			name = { useClassColor = true },
+		},
+		FRIENDLY_NPC = {
+			healthbar = {
+				enable = false,
+				height = 10,
+				width = 150,
+				text = { enable = false, format = "CURRENT" },
+			},
+			castbar = {
+				enable = true,
+				height = 8,
+				offset = 1,
+				hideSpellName = false,
+				hideTime = false,
+				castTimeFormat = "CURRENT",
+				channelTimeFormat = "CURRENT",
+				timeToHold = 0,
+				iconPosition = "RIGHT",
+			},
+			debuffs = {
+				enable = true,
+				numAuras = 4,
+				baseHeight = 18,
+				filters = { minDuration = 0, maxDuration = 0, priority = "Blacklist,CCDebuffs,RaidDebuffs" },
+			},
+			showName = true,
+			showLevel = true,
+		},
+		ENEMY_NPC = {
+			healthbar = {
+				enable = true,
+				height = 10,
+				width = 150,
+				text = { enable = false, format = "CURRENT" },
+			},
+			castbar = {
+				enable = true,
+				height = 8,
+				offset = 1,
+				hideSpellName = false,
+				hideTime = false,
+				castTimeFormat = "CURRENT",
+				channelTimeFormat = "CURRENT",
+				timeToHold = 0,
+				iconPosition = "RIGHT",
+			},
+			debuffs = {
+				enable = true,
+				numAuras = 4,
+				baseHeight = 18,
+				filters = { minDuration = 0, maxDuration = 0, priority = "Blacklist,Personal,CCDebuffs" },
+			},
+			showName = true,
+			showLevel = true,
+		},
 	},
 }
 

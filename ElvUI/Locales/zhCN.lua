@@ -309,3 +309,7 @@ L["Lua error recorded. Type /elvui errors to view it."] = "已记录 Lua 错误�
 L["Lua error window: opens automatically."] = "Lua 错误窗口:自动打开。"
 L["Lua error window: does not open automatically. /elvui errors shows recorded errors."] = "Lua 错误窗口:不会自动打开。使用 /elvui errors 查看已记录的错误。"
 
+--Class Cache
+L["Class DB cache wiped."] = "职业缓存(数据库)已清空."
+L["Class session cache wiped."] = "职业缓存(会话)已清空."
+

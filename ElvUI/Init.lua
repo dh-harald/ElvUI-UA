@@ -157,6 +157,13 @@ function AddOn:OnInitialize()
 	local privateProfileKey = ElvPrivateDB.profileKeys[charKey] or charKey
 	ElvPrivateDB.profileKeys[charKey] = privateProfileKey
 
+	ElvPrivateDB.migrations = ElvPrivateDB.migrations or {}
+	ElvPrivateDB.migrations[privateProfileKey] = ElvPrivateDB.migrations[privateProfileKey] or {}
+
+	-- Also run for a profile that does not exist yet, so its steps are marked
+	-- done before its first save.
+	self:MigrateStoredPrivate(ElvPrivateDB.profiles[privateProfileKey], ElvPrivateDB.migrations[privateProfileKey])
+
 	self.private = Merge({}, self.privateVars.profile)
 	if ElvPrivateDB.profiles[privateProfileKey] then
 		Merge(self.private, ElvPrivateDB.profiles[privateProfileKey])

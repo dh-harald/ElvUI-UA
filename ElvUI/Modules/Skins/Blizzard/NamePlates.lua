@@ -6,9 +6,11 @@ local S = E:GetModule("Skins")
 -- in a backdrop with a 1-unit border, the name above its left end and the
 -- level above its right end, in the nameplate font; the target's plate scaled
 -- up with real ElvUI's background glow, and a yellow / red glow on plates at
--- low health. Gated by `E.private.skins.blizzard.nameplates`; sizes, fonts and
--- glow settings come from real ElvUI's nameplate profile keys
--- (`E.db.nameplates`).
+-- low health. Gated by `E.private.skins.blizzard.nameplates`, and off while
+-- the NamePlates module runs (it replaces the plates' look). Fonts and glow
+-- settings come from real ElvUI's nameplate profile keys (`E.db.nameplates`);
+-- every plate takes the enemy NPC health bar size, since a skinned plate does
+-- not tell unit types apart.
 --
 -- A plate is an unnamed WorldFrame child (on Unreal Azeroth too, a Lua frame
 -- of the engine class FNamePlateFrame) with the 1.12.1 layout: one StatusBar
@@ -22,9 +24,7 @@ local S = E:GetModule("Skins")
 --
 -- The native health bar is kept and only re-textured and resized: the client
 -- colours it by reaction (red / yellow / green / blue), and that colour
--- survives a texture change. On Unreal Azeroth it could not be replaced, as
--- StatusBar has no GetStatusBarColor there to read the reaction from. On
--- Unreal Azeroth the bar sits one frame level BELOW its plate, so the plate's
+-- survives a texture change. On Unreal Azeroth the bar sits one frame level BELOW its plate, so the plate's
 -- own textures would cover it; it is raised above the plate. Border and
 -- highlight are hidden and made fully transparent, so a later Show() from the
 -- client draws nothing.
@@ -131,8 +131,9 @@ local function Layout(p)
 	bar:SetFrameLevel(p.plate:GetFrameLevel() + 1)
 	bar:ClearAllPoints()
 	bar:SetPoint("CENTER", p.plate, "CENTER", 0, 0)
-	bar:SetWidth(db.width * scale)
-	bar:SetHeight(db.healthHeight * scale)
+	local size = db.units.ENEMY_NPC.healthbar
+	bar:SetWidth(size.width * scale)
+	bar:SetHeight(size.height * scale)
 	local texture = LSM and LSM:Fetch("statusbar", db.statusbar)
 	if texture then pcall(bar.SetStatusBarTexture, bar, texture) end
 	PlaceGlow(p)
@@ -248,8 +249,8 @@ end
 -- yellow at or below the low health threshold and red at or below half of it.
 local function GlowColor(p)
 	local db = E.db.nameplates
-	if p.isTarget and db.targetGlow ~= "none" then
-		local c = db.glowColor
+	if p.isTarget and db.units.TARGET.glowStyle ~= "none" then
+		local c = db.colors.glowColor
 		return c.r, c.g, c.b, c.a or 1
 	end
 	local threshold = db.lowHealthThreshold or 0
@@ -315,6 +316,7 @@ local function Scan()
 end
 
 local function LoadSkin()
+	if E.private.nameplates and E.private.nameplates.enable then return end
 	local driver = CreateFrame("Frame")
 	driver:SetScript("OnUpdate", function() pcall(Scan) end)
 end

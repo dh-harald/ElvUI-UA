@@ -309,3 +309,7 @@ L["Lua error recorded. Type /elvui errors to view it."] = "Ошибка Lua за
 L["Lua error window: opens automatically."] = "Окно ошибок Lua: открывается автоматически."
 L["Lua error window: does not open automatically. /elvui errors shows recorded errors."] = "Окно ошибок Lua: не открывается автоматически. /elvui errors показывает зафиксированные ошибки."
 
+--Class Cache
+L["Class DB cache wiped."] = "Кэш классов (база данных) очищен."
+L["Class session cache wiped."] = "Кэш классов (сессия) очищен."
+

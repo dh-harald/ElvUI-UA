@@ -927,6 +927,13 @@ function Util.SetStatusBarBackgroundColor(bar, r, g, b, a)
 	bar.barBgTexture:SetVertexColor(r, g, b, a or 1)
 end
 
+-- Re-lays the fill of a CreateStatusBar bar after its size changed: the fill
+-- is anchored with fixed offsets, recomputed only when a value changes.
+function Util.RefreshStatusBar(bar)
+	if not bar or not bar.barFillTexture then return end
+	UpdateStatusBarFill(bar)
+end
+
 -- ChangeChatColor taking 0-1 channels on both clients, applied at once.
 -- Unreal Azeroth stores the channels as 0-255 integers (0-1 values truncate
 -- to black) and fires no UPDATE_CHAT_COLOR, so there the values are scaled

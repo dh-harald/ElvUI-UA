@@ -129,6 +129,20 @@ Two addons ship together:
   weapon DPS), visibility rules
   (modifier key / hide in combat) for unit frames, bags and action bars,
   and an options page for all of these
+- NamePlates: ElvUI's nameplates on top of the native ones — flat health
+  bar coloured by reaction, name and level, name-only friendly plates,
+  the target scaled up with ElvUI's target indicator (glow or arrows) and
+  the other plates faded, low-health glow, mouseover highlight, raid icon,
+  optional health text, cast bar with spell icon (from the combat log, like
+  the target cast bar), your own debuffs with time left (remembered on
+  every plate you targeted or hovered), combo points on the target's plate;
+  threat colour and scale (from whom the mob is attacking, tank-aware; with
+  LibVanillaThreat-1.0 loaded, also the "about to pull it off your pet"
+  transition colours),
+  player class colours from a class cache (General → Class Cache: target,
+  mouseover, group, friends, guild, battleground score), combat show/hide
+  toggles; sized by the UI scale; enemy nameplates switched on
+  at login; per-unit-type settings for friendly/enemy players and NPCs
 - Fonts: the General → Media default font and size, combat text and name
   fonts, and "Apply Font To All" — applied to the native Blizzard text,
   ElvUI's own text and the tooltip text
@@ -146,7 +160,7 @@ Two addons ship together:
   Trainer, Mail, Auction House, Dressing Room, World Map, Stack Split,
   Quest Timers (movable with `/moveui`), Nameplates, and more).
   Where ElvUI has its own module for a window (Bags/Bank, Mailbox, Mirror
-  Timers), the module decides its look while it is on; with the module off,
+  Timers, Nameplates), the module decides its look while it is on; with the module off,
   the window's skin toggle takes over, so e.g. the native bags and bank can
   still be restyled with quality-coloured slot borders
 - Skins for other addons: Bagzen's bag and bank windows, every
@@ -168,9 +182,8 @@ Two addons ship together:
   action slot)
 - A handful of native windows not yet reskinned (Tabard and a few more
   niche ones)
-- The full NamePlates module (castbar, auras, threat and class colours,
-  target scaling, per-unit-type settings); for now the native nameplates are
-  restyled in ElvUI's look by a skin
+- NamePlates: buffs, aura filter lists, threat transition colours, style
+  filters, and the click settings
 - Heal prediction: channelled heals (Tranquility, Mend Pet, bandages) are not
   predicted, Chain Heal only on its first target, and another player's
   heal-over-time only by estimate until its first tick (the HealComm protocol

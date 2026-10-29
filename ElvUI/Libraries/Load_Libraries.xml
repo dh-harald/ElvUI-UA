@@ -24,4 +24,5 @@
 	<Include file="LibVanillaDurations-1.0\LibVanillaDurations-1.0.xml"/>
 	<Include file="LibDeflate\LibDeflate.xml"/>
 	<Include file="AceSerializer-3.0\AceSerializer-3.0.xml"/>
+	<Include file="LibVanillaThreat-1.0\LibVanillaThreat-1.0.xml"/>
 </Ui>

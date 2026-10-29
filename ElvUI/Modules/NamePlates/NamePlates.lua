@@ -1,904 +1,1555 @@
--- ***************************************************************************
--- ** DISABLED, CONFIRMED DEAD END. Do not re-enable without a real fix for **
--- ** the root cause below.                                                 **
--- **                                                                       **
--- ** Investigation (WorldFrame scan, GetMouseFocus(), a full recursive UI- **
--- ** tree text search) conclusively found that the native nameplate on     **
--- ** this UA build is NOT a Lua/FrameXML UI Frame at all -- no GetName(),  **
--- ** no regions, not reachable from WorldFrame OR UIParent's own tree, no  **
--- ** mouse hit-testing (consistent with the separately reported bug        **
--- ** EF-225, "nameplates aren't clickable"). A follow-up check of the full **
--- ** UA API surface (functions.md, WorldFrame.md, PlayerModel.md,          **
--- ** Region.md) also found no world-space-to-screen projection API, so     **
--- ** even a target-only floating replacement (not reusing the native plate **
--- ** at all) has no primitive to anchor itself to a unit's actual 3D       **
--- ** position either. Both possible paths forward are closed, not just     **
--- ** this specific detector implementation.                                **
--- **                                                                       **
--- ** `NP:Initialize()` is hard-disabled below (unconditionally returns,    **
--- ** independent of `E.private.nameplates.enable`) and the config toggle   **
--- ** in `ElvUI_Config/Core.lua` is commented out -- this cannot be turned  **
--- ** back on by a config change or a copied-in real profile. Kept in the   **
--- ** repo rather than deleted -- equivalent unit-level info                **
--- ** (health/name/level) for the CURRENT TARGET already exists via         **
--- ** `Modules/UnitFrames/Units/Target.lua`, just not as a floating above-  **
--- ** the-head indicator.                                                   **
--- ***************************************************************************
---
--- NamePlates -- custom-built, NOT oUF-based, same reasoning as UnitFrames:
--- this module never even tried oUF.
---
--- Neither client exposes an addressable per-plate unit token on this API
--- vintage (that's a TBC+ addition) -- a plate is just an anonymous child of
--- WorldFrame. Real ElvUI-vanilla's own Modules/NamePlates/NamePlates.lua
--- (ElvUI-vanilla) discovers plates the same way: poll
--- WorldFrame:GetNumChildren()/GetChildren(), and recognize a genuine
--- nameplate among the new children by its native border texture
--- (`Interface\Tooltips\Nameplate-Border`). That check is ALSO how this
--- module's discovery starts (ClassifyPlate below) -- but
--- UnrealUI/modules/nameplates.lua found, live on UA, that the
--- border-texture check finds NOTHING there: UA's native plate doesn't carry
--- that texture at all (some don't even have a health bar). UnrealUI's fix,
--- ALSO ported here as the fallback: classify a WorldFrame child
--- structurally instead (does it have a StatusBar-shaped child plus at least
--- one FontString region, or at least two FontString regions) when the
--- border-texture check finds nothing. This dual-path detector is the single
--- most load-bearing piece of this file -- see ClassifyPlate's own comment.
---
--- Native plate art is MUTED (SetTexture(nil)/SetAlpha(0)), not Hide()d --
--- matches UnrealUI's own choice, not real ElvUI-vanilla's Hide()+shrink
--- (QueueObject). Reasoning ported directly: GetText()/GetTexture() on a
--- muted-but-not-hidden region keep working, so the native Name/Level
--- fontstrings and the elite/glow textures' own IsShown() state stay usable
--- as this module's *data source* every refresh (there is no unit token to
--- re-query instead). A real profile's motionType/threat/buffs/debuffs/
--- castbar/comboPoints/style-filter machinery (real ElvUI's own
--- P.nameplates.units[...] per-unit-type schema, ElvUI-vanilla's own
--- Settings/Profile.lua:202+) is DELIBERATELY NOT attempted this pass.
-
 local E, L, V, P, G = unpack(ElvUI)
 local NP = E:NewModule("NamePlates", "AceEvent-3.0")
-E.NamePlates = NP
 
--- Settings: `V.nameplates` (Settings/Private.lua), `P.nameplates`
--- (Settings/Profile.lua). `V.nameplates.enable` is a project-only
--- convenience switch -- real ElvUI's nameplate module has no top-level
--- enable, it just always runs once loaded, since vanilla's native
--- nameplates are on via CVars regardless of any addon. It no longer gates
--- anything either way: NP:Initialize() hard-disables this module.
+-- NamePlates -- real ElvUI's nameplates (ElvUI-vanilla Modules/NamePlates),
+-- built on top of the native plates: every native plate gets an ElvUI unit
+-- frame as a child, and the native art is muted. Gated by
+-- `E.private.nameplates.enable` (reload); while it runs, the NamePlates skin
+-- (Modules/Skins/Blizzard/NamePlates.lua) stays off.
+--
+-- A native plate is an unnamed WorldFrame child with one StatusBar child
+-- (health) and six regions in a fixed order: border, mouseover highlight,
+-- name, level, boss skull, raid icon. It is recognised by its first region's
+-- `Interface\Tooltips\Nameplate-Border` texture (true on both clients; on
+-- Unreal Azeroth a Lua frame of the engine class FNamePlateFrame). Plates are
+-- created on demand and reused for other units, so the WorldFrame children
+-- are rescanned whenever their count changes, and every visible plate is
+-- re-read each frame: on a 0.1 s timer a new plate visibly shows its native
+-- look first. The per-frame work only compares values and touches widgets
+-- on change.
+--
+-- A plate carries no unit token, so everything comes from the native plate:
+-- - unit type and reaction: the native health bar's colour, which the client
+--   sets by reaction (red hostile, yellow neutral, green friendly NPC, blue
+--   friendly player, grey tapped);
+-- - health: the native bar's value and range (a percentage for most units);
+-- - target: while there is a target, the client lowers the alpha of every
+--   other plate (0.498 measured on Unreal Azeroth, where that alpha is not
+--   drawn); the target's plate keeps alpha 1;
+-- - mouseover: the client shows the native highlight region under the mouse;
+-- - name, level (with the difficulty colour), boss skull: the native regions.
+--
+-- Muting the native art: border and highlight are made transparent (the
+-- client shows the highlight again on hover, which is what the mouseover
+-- check reads); name and level are hidden, re-hidden if the client shows
+-- them, and anchored below the screen; the skull is transparent but keeps
+-- its shown state as data. The
+-- native health bar stays shown, so the client keeps updating its value and
+-- colour, but is shrunk to a point, made transparent and parked below the
+-- screen. The raid icon stays native and is only re-anchored next to the
+-- ElvUI health bar.
+--
+-- Scale: native plates are WorldFrame children and ignore the UI scale. The
+-- ElvUI frame is scaled to match UIParent, as in current real ElvUI, where
+-- nameplates follow the UI scale. ElvUI-vanilla leaves them at world scale.
+--
+-- The mouseover highlight is current real ElvUI's: a flat white layer at
+-- 0.25 * 0.75 alpha over the whole health bar (ElvUI-vanilla lays the status
+-- bar texture at 0.3 alpha over the filled part only). Name-only plates use
+-- ElvUI-vanilla's glow behind the name.
+--
+-- Cast bars: the client reports no casts of other units; they are read by
+-- caster name from the combat-log cast tracker the target cast bar uses
+-- (UnitFrames/CastTracker.lua), which has no channels and cannot tell
+-- same-named units apart.
+--
+-- Debuffs: read while the plate is the target or under the mouse and kept
+-- on the plate until they run out (see UpdateAuras).
+--
+-- Threat: each hostile mob's own target, refined by LibVanillaThreat-1.0
+-- when an addon loads it (see ScanThreat).
+--
+-- Class colours: from the class cache (Core/ClassCache.lua) by name; a
+-- hostile plate whose name the cache knows is an enemy player.
+--
+-- Not ported yet: buffs, style filters, motion type, click-through and
+-- clickable size, the elite icon, and the size animation.
 
--- ---------------------------------------------------------------------
--- Small call helpers -- ported from UnrealUI's own defensive pattern
--- (UnrealUI/modules/nameplates.lua:171-199): every native plate
--- part is touched through a pcall, since a WorldFrame child that turns
--- out not to be a plate at all must never error the scan.
--- ---------------------------------------------------------------------
-local function Call1(object, method, a, b)
-	if not object then return nil end
-	local ok, fn = pcall(function() return object[method] end)
-	if not ok or type(fn) ~= "function" then return nil end
-	local ok2, r1, r2, r3 = pcall(fn, object, a, b)
-	if not ok2 then return nil end
-	return r1, r2, r3
+local LSM = LibStub("LibSharedMedia-3.0", true)
+local LVD = LibStub("LibVanillaDurations-1.0", true)
+local Util = ElvUI.Util
+local Compat = ElvUI.Compat
+local getn = Compat.getn
+
+local BORDER_TEXTURE = "interface\\tooltips\\nameplate-border"
+local WHITE = "Interface\\Buttons\\WHITE8x8"
+local MEDIA = "Interface\\AddOns\\ElvUI\\Media\\Textures\\"
+local SPARK = MEDIA .. "spark"
+-- Real ElvUI's pixel-mode E.Border / E.Spacing; this project has no pixel
+-- perfect scaling, so both are 1.
+local BORDER = 1
+local TARGET_LEVEL = 20
+local SPARK_TEXTURE = "Interface\\CastingBar\\UI-CastingBar-Spark"
+local ICON_COORDS = { 0.08, 0.92, 0.08, 0.92 }
+local BUBBLE = MEDIA .. "bubbleTex"
+local MAX_COMBO = 5
+local MAX_DEBUFFS = 16
+-- Real ElvUI polls aura timers at this interval.
+local AURA_INTERVAL = 0.1
+-- Real ElvUI's spacing between aura icons (E.Border + E.Spacing * 3).
+local AURA_SPACING = 4
+-- Retail ElvUI's target arrows (Media/Arrows, 64x64, pointing up), drawn at
+-- their own size times `units.TARGET.arrowScale` and turned by texture
+-- coordinates: the top one points down, the one right of the bar left, the
+-- one left of it right.
+local ARROWS = "Interface\\AddOns\\ElvUI\\Media\\Arrows\\"
+local ARROW_SIZE = 64
+local ARROW_COORDS = {
+	TopArrow = { 1, 1, 1, 0, 0, 1, 0, 0 },
+	LeftArrow = { 1, 0, 0, 0, 1, 1, 0, 1 },
+	RightArrow = { 1, 1, 0, 1, 1, 0, 0, 0 },
+}
+-- The client's dimmed non-target plate alpha is 0.498; anything this close to
+-- 1 counts as undimmed.
+local LIT_ALPHA = 0.99
+
+-- The UnitFrames module, owner of the combat-log cast tracker; set at
+-- Initialize.
+local UF
+
+local plates = {}
+local numChildren = 0
+local plateID = 0
+local uiScale
+
+local function Fetch(mediaType, name)
+	return LSM and name and LSM:Fetch(mediaType, name)
 end
 
-local function ObjectType(object)
-	local t = Call1(object, "GetObjectType")
-	if type(t) == "string" then return t end
+local function SetColor(texture, color)
+	texture:SetVertexColor(color.r, color.g, color.b, color.a or 1)
+end
+
+-- ---------------------------------------------------------------------
+-- Native plate
+-- ---------------------------------------------------------------------
+local function IsNamePlate(frame)
+	local ok, region = pcall(frame.GetRegions, frame)
+	if not ok or not region or not region.GetTexture then return false end
+	local okTex, texture = pcall(region.GetTexture, region)
+	return okTex and type(texture) == "string" and string.lower(texture) == BORDER_TEXTURE
+end
+
+local function Mute(region, keepShown)
+	if not region then return end
+	pcall(region.SetAlpha, region, 0)
+	if not keepShown then pcall(region.Hide, region) end
+end
+
+local function IsShown(region)
+	if not region then return false end
+	local ok, shown = pcall(region.IsShown, region)
+	return ok and Compat.bool(shown)
+end
+
+-- Unreal Azeroth keeps drawing the native level text however it is hidden,
+-- made transparent or narrowed, and rewrites its text every frame; it does
+-- follow a new anchor, so name and level are also parked below the screen.
+local function Park(region)
+	if not region then return end
+	pcall(region.ClearAllPoints, region)
+	pcall(region.SetPoint, region, "TOP", UIParent, "BOTTOM", 0, -500)
+end
+
+-- The native health bar stays shown, so the client keeps updating its value
+-- and colour. Shrunk to a point and made transparent it still draws one
+-- pixel on Unreal Azeroth (a dot under a name-only plate's name), so it is
+-- parked below the screen as well; value and colour still read there.
+local function MuteNativeBar(frame)
+	local bar = frame.oldHealthBar
+	pcall(bar.SetAlpha, bar, 0)
+	pcall(bar.SetWidth, bar, 1)
+	pcall(bar.SetHeight, bar, 1)
+	Park(bar)
+end
+
+local function MuteNative(frame)
+	Mute(frame.oldBorder)
+	Mute(frame.oldHighlight, true)
+	Mute(frame.oldName)
+	Mute(frame.oldLevel)
+	Park(frame.oldName)
+	Park(frame.oldLevel)
+	Mute(frame.BossIcon, true)
+	MuteNativeBar(frame)
+end
+
+-- The client may show the native name and level again when it refreshes a
+-- plate; they hold data only.
+local function KeepMuted(frame)
+	if IsShown(frame.oldName) then Mute(frame.oldName) end
+	if IsShown(frame.oldLevel) then Mute(frame.oldLevel) end
+end
+
+local function NativeText(region)
+	if not region then return "" end
+	local ok, text = pcall(region.GetText, region)
+	if not ok or not text then return "" end
+	local _, _, trimmed = string.find(text, "^%s*(.-)%s*$")
+	return trimmed or text
+end
+
+local function NativeHealth(frame)
+	local bar = frame.oldHealthBar
+	local okValue, value = pcall(bar.GetValue, bar)
+	local okRange, low, high = pcall(bar.GetMinMaxValues, bar)
+	if not okValue or type(value) ~= "number" then value = 0 end
+	if not okRange or type(high) ~= "number" or high <= 0 then high = 1 end
+	return value, high
+end
+
+-- Real ElvUI's GetUnitInfo: reaction and unit type from the native bar's
+-- colour. Thresholds instead of exact matches, plus the grey tapped colour
+-- ElvUI-vanilla leaves out; anything else counts as hostile.
+local function UnitInfo(frame)
+	local bar = frame.oldHealthBar
+	local ok, r, g, b = pcall(bar.GetStatusBarColor, bar)
+	if not ok or type(r) ~= "number" then return 2, "ENEMY_NPC" end
+	if r > 0.9 and g > 0.9 and b < 0.1 then return 4, "ENEMY_NPC" end
+	if r > 0.9 and g < 0.1 and b < 0.1 then return 2, "ENEMY_NPC" end
+	if g > 0.9 and r < 0.1 and b < 0.1 then return 5, "FRIENDLY_NPC" end
+	if b > 0.9 and r < 0.1 then return 5, "FRIENDLY_PLAYER" end
+	if math.abs(r - g) < 0.05 and math.abs(g - b) < 0.05 then return 1, "ENEMY_NPC" end
+	return 2, "ENEMY_NPC"
+end
+
+-- Unreal Azeroth stops a plate whose unit leaves the screen at the screen
+-- edge (its left reaches exactly 0) instead of hiding it, so a plate
+-- touching an edge counts as off screen; a unit standing right at the edge
+-- loses its plate a little early.
+local EDGE_SLACK = 0.5
+
+local function AtScreenEdge(plate)
+	local left, bottom = plate:GetLeft(), plate:GetBottom()
+	if not left or not bottom then return false end
+	local screenWidth, screenHeight = WorldFrame:GetWidth(), WorldFrame:GetHeight()
+	return left <= EDGE_SLACK or bottom <= EDGE_SLACK
+		or plate:GetRight() >= screenWidth - EDGE_SLACK
+		or plate:GetTop() >= screenHeight - EDGE_SLACK
+end
+
+local function IsLit(plate)
+	local ok, alpha = pcall(plate.GetAlpha, plate)
+	return not ok or type(alpha) ~= "number" or alpha >= LIT_ALPHA
+end
+
+-- The plate's own effective scale, else WorldFrame's (a plate's own scale is
+-- 1), else 1.
+local function ScaleFactor(plate)
+	if not uiScale then return 1 end
+	local ok, world = pcall(plate.GetEffectiveScale, plate)
+	if not ok or type(world) ~= "number" or world <= 0 then
+		ok, world = pcall(WorldFrame.GetEffectiveScale, WorldFrame)
+	end
+	if not ok or type(world) ~= "number" or world <= 0 then world = 1 end
+	return uiScale / world
+end
+
+local function ReadUIScale()
+	local ok, scale = pcall(UIParent.GetEffectiveScale, UIParent)
+	if ok and type(scale) == "number" and scale > 0 then return scale end
 	return nil
 end
 
-local function Clamp01(value)
-	if value < 0 then return 0 end
-	if value > 1 then return 1 end
-	return value
+-- ---------------------------------------------------------------------
+-- Construction
+-- ---------------------------------------------------------------------
+local function NewTexture(parent, layer, path)
+	local tex = parent:CreateTexture(nil, layer)
+	tex:SetTexture(path or WHITE)
+	return tex
 end
 
-local function MuteTexture(region)
-	if not region then return end
-	pcall(function() region:SetTexture(nil) end)
-	pcall(function() region:SetAlpha(0) end)
+-- Unreal Azeroth does not draw the part of a texture that reaches past the
+-- right or bottom edge of its parent frame: on the 1x1 plate frame only the
+-- part left of and above the frame shows. A texture that overhangs its
+-- parent therefore gets a frame of its own, which callers size, place, show
+-- and hide; the texture (`.texture`) fills it.
+local function NewFramedTexture(parent, layer, path)
+	local holder = CreateFrame("Frame", nil, parent)
+	local tex = NewTexture(holder, layer, path)
+	tex:SetAllPoints(holder)
+	holder.texture = tex
+	holder:Hide()
+	return holder
 end
 
-local function MuteFontString(region)
-	if not region then return end
-	-- GetText()/GetTextColor() must keep working -- name, level, and the
-	-- level's own difficulty color are read back off these every refresh.
-	pcall(function() region:SetAlpha(0) end)
+-- Real ElvUI's StyleFrame, pixel-mode branch: the bar's own background takes
+-- the backdrop fade colour, and four 1-unit lines frame it from outside.
+local function ConstructBorder(bar)
+	local lines = {}
+	local i
+	for i = 1, 4 do
+		lines[i] = NewTexture(bar, "BORDER")
+	end
+	lines[1]:SetPoint("TOPLEFT", bar, "TOPLEFT", -BORDER, BORDER)
+	lines[1]:SetPoint("TOPRIGHT", bar, "TOPRIGHT", BORDER, BORDER)
+	lines[1]:SetHeight(BORDER)
+	lines[2]:SetPoint("BOTTOMLEFT", bar, "BOTTOMLEFT", -BORDER, -BORDER)
+	lines[2]:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", BORDER, -BORDER)
+	lines[2]:SetHeight(BORDER)
+	lines[3]:SetPoint("TOPLEFT", bar, "TOPLEFT", -BORDER, BORDER)
+	lines[3]:SetPoint("BOTTOMLEFT", bar, "BOTTOMLEFT", -BORDER, -BORDER)
+	lines[3]:SetWidth(BORDER)
+	lines[4]:SetPoint("TOPRIGHT", bar, "TOPRIGHT", BORDER, BORDER)
+	lines[4]:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", BORDER, -BORDER)
+	lines[4]:SetWidth(BORDER)
+	bar.borderLines = lines
 end
 
--- A native bar frame plus its own regions -- zeroing the frame's own alpha
--- alone doesn't stop the fill drawing (parent-alpha-not-propagated, same
--- UA quirk documented project-wide for Hide()).
-local function MuteBar(bar)
-	if not bar then return end
-	pcall(function() bar:SetStatusBarTexture(nil) end)
-	pcall(function() bar:SetAlpha(0) end)
-	local ok, regions = pcall(function() return { bar:GetRegions() } end)
-	if not ok or type(regions) ~= "table" then return end
-	for i = 1, table.getn(regions) do
-		if ObjectType(regions[i]) == "Texture" then MuteTexture(regions[i]) end
+local function ConstructHealthBar(frame)
+	local bar = Util.CreateStatusBar(frame, {})
+	bar:SetFrameLevel(frame:GetFrameLevel() + 1)
+	ConstructBorder(bar)
+
+	-- The mouseover layer sits on the bar above the fill; the text gets a
+	-- child frame so it always draws above that layer.
+	local highlight = NewTexture(bar, "OVERLAY")
+	highlight:SetAllPoints(bar)
+	highlight:SetVertexColor(1, 1, 1, 0.25 * 0.75)
+	highlight:Hide()
+	bar.highlight = highlight
+
+	local holder = CreateFrame("Frame", nil, bar)
+	holder:SetAllPoints(bar)
+	holder:SetFrameLevel(bar:GetFrameLevel() + 1)
+	bar.text = holder:CreateFontString(nil, "OVERLAY")
+	bar.text:SetAllPoints(bar)
+	bar.textHolder = holder
+
+	bar:Hide()
+	return bar
+end
+
+-- Real ElvUI's target indicators: a border glow frame, a background glow and
+-- three arrows, all hidden until UpdateGlow picks them by style.
+local function ConstructGlow(frame)
+	local glow = CreateFrame("Frame", nil, frame)
+	glow:SetFrameLevel(frame:GetFrameLevel())
+	pcall(glow.SetBackdrop, glow, { edgeFile = Fetch("border", "ElvUI GlowBorder") or (MEDIA .. "glowTex"), edgeSize = 6 })
+	glow:Hide()
+	frame.Glow = glow
+
+	frame.Glow2 = NewFramedTexture(frame, "BACKGROUND", SPARK)
+
+	local key
+	for key in pairs(ARROW_COORDS) do
+		frame[key] = NewFramedTexture(frame, "BACKGROUND")
 	end
 end
 
-local function IsNumericText(text)
-	if type(text) ~= "string" then return false end
-	return tonumber(text) ~= nil
+-- Real ElvUI's cast bar: below the health bar, the spell icon to the right
+-- of both, spell name and time below the bar.
+local function ConstructCastBar(frame)
+	local bar = Util.CreateStatusBar(frame, {})
+	bar:SetFrameLevel(frame:GetFrameLevel() + 1)
+	ConstructBorder(bar)
+
+	local icon = CreateFrame("Frame", nil, bar)
+	icon.texture = icon:CreateTexture(nil, "ARTWORK")
+	icon.texture:SetAllPoints(icon)
+	icon.texture:SetTexCoord(ICON_COORDS[1], ICON_COORDS[2], ICON_COORDS[3], ICON_COORDS[4])
+	ConstructBorder(icon)
+	bar.Icon = icon
+
+	bar.Name = bar:CreateFontString(nil, "OVERLAY")
+	bar.Time = bar:CreateFontString(nil, "OVERLAY")
+	-- Twice the bar's height, so it gets a frame of its own.
+	bar.Spark = NewFramedTexture(bar, "OVERLAY", SPARK_TEXTURE)
+	bar.Spark.texture:SetBlendMode("ADD")
+
+	bar:Hide()
+	return bar
+end
+
+-- Real ElvUI's aura icon: bordered, no backdrop, time at the top left and
+-- stacks at the bottom right.
+local function ConstructAuraIcon(row)
+	local aura = CreateFrame("Frame", nil, row)
+	ConstructBorder(aura)
+	aura.icon = aura:CreateTexture(nil, "ARTWORK")
+	aura.icon:SetAllPoints(aura)
+	aura.icon:SetTexCoord(ICON_COORDS[1], ICON_COORDS[2], ICON_COORDS[3], ICON_COORDS[4])
+	aura.timeLeft = aura:CreateFontString(nil, "OVERLAY")
+	aura.timeLeft:SetPoint("TOPLEFT", aura, "TOPLEFT", 2, 2)
+	aura.count = aura:CreateFontString(nil, "OVERLAY")
+	aura.count:SetPoint("BOTTOMRIGHT", aura, "BOTTOMRIGHT", 0, 0)
+	aura:Hide()
+	return aura
+end
+
+local function ConstructDebuffs(frame)
+	local row = CreateFrame("Frame", nil, frame)
+	row:SetFrameLevel(frame:GetFrameLevel() + 1)
+	row:SetHeight(18)
+	row.icons = {}
+	row:Hide()
+	return row
+end
+
+-- Real ElvUI's combo points: five 12x12 bubbles, 2 apart, centred on the
+-- bottom edge of the health bar. The holder is exactly as large as the row
+-- of bubbles (see NewFramedTexture).
+local function ConstructComboPoints(frame)
+	local holder = CreateFrame("Frame", nil, frame.HealthBar)
+	holder:SetPoint("CENTER", frame.HealthBar, "BOTTOM", 0, 0)
+	holder:SetWidth(MAX_COMBO * 12 + (MAX_COMBO - 1) * 2)
+	holder:SetHeight(12)
+	local i
+	for i = 1, MAX_COMBO do
+		local point = NewTexture(holder, "OVERLAY", BUBBLE)
+		point:SetWidth(12)
+		point:SetHeight(12)
+		if i == 1 then
+			point:SetPoint("LEFT", holder, "LEFT", 0, 0)
+		else
+			point:SetPoint("LEFT", holder[i - 1], "RIGHT", 2, 0)
+		end
+		holder[i] = point
+	end
+	holder:Hide()
+	return holder
+end
+
+-- Name and level sit on their own frame, raised above the name-only glow's
+-- frame so the glow stays behind the text.
+local function ConstructTexts(frame)
+	local holder = CreateFrame("Frame", nil, frame)
+	holder:SetAllPoints(frame)
+	frame.TextHolder = holder
+	frame.Name = holder:CreateFontString(nil, "OVERLAY")
+	frame.Level = holder:CreateFontString(nil, "OVERLAY")
+
+	-- ElvUI-vanilla anchors the glow to the name's corners, 20 out on the
+	-- sides and 8 above and below. On Unreal Azeroth a frame anchored to the
+	-- corners of a font string on a scaled frame gets that size times the
+	-- scale once more (50 instead of 70 wide at 0.712) and the glow all but
+	-- vanishes, so it is centred on the name and sized from it in UpdateName.
+	local glow = NewFramedTexture(frame, "BACKGROUND", SPARK)
+	glow:SetPoint("CENTER", frame.Name, "CENTER", 0, 0)
+	frame.Name.NameOnlyGlow = glow
+end
+
+function NP:OnCreated(plate)
+	local bar = plate:GetChildren()
+	if not bar then return end
+	local border, highlight, name, level, boss, raid = plate:GetRegions()
+
+	plateID = plateID + 1
+	local frame = CreateFrame("Frame", "ElvUI_NamePlate" .. plateID, plate)
+	frame:SetPoint("CENTER", plate, "CENTER", 0, 0)
+	frame:SetWidth(1)
+	frame:SetHeight(1)
+	frame.plate = plate
+	frame.plateID = plateID
+	frame.oldHealthBar = bar
+	frame.oldBorder = border
+	frame.oldHighlight = highlight
+	frame.oldName = name
+	frame.oldLevel = level
+	frame.BossIcon = boss
+	frame.RaidIcon = raid
+
+	frame.HealthBar = ConstructHealthBar(frame)
+	frame.CastBar = ConstructCastBar(frame)
+	frame.Debuffs = ConstructDebuffs(frame)
+	frame.debuffCache = {}
+	frame.CPoints = ConstructComboPoints(frame)
+	ConstructGlow(frame)
+	ConstructTexts(frame)
+
+	MuteNative(frame)
+	frame:Hide()
+	plate.UnitFrame = frame
+	table.insert(plates, frame)
 end
 
 -- ---------------------------------------------------------------------
--- Plate classification -- see this file's header comment for why there
--- are two independent detectors.
+-- Elements
 -- ---------------------------------------------------------------------
-local BORDER_TEXTURE = "Nameplate%-Border"
+local function UnitDB(frame)
+	return NP.db.units[frame.UnitType]
+end
 
--- Known non-plate native frames the structural fallback (StatusBar-shaped
--- child + fontstring) has actually been caught matching, live: among
--- WorldFrame's adopted children, GameTooltip and GroupLootFrame1-4 both
--- matched with no real nameplate present. GameTooltip has an item-
--- quality-colored bar-shaped region plus text; GroupLootFrame1-4 (the
--- Need/Greed/Pass roll popups) have an icon border and item name/count
--- text -- both incidentally shaped enough like "healthbar+name" to slip
--- through. Real vanilla nameplates are anonymous (never `CreateFrame`'d
--- with an explicit name), so a candidate with one of these SPECIFIC,
--- deliberately-Blizzard-named identities is never a plate -- excluded by
--- name before any structural check runs. Grow this list if another named
--- frame is caught the same way; don't reject ALL named frames outright
--- (UnrealUI's own finding: this runtime auto-names even anonymous
--- CreateFrame calls as "GeneratedLuaUIObject_NNNN", so GetName() ~= nil
--- alone doesn't distinguish a real Blizzard name from an auto-generated
--- one without pattern-matching that prefix, which isn't confirmed
--- consistent enough here to rely on yet).
-local KNOWN_NON_PLATE_NAMES = {
-	"^GameTooltip$", "^GroupLootFrame%d+$", "^ItemRefTooltip$",
-	"^ShoppingTooltip%d*$", "^AutoCompleteBox$",
+local function ReactionColor(frame)
+	local reactions = NP.db.reactions
+	local reaction = frame.UnitReaction
+	if reaction == 1 then return reactions.tapped end
+	if reaction == 4 then return reactions.neutral end
+	if reaction > 4 then
+		if frame.UnitType == "FRIENDLY_PLAYER" then return reactions.friendlyPlayer end
+		return reactions.good
+	end
+	return reactions.bad
+end
+
+-- Real ElvUI's E:GetFormattedText styles, on the native bar's values.
+local TEXT_FORMATS = {
+	CURRENT = "%s",
+	CURRENT_MAX = "%s - %s",
+	CURRENT_PERCENT = "%s - %.1f%%",
+	CURRENT_MAX_PERCENT = "%s - %s | %.1f%%",
+	PERCENT = "%.1f%%",
+	DEFICIT = "-%s",
 }
 
-local function IsKnownNonPlateName(name)
-	if type(name) ~= "string" then return false end
-	for i = 1, table.getn(KNOWN_NON_PLATE_NAMES) do
-		if string.find(name, KNOWN_NON_PLATE_NAMES[i]) then return true end
+local function FormatHealth(style, value, high)
+	local pattern = TEXT_FORMATS[style] or TEXT_FORMATS.CURRENT
+	local dec = (E.db.general and E.db.general.decimalLength) or 1
+	if dec ~= 1 and string.find(style, "PERCENT") then
+		pattern = string.gsub(pattern, "%%%.1f%%%%", "%%." .. dec .. "f%%%%")
 	end
-	return false
+	local percent = value / high * 100
+	if style == "DEFICIT" then
+		if high - value <= 0 then return "" end
+		return string.format(pattern, E:ShortValue(high - value))
+	elseif style == "PERCENT" then
+		return string.format(pattern, percent)
+	elseif style == "CURRENT" or value == high then
+		return E:ShortValue(value)
+	elseif style == "CURRENT_MAX" then
+		return string.format(pattern, E:ShortValue(value), E:ShortValue(high))
+	elseif style == "CURRENT_PERCENT" then
+		return string.format(pattern, E:ShortValue(value), percent)
+	end
+	return string.format(pattern, E:ShortValue(value), E:ShortValue(high), percent)
 end
 
-local function ClassifyPlate(frame)
-	local frameName = Call1(frame, "GetName")
-	if IsKnownNonPlateName(frameName) then return nil, "known-non-plate:" .. tostring(frameName) end
-
-	local ok, regions = pcall(function() return { frame:GetRegions() } end)
-	if not ok or type(regions) ~= "table" then return nil, "no-getregions" end
-
-	local parts = { textures = {}, fontstrings = {} }
-
-	for i = 1, table.getn(regions) do
-		local region = regions[i]
-		local regionType = ObjectType(region)
-
-		if regionType == "FontString" then
-			table.insert(parts.fontstrings, region)
-		elseif regionType == "Texture" then
-			table.insert(parts.textures, region)
-			local texture = Call1(region, "GetTexture")
-			if type(texture) == "string" then
-				if string.find(texture, BORDER_TEXTURE) then
-					parts.border = region
-				elseif string.find(texture, "Glow") then
-					parts.glow = region
-				elseif string.find(texture, "Elite") or string.find(texture, "Rare") then
-					parts.levelicon = region
-				end
-			end
-		end
-	end
-
-	local kidsOk, kids = pcall(function() return { frame:GetChildren() } end)
-	if kidsOk and type(kids) == "table" then
-		for i = 1, table.getn(kids) do
-			local kid = kids[i]
-			local kidType = ObjectType(kid)
-			local hasValue = false
-			pcall(function() hasValue = type(kid.GetValue) == "function" end)
-			if kidType == "StatusBar" or hasValue then
-				if not parts.healthbar then parts.healthbar = kid end
-			end
-		end
-	end
-
-	local fontCount = table.getn(parts.fontstrings)
-
-	-- Real ElvUI's own detector (border texture present) is tried first;
-	-- UnrealUI's structural fallback covers the client where that texture
-	-- doesn't exist. Neither is a single generic trait -- adopting a plate
-	-- mutes its native art for the rest of the session, so a false
-	-- positive on some unrelated WorldFrame child would be a real, visible
-	-- mistake, not a cosmetic one.
-	local detector
-	if parts.border then
-		detector = "border-texture"
-	elseif parts.healthbar and fontCount >= 1 then
-		detector = "healthbar+name"
-	elseif fontCount >= 2 then
-		detector = "name+level-fontstrings"
+function NP:UpdateHealth(frame)
+	local value, high = NativeHealth(frame)
+	frame.healthValue, frame.healthMax = value, high
+	local bar = frame.HealthBar
+	bar:SetMinMaxValues(0, high)
+	bar:SetValue(value)
+	local text = UnitDB(frame).healthbar.text
+	if text.enable then
+		bar.text:SetText(FormatHealth(text.format, value, high))
 	else
-		-- Reason string for /run E.NamePlates:Dump() -- see that
-		-- function's own comment for why this exists.
-		return nil, string.format("tex=%d fs=%d bar=%s",
-			table.getn(parts.textures), fontCount, parts.healthbar and "y" or "n")
+		bar.text:SetText("")
 	end
-	parts.detector = detector
-
-	-- The level is whichever fontstring currently reads as a number; the
-	-- name is the other one. Re-checked every refresh too (RefreshPlate),
-	-- since a plate is recycled onto a different unit without being
-	-- rebuilt.
-	local first, second = parts.fontstrings[1], parts.fontstrings[2]
-	if IsNumericText(Call1(first, "GetText")) and second then
-		parts.level, parts.name = first, second
-	else
-		parts.name, parts.level = first, second
-	end
-
-	return parts
 end
 
--- ---------------------------------------------------------------------
--- Overlay construction -- backdrop+inset-StatusBar recipe already
--- established project-wide (DataBars/PetBar/ActionBars/UnitFrames), NOT
--- UnrealUI's own plain-texture bar (Util.CreateStatusBar exists precisely
--- so every module shares one proven-on-UA status bar implementation).
--- ---------------------------------------------------------------------
-local plateCount = 0
-
-local function ApplyFont(fontString, size)
-	local LSM = LibStub("LibSharedMedia-3.0", true)
-	local path = (LSM and LSM:Fetch("font", NPdb.font)) or "Fonts\\FRIZQT__.TTF"
-	pcall(fontString.SetFont, fontString, path, size or NPdb.fontSize,
-		NPdb.fontOutline == "NONE" and "" or NPdb.fontOutline)
-end
-
-local function BuildOverlay(frame, parts)
-	plateCount = plateCount + 1
-
-	local overlay = CreateFrame("Frame", "ElvNamePlate" .. plateCount, frame)
-	overlay.plate = frame
-	overlay.parts = parts
-	overlay.cache = {}
-	overlay:SetWidth(NPdb.width)
-	overlay:SetHeight(NPdb.healthHeight + NPdb.fontSize + 4)
-	overlay:SetPoint("TOP", frame, "TOP", 0, 0)
-
-	local health = ElvUI.Util.CreateStatusBar(overlay, {
-		width = NPdb.width,
-		height = NPdb.healthHeight,
-		background = {0.1, 0.1, 0.1, 1},
-		color = {0.31, 0.31, 0.31},
-	})
-	health:SetPoint("BOTTOM", overlay, "BOTTOM", 0, 0)
-	overlay.health = health
-
-	local textLayer = CreateFrame("Frame", nil, health)
-	textLayer:SetAllPoints(health)
-	local ok, level = pcall(health.GetFrameLevel, health)
-	if ok and tonumber(level) then pcall(textLayer.SetFrameLevel, textLayer, level + 10) end
-
-	overlay.healthText = textLayer:CreateFontString(nil, "OVERLAY")
-	ApplyFont(overlay.healthText, NPdb.healthFontSize)
-	overlay.healthText:SetPoint("CENTER", health, "CENTER", 0, 0)
-
-	overlay.name = overlay:CreateFontString(nil, "OVERLAY")
-	ApplyFont(overlay.name)
-	overlay.name:SetPoint("BOTTOMLEFT", health, "TOPLEFT", 0, 2)
-
-	overlay.level = overlay:CreateFontString(nil, "OVERLAY")
-	ApplyFont(overlay.level)
-	overlay.level:SetPoint("BOTTOMRIGHT", health, "TOPRIGHT", 0, 2)
-
-	overlay:Show()
-	return overlay
-end
-
-local registry = {}
-local plateOrder = {}
-
--- Diagnostics -- see NP:Report()/NP:Dump()/NP:DumpAdopted() at the bottom
--- of this file: with no other symptom to go on when the scan adopts zero
--- plates, this exists so a report can say WHY instead of guessing at a
--- second detector blind. `rejected`/`rejectReasons` reflect only the MOST
--- RECENT scan pass (reset every tick, see ScanWorldFrame) -- `adopted` is
--- cumulative (a frame, once adopted, is never reclassified).
-local stats = { worldChildren = 0, adopted = 0, rejected = 0 }
-local rejectReasons = {}
-
-local function AdoptPlate(frame)
-	local parts, reason = ClassifyPlate(frame)
-	if not parts then
-		stats.rejected = stats.rejected + 1
-		reason = reason or "unknown"
-		rejectReasons[reason] = (rejectReasons[reason] or 0) + 1
-		return nil
-	end
-	stats.adopted = stats.adopted + 1
-
-	MuteTexture(parts.border)
-	MuteTexture(parts.glow)
-	MuteFontString(parts.name)
-	MuteFontString(parts.level)
-	MuteBar(parts.healthbar)
-
-	-- Everything not explicitly excepted above gets muted too, INCLUDING
-	-- the elite/rare icon (parts.levelicon) -- it stays invisible but its
-	-- own IsShown() keeps working (MuteTexture is alpha, not Hide()), which
-	-- is exactly what RefreshPlate reads to append the "+" suffix.
-	for i = 1, table.getn(parts.textures) do
-		local region = parts.textures[i]
-		if region ~= parts.border and region ~= parts.glow then
-			MuteTexture(region)
-		end
-	end
-	for i = 1, table.getn(parts.fontstrings) do
-		MuteFontString(parts.fontstrings[i])
-	end
-
-	local overlay = BuildOverlay(frame, parts)
-	registry[frame] = overlay
-	table.insert(plateOrder, overlay)
-	return overlay
-end
-
--- WARNING: never re-walk EVERY not-yet-adopted WorldFrame child's full
--- region/child tree, through pcall-wrapped closures, on EVERY 0.1s tick --
--- this freezes the client. Repeated pcall+closure allocation across many
--- objects, many times a second, is a known stutter/freeze risk on this
--- engine (also documented in UnrealUI's own comments) -- exactly
--- what an unthrottled full re-walk does once WorldFrame's child count is
--- more than trivial.
+-- Threat. The client has no threat API (ElvUI-vanilla leaves real ElvUI's
+-- threat settings unused), so the mob's own target decides who it attacks:
+-- every group member's target, the pet's, the player's target and mouseover
+-- are read; a hostile mob in combat whose target is the player is status 3
+-- ("tanking"), one targeting anybody else is status 0. The state is kept by
+-- the mob's name for THREAT_MEMORY seconds, so plates of mobs nobody targets
+-- keep it a while; same-named mobs share it.
 --
--- Why a retry is needed at all: real ElvUI-vanilla's own code notes
--- "Vanilla never destroys a plate" -- a native plate frame is CREATED
--- ONCE and reused/repopulated for different mobs over the whole session.
--- A frame that was empty (no health bar/fontstring yet) at scan time and
--- got rejected must eventually be retried, or a plate that later becomes
--- a real, visible, populated mob nameplate never gets adopted (live-
--- confirmed: a fully native "Elder Mottled Boar" plate stayed unreplaced
--- because its frame had already been scanned-and-rejected earlier in the
--- session).
---
--- This version keeps BOTH constraints: cheap per-tick cost (only
--- genuinely NEW WorldFrame children are classified every 0.1s, via the
--- scannedChildren cursor), plus eventual retry for rejected candidates,
--- but THROTTLED (one retry pass every RETRY_EVERY_TICKS ticks, ~2s) AND
--- BUDGETED (at most RETRY_BUDGET candidates reclassified per retry pass,
--- regardless of how large the rejected/pending set has grown) -- a hard
--- ceiling on worst-case per-tick cost no matter how many stray WorldFrame
--- children accumulate over a long session.
-local pending = {}
-local scannedChildren = 0
-local tickCount = 0
-local RETRY_EVERY_TICKS = 20
-local RETRY_BUDGET = 25
+-- LibVanillaThreat-1.0, when an addon loads it, refines that within the
+-- observed victim, never against it. It estimates only the player's and the
+-- pet's threat from the combat log, so it is asked only where both sides of
+-- the comparison are its own: a mob on the player with the pet above the
+-- player is status 2, a mob on the pet with the player above the pet (not yet
+-- past the 110% / 130% pull) is status 1. Out of a group the player and the
+-- pet are a mob's whole threat list, so a mob nobody targets takes status 3 or
+-- 0 from whichever of the two the library has on top. "Tanked by another
+-- tank" has no source: 1.12 has no group roles.
+local THREAT_MEMORY = 3
+local THREAT_INTERVAL = 0.2
+local threatByName = {}
+local threatNext = 0
+local threatSolo = true
 
-local function TryAdopt(frame)
-	local overlay = AdoptPlate(frame)
-	if overlay then
-		pending[frame] = nil
-	else
-		pending[frame] = true
-	end
-end
+local OWN_UNITS = { "target", "mouseover", "pettarget" }
+local PARTY_UNITS, RAID_UNITS = {}, {}
+local i
+for i = 1, 4 do PARTY_UNITS[i] = "party" .. i .. "target" end
+for i = 1, 40 do RAID_UNITS[i] = "raid" .. i .. "target" end
 
-local function ScanWorldFrame()
-	local count = tonumber(Call1(WorldFrame, "GetNumChildren"))
-	if not count then return end
-	stats.worldChildren = count
-	stats.rejected = 0
-	rejectReasons = {}
-	tickCount = tickCount + 1
-
-	if count < scannedChildren then scannedChildren = 0 end
-	if count > scannedChildren then
-		local ok, kids = pcall(function() return { WorldFrame:GetChildren() } end)
-		if ok and type(kids) == "table" then
-			for i = scannedChildren + 1, count do
-				local child = kids[i]
-				if child and not registry[child] then TryAdopt(child) end
-			end
-		end
-		scannedChildren = count
-	end
-
-	if tickCount >= RETRY_EVERY_TICKS then
-		tickCount = 0
-		local n = 0
-		for frame in pairs(pending) do
-			if n >= RETRY_BUDGET then break end
-			n = n + 1
-			if not registry[frame] then TryAdopt(frame) end
-		end
-	end
-end
-
--- ---------------------------------------------------------------------
--- Refresh
--- ---------------------------------------------------------------------
-
--- Unit-type color, read from the native health bar's own tint -- the only
--- unit-type signal available for a plate that isn't the current target
--- (ported from UnrealUI's own UnitTypeFromBarColor, thresholds unchanged,
--- remapped onto real ElvUI's own P.nameplates.reactions palette instead of
--- UnrealUI's own).
-local function ReactionColorFromBarTint(r, g, b)
-	if type(r) ~= "number" or type(g) ~= "number" or type(b) ~= "number" then return nil end
-	if r > 0.8 and g < 0.3 and b < 0.3 then return NPdb.reactions.bad end
-	if r > 0.8 and g > 0.8 and b < 0.3 then return NPdb.reactions.neutral end
-	if r < 0.3 and g > 0.8 and b < 0.3 then return NPdb.reactions.good end
-	if r < 0.3 and g < 0.3 and b > 0.8 then return NPdb.reactions.friendlyPlayer end
+-- Looked up on use: an addon loaded after ElvUI may be the one that ships it.
+local LVT
+local function ThreatLib()
+	if not LVT then LVT = LibStub("LibVanillaThreat-1.0", true) end
+	if LVT and LVT.playerName then return LVT end
 	return nil
 end
 
-local function IsFriendlyPlayerTarget()
-	local ok, isPlayer = pcall(UnitIsPlayer, "target")
-	if not ok or not isPlayer then return false end
-	local ok2, canAttack = pcall(UnitCanAttack, "player", "target")
-	return ok2 and not canAttack
+local function RefineThreat(status, name, mobTarget)
+	local lib = ThreatLib()
+	if not lib or not lib.petName then return status end
+	local mine = lib:GetThreat(lib.playerName, name)
+	local pet = lib:GetThreat(lib.petName, name)
+	if not mine or not pet then return status end
+	if status == 3 then
+		if pet > mine then return 2 end
+	elseif Compat.bool(UnitIsUnit(mobTarget, "pet")) and mine > pet then
+		return 1
+	end
+	return status
 end
 
--- Fallback reaction lookup for the CURRENT TARGET's own plate, where a
--- real unit token ("target") actually exists to query -- ported from
--- UnrealUI's identical fallback branch.
-local function ReactionColorFromTarget()
-	if IsFriendlyPlayerTarget() then return NPdb.reactions.friendlyPlayer end
-	local ok, reaction = pcall(UnitReaction, "target", "player")
-	if not ok or not reaction then return nil end
-	if reaction <= 3 then return NPdb.reactions.bad end
-	if reaction == 4 then return NPdb.reactions.neutral end
-	return NPdb.reactions.good
+local function ReadThreat(unit, now)
+	if not Compat.bool(UnitExists(unit)) or Compat.bool(UnitIsDeadOrGhost(unit)) then return end
+	if not Compat.bool(UnitCanAttack("player", unit)) or not Compat.bool(UnitAffectingCombat(unit)) then return end
+	local mobTarget = unit .. "target"
+	if not Compat.bool(UnitExists(mobTarget)) then return end
+	local name = UnitName(unit)
+	if not name then return end
+	local status = Compat.bool(UnitIsUnit(mobTarget, "player")) and 3 or 0
+	threatByName[name] = { status = RefineThreat(status, name, mobTarget), time = now }
 end
 
-local function RefreshPlate(overlay)
-	local parts = overlay.parts
-	local plate = overlay.plate
-
-	local visible = Call1(plate, "IsVisible")
-	if not visible then return end
-
-	-- Re-resolve which fontstring is the level -- a plate is recycled
-	-- onto a new unit without being rebuilt.
-	local a, b = parts.fontstrings[1], parts.fontstrings[2]
-	if b then
-		if IsNumericText(Call1(a, "GetText")) then
-			parts.level, parts.name = a, b
-		else
-			parts.name, parts.level = a, b
-		end
+local function ScanThreat(now)
+	if now < threatNext then return end
+	threatNext = now + THREAT_INTERVAL
+	local name, entry
+	for name, entry in pairs(threatByName) do
+		if now - entry.time > THREAT_MEMORY then threatByName[name] = nil end
 	end
-
-	local hasTarget = false
-	pcall(function() hasTarget = UnitExists("target") and true or false end)
-	local plateAlpha = tonumber(Call1(plate, "GetAlpha")) or 1
-	overlay.isTarget = hasTarget and plateAlpha >= 1
-
-	-- Name
-	local name = Call1(parts.name, "GetText")
-	if name ~= overlay.cache.name then
-		overlay.cache.name = name
-		overlay.name:SetText(name or "")
-	end
-
-	-- Level (native elite/rare marker kept as a "+" suffix)
-	if NPdb.showLevel then
-		local levelText = Call1(parts.level, "GetText")
-		local suffix = ""
-		if parts.levelicon and Call1(parts.levelicon, "IsShown") then suffix = "+" end
-		local text = parts.level and ((levelText or "??") .. suffix) or ""
-		if text ~= overlay.cache.level then
-			overlay.cache.level = text
-			overlay.level:SetText(text)
-			local r, g, bb = Call1(parts.level, "GetTextColor")
-			if type(r) ~= "number" then r, g, bb = 1, 1, 1 end
-			pcall(overlay.level.SetTextColor, overlay.level, r, g, bb, 1)
-		end
-	elseif overlay.cache.level ~= "" then
-		overlay.cache.level = ""
-		overlay.level:SetText("")
-	end
-
-	-- Health -- native bar first (works for any plate); UnitHealth("target")
-	-- fallback only for the plate that IS the current target.
-	local value, minimum, maximum
-	if parts.healthbar then
-		value = tonumber(Call1(parts.healthbar, "GetValue"))
-		minimum, maximum = Call1(parts.healthbar, "GetMinMaxValues")
-		minimum, maximum = tonumber(minimum), tonumber(maximum)
-	end
-	if not (value and maximum and maximum > 0) and overlay.isTarget then
-		local ok, hp = pcall(UnitHealth, "target")
-		local ok2, hpMax = pcall(UnitHealthMax, "target")
-		if ok and ok2 and hpMax and hpMax > 0 then
-			value, minimum, maximum = hp, 0, hpMax
-		end
-	end
-
-	if value and maximum and maximum > 0 then
-		overlay.health:Show()
-		overlay.health:SetMinMaxValues(minimum or 0, maximum)
-		overlay.health:SetValue(value)
-		if NPdb.showHealthText then
-			local perc = (value - (minimum or 0)) / (maximum - (minimum or 0)) * 100
-			overlay.healthText:SetText(string.format("%.0f%%", perc))
-		else
-			overlay.healthText:SetText("")
-		end
+	local k
+	for k = 1, getn(OWN_UNITS) do ReadThreat(OWN_UNITS[k], now) end
+	local raidSize = GetNumRaidMembers() or 0
+	local partySize = GetNumPartyMembers() or 0
+	threatSolo = raidSize == 0 and partySize == 0
+	if raidSize > 0 then
+		for k = 1, raidSize do ReadThreat(RAID_UNITS[k], now) end
 	else
-		overlay.health:Hide()
-		overlay.healthText:SetText("")
-	end
-
-	-- Unit-type / reaction color
-	local r, g, bb = Call1(parts.healthbar, "GetStatusBarColor")
-	local color = ReactionColorFromBarTint(r, g, bb)
-	if not color and overlay.isTarget then color = ReactionColorFromTarget() end
-	color = color or NPdb.reactions.bad
-	if color ~= overlay.cache.color then
-		overlay.cache.color = color
-		ElvUI.Util.SetStatusBarColor(overlay.health, color.r, color.g, color.b, 1)
-	end
-
-	-- Target emphasis: scale + fade non-target plates, matching real
-	-- ElvUI's own useTargetScale/targetScale/nonTargetTransparency fields.
-	local wantScale = 1
-	if NPdb.useTargetScale and overlay.isTarget then wantScale = NPdb.targetScale end
-	if wantScale ~= overlay.cache.scale then
-		overlay.cache.scale = wantScale
-		pcall(overlay.SetScale, overlay, wantScale)
-	end
-
-	local wantAlpha = 1
-	if hasTarget and not overlay.isTarget then wantAlpha = Clamp01(NPdb.nonTargetTransparency) end
-	if wantAlpha ~= overlay.cache.alpha then
-		overlay.cache.alpha = wantAlpha
-		pcall(overlay.SetAlpha, overlay, wantAlpha)
+		for k = 1, partySize do ReadThreat(PARTY_UNITS[k], now) end
 	end
 end
 
-local function RefreshAll()
-	for i = 1, table.getn(plateOrder) do
-		local overlay = plateOrder[i]
-		if overlay then
-			local ok, err = pcall(RefreshPlate, overlay)
-			if not ok then E:Print("NamePlates refresh error: " .. tostring(err)) end
+-- The plate's threat status: the observed one, else (out of a group) the
+-- library's top threat holder.
+local function ThreatStatus(name)
+	local entry = threatByName[name]
+	if entry then return entry.status end
+	local lib = threatSolo and ThreatLib()
+	if not lib then return nil end
+	local value, top = lib:GetMaxThreatOnTarget(name)
+	if not top or value <= 0 then return nil end
+	if top == lib.playerName then return 3 end
+	return 0
+end
+
+-- Real ElvUI's E.Role (ElvUI-vanilla core.lua CheckRole): by class, or by
+-- the talent tree with the most points; a feral druid with Feral Instinct
+-- counts as a tank.
+local CLASS_ROLE = {
+	PALADIN = { "Caster", "Tank", "Melee" },
+	PRIEST = "Caster", WARLOCK = "Caster", HUNTER = "Melee", ROGUE = "Melee", MAGE = "Caster",
+	WARRIOR = { "Melee", "Melee", "Tank" },
+	SHAMAN = { "Caster", "Melee", "Caster" },
+	DRUID = { "Caster", "Melee", "Caster" },
+}
+
+function NP:CheckRole()
+	local roles = CLASS_ROLE[E.myclass]
+	if type(roles) == "string" then
+		self.role = roles
+		return
+	end
+	local tree, most = nil, 0
+	local t
+	for t = 1, 3 do
+		local ok, _, _, spent = pcall(GetTalentTabInfo, t)
+		if ok and type(spent) == "number" and spent > most then tree, most = t, spent end
+	end
+	local role = roles and tree and roles[tree] or "Melee"
+	if E.myclass == "DRUID" and tree == 2 then
+		local ok, _, _, _, _, rank = pcall(GetTalentInfo, 2, 22)
+		if ok and type(rank) == "number" and rank > 0 then role = "Tank" end
+	end
+	self.role = role
+end
+
+-- Real ElvUI's GetThreatSituationColor / GetThreatSituationScale: a tank
+-- wants the mob on it, anyone else wants it elsewhere. Status 3 securely
+-- tanking, 2 tanking with someone above, 1 above the one tanking, 0 not
+-- tanking; the transitions keep the normal scale.
+function NP:ThreatColor(status)
+	local db = self.db.threat
+	local tank = self.role == "Tank"
+	if status == 3 then
+		return tank and db.goodColor or db.badColor
+	elseif status == 2 then
+		return tank and db.badTransition or db.goodTransition
+	elseif status == 1 then
+		return tank and db.goodTransition or db.badTransition
+	end
+	return tank and db.badColor or db.goodColor
+end
+
+local function ThreatScale(frame)
+	local status = frame.threatStatus
+	if not status or status == 1 or status == 2 then return 1 end
+	local db = NP.db.threat
+	if (status == 3) == (NP.role == "Tank") then return db.goodScale end
+	return db.badScale
+end
+
+local function ClassColor(frame)
+	local class = frame.UnitClass
+	if not class or not E.private.general.classCache then return nil end
+	return (CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class]) or RAID_CLASS_COLORS[class]
+end
+
+local function IsPlayerType(frame)
+	return frame.UnitType == "FRIENDLY_PLAYER" or frame.UnitType == "ENEMY_PLAYER"
+end
+
+-- Real ElvUI's UpdateElement_HealthColor: class colour for players (when
+-- the class is known), the tapped colour, then threat colours when threat
+-- coloring is on and the plate has a threat state, else the reaction.
+function NP:UpdateHealthColor(frame)
+	local c
+	if IsPlayerType(frame) and UnitDB(frame).healthbar.useClassColor then c = ClassColor(frame) end
+	if not c and frame.UnitReaction ~= 1 and frame.threatStatus and self.db.threat.useThreatColor then
+		c = self:ThreatColor(frame.threatStatus)
+	end
+	if not c then c = ReactionColor(frame) end
+	Util.SetStatusBarColor(frame.HealthBar, c.r, c.g, c.b, 1)
+end
+
+-- Real ElvUI's UpdateElement_Name. A player whose class the class cache
+-- does not know takes the friendly player colour, as in real ElvUI.
+function NP:UpdateName(frame)
+	local db = UnitDB(frame)
+	local name = frame.Name
+	if not db.showName then
+		name:SetText("")
+		return
+	end
+	name:SetText(frame.UnitName)
+	name.NameOnlyGlow:SetWidth(name:GetWidth() + 40)
+	name.NameOnlyGlow:SetHeight(name:GetHeight() + 16)
+
+	local r, g, b = 1, 1, 1
+	if IsPlayerType(frame) and db.name and db.name.useClassColor then
+		local c = ClassColor(frame) or self.db.reactions.friendlyPlayer
+		r, g, b = c.r, c.g, c.b
+	elseif not db.healthbar.enable and not frame.isTarget then
+		local c = ReactionColor(frame)
+		r, g, b = c.r, c.g, c.b
+	end
+	name:SetTextColor(r, g, b)
+
+	local glow = name.NameOnlyGlow.texture
+	if self.db.nameColoredGlow then
+		glow:SetVertexColor(r - 0.1, g - 0.1, b - 0.1, 1)
+	else
+		SetColor(glow, self.db.colors.glowColor)
+	end
+end
+
+-- Real ElvUI's UnitLevel: "??" in red for bosses and unknown levels, else the
+-- native level in its difficulty colour.
+function NP:UpdateLevel(frame)
+	local level = frame.Level
+	local text = NativeText(frame.oldLevel)
+	frame.levelText = text
+	if not UnitDB(frame).showLevel then
+		level:SetText("")
+		return
+	end
+	local r, g, b = 0.9, 0, 0
+	if IsShown(frame.BossIcon) or not tonumber(text) then
+		text = "??"
+	else
+		local ok, lr, lg, lb = pcall(frame.oldLevel.GetTextColor, frame.oldLevel)
+		if ok and type(lr) == "number" then r, g, b = lr, lg, lb end
+	end
+	if frame.healthShown then
+		level:SetText(text)
+	else
+		level:SetText(" [" .. text .. "]")
+	end
+	level:SetTextColor(r, g, b)
+end
+
+-- Real ElvUI's UpdateElement_Highlight, with the current ElvUI health layer.
+function NP:UpdateHighlight(frame)
+	local glow, layer = frame.Name.NameOnlyGlow, frame.HealthBar.highlight
+	glow:Hide()
+	layer:Hide()
+	if not frame.isMouseover or frame.isTarget then return end
+	if frame.healthShown then
+		layer:Show()
+	elseif UnitDB(frame).showName then
+		glow:Show()
+	end
+end
+
+-- Real ElvUI's glow choice: the indicator colour on the target, otherwise
+-- yellow at or below the low health threshold and red at or below half of
+-- it. Low health shows the glows only, never the arrows.
+local function GlowState(frame)
+	local db = NP.db
+	if frame.isTarget and db.units.TARGET.glowStyle ~= "none" then
+		local c = db.colors.glowColor
+		return 1, c.r, c.g, c.b, c.a or 1
+	end
+	local threshold = db.lowHealthThreshold or 0
+	if threshold <= 0 or not frame.healthMax then return 0 end
+	local perc = frame.healthValue / frame.healthMax
+	if perc <= threshold / 2 then return 2, 1, 0, 0, 1 end
+	if perc <= threshold then return 2, 1, 1, 0, 1 end
+	return 0
+end
+
+local BORDER_GLOW = { style1 = true, style5 = true, style7 = true }
+local BACKGROUND_GLOW = { style2 = true, style6 = true, style8 = true }
+local TOP_ARROW = { style3 = true, style5 = true, style6 = true }
+local SIDE_ARROWS = { style4 = true, style7 = true, style8 = true }
+
+local function SetArrow(frame, key, path, size)
+	local arrow = frame[key]
+	local c = ARROW_COORDS[key]
+	arrow.texture:SetTexture(path)
+	arrow.texture:SetTexCoord(c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8])
+	arrow:SetWidth(size)
+	arrow:SetHeight(size)
+	arrow:ClearAllPoints()
+	return arrow
+end
+
+local function PlaceGlows(frame, state)
+	local db = NP.db
+	local target = db.units.TARGET
+	local style, bar = target.glowStyle, frame.HealthBar
+	if BORDER_GLOW[style] then
+		-- Around the cast bar and its icon too while one is shown close below.
+		local bottom = bar
+		if frame.CastBar:IsShown() and UnitDB(frame).castbar.offset < 4 then
+			bottom = frame.CastBar.Icon
+		end
+		frame.Glow:ClearAllPoints()
+		frame.Glow:SetPoint("TOPLEFT", bar, "TOPLEFT", -6, 6)
+		frame.Glow:SetPoint("BOTTOMRIGHT", bottom, "BOTTOMRIGHT", 6, -6)
+		frame.Glow:Show()
+	end
+	if BACKGROUND_GLOW[style] then
+		-- Real ElvUI reaches down over a shown cast bar and out over its icon.
+		local castBar = frame.CastBar:IsShown() and frame.CastBar
+		local scale = 1
+		if db.useTargetScale then scale = math.max(db.targetScale, 0.75) end
+		local size = (BORDER + 14 + (castBar and 3 or 0)) * scale
+		frame.Glow2:ClearAllPoints()
+		frame.Glow2:SetPoint("TOPLEFT", bar, "TOPLEFT", -(size * 2), size)
+		frame.Glow2:SetPoint("BOTTOMRIGHT", castBar and castBar.Icon or bar, "BOTTOMRIGHT", size * 2, -size)
+		frame.Glow2:Show()
+	end
+	if state == 2 then return end
+	-- Real ElvUI: the arrows `arrowSpacing` away from the bar; the top one
+	-- also clears the name, which sits above the bar here.
+	local path = ARROWS .. (target.arrow or "Arrow9")
+	local size = ARROW_SIZE * (target.arrowScale or 1)
+	local spacing = target.arrowSpacing or 0
+	if TOP_ARROW[style] then
+		local space = spacing
+		if UnitDB(frame).showName and frame.UnitName ~= "" then space = space + db.fontSize end
+		SetArrow(frame, "TopArrow", path, size):SetPoint("BOTTOM", bar, "TOP", 0, space)
+		frame.TopArrow:Show()
+	end
+	if SIDE_ARROWS[style] then
+		SetArrow(frame, "RightArrow", path, size):SetPoint("RIGHT", bar, "LEFT", -spacing, 0)
+		SetArrow(frame, "LeftArrow", path, size):SetPoint("LEFT", bar, "RIGHT", spacing, 0)
+		frame.RightArrow:Show()
+		frame.LeftArrow:Show()
+	end
+end
+
+function NP:UpdateGlow(frame)
+	local state, r, g, b, a = 0
+	if frame.healthShown then state, r, g, b, a = GlowState(frame) end
+	local cast = frame.CastBar:IsShown() and "cast" or ""
+	local key = state ~= 0 and (state .. r .. g .. b .. a .. self.db.units.TARGET.glowStyle .. cast) or nil
+	if key == frame.glowKey then return end
+	frame.glowKey = key
+
+	frame.Glow:Hide()
+	frame.Glow2:Hide()
+	frame.TopArrow:Hide()
+	frame.LeftArrow:Hide()
+	frame.RightArrow:Hide()
+	if state == 0 then return end
+
+	PlaceGlows(frame, state)
+	pcall(frame.Glow.SetBackdropBorderColor, frame.Glow, r, g, b, a)
+	frame.Glow2.texture:SetVertexColor(r, g, b, a)
+	frame.TopArrow.texture:SetVertexColor(r, g, b, a)
+	frame.LeftArrow.texture:SetVertexColor(r, g, b, a)
+	frame.RightArrow.texture:SetVertexColor(r, g, b, a)
+end
+
+-- Real ElvUI's cast time formats.
+local function FormatCastTime(style, value, max)
+	if style == "CURRENT" then return string.format("%.1f", value) end
+	if style == "CURRENT_MAX" then return string.format("%.1f / %.1f", value, max) end
+	return string.format("%.1f", max - value)
+end
+
+local function HideCast(frame)
+	local bar = frame.CastBar
+	bar.spell, bar.startTime, bar.holdUntil = nil, nil, nil
+	if bar:IsShown() then
+		bar:Hide()
+		NP:UpdateGlow(frame)
+	end
+end
+
+local function StartCast(frame, spell, startTime, endTime, icon)
+	local bar = frame.CastBar
+	bar.spell, bar.startTime, bar.endTime = spell, startTime, endTime
+	bar.holdUntil = nil
+	bar:SetMinMaxValues(0, endTime - startTime)
+	bar.Name:SetText(spell)
+	bar.Icon.texture:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+	bar.Spark:Show()
+	if not bar:IsShown() then
+		bar:Show()
+		NP:UpdateGlow(frame)
+	end
+end
+
+-- The cast ended without a new one: "Interrupted" for the hold time when the
+-- combat log reported it broken off, otherwise the bar goes away. The client
+-- reports no failed casts of other units.
+local function EndCast(frame, now)
+	local bar = frame.CastBar
+	local hold = UnitDB(frame).castbar.timeToHold
+	local brokeAt = UF and UF:GetCastBreak(frame.UnitName)
+	if hold > 0 and brokeAt and bar.startTime and brokeAt >= bar.startTime then
+		local _, max = bar:GetMinMaxValues()
+		bar.spell, bar.startTime = nil, nil
+		bar.holdUntil = now + hold
+		bar:SetValue(max)
+		bar.Name:SetText(INTERRUPTED or L["Interrupted"])
+		bar.Time:SetText("")
+		bar.Spark:Hide()
+		return
+	end
+	HideCast(frame)
+end
+
+-- Casts of other units come from the combat log by caster name
+-- (UnitFrames/CastTracker.lua), so every plate showing that name shows the
+-- cast; same-named units cannot be told apart. Channels are not reported.
+function NP:UpdateCast(frame)
+	local bar = frame.CastBar
+	if not frame.healthShown or not UnitDB(frame).castbar.enable or not UF then
+		if bar:IsShown() then HideCast(frame) end
+		return
+	end
+	local now = GetTime()
+	local spell, startTime, endTime, icon = UF:GetCastByName(frame.UnitName)
+	if spell then
+		if spell ~= bar.spell or startTime ~= bar.startTime then
+			StartCast(frame, spell, startTime, endTime, icon)
+		end
+		local max = endTime - startTime
+		if max <= 0 then max = 0.001 end
+		local value = now - startTime
+		if value > max then value = max end
+		bar:SetValue(value)
+		bar.Time:SetText(FormatCastTime(UnitDB(frame).castbar.castTimeFormat, value, max))
+		bar.Spark:SetPoint("CENTER", bar, "LEFT", value / max * bar:GetWidth(), 0)
+	elseif bar.spell then
+		EndCast(frame, now)
+	elseif bar.holdUntil and now >= bar.holdUntil then
+		HideCast(frame)
+	end
+end
+
+-- Debuffs, after pfUI's nameplates: a plate carries no unit, so its debuffs
+-- are read while it is the target or under the mouse, and kept on the plate
+-- until they run out; the plate shows the kept list the rest of the time.
+-- The list is dropped when the plate shows another name. Names and times
+-- come from LibVanillaDurations-1.0; "mine" is its stamp of the player's
+-- own cast (UnitFrames/OwnAuras.lua). Debuffs without a known duration are
+-- kept only while the unit is read live.
+local function LiveUnit(frame)
+	if frame.isTarget and UnitName("target") == frame.UnitName then return "target" end
+	if frame.isMouseover and UnitName("mouseover") == frame.UnitName then return "mouseover" end
+	return nil
+end
+
+-- Real ElvUI's filters.priority tokens that need no aura list: "Personal"
+-- (the player's own debuffs only) and "blockNoDuration". The list tokens
+-- (Blacklist, CCDebuffs, RaidDebuffs, ...) have no lists here.
+local function HasToken(priority, token)
+	return type(priority) == "string" and string.find("," .. priority .. ",", "," .. token .. ",", 1, true) ~= nil
+end
+
+local function PassesFilters(filters, mine, duration)
+	if HasToken(filters.priority, "Personal") and not mine then return false end
+	if not duration then return not HasToken(filters.priority, "blockNoDuration") end
+	if filters.maxDuration and filters.maxDuration > 0 and duration > filters.maxDuration then return false end
+	if filters.minDuration and filters.minDuration > 0 and duration < filters.minDuration then return false end
+	return true
+end
+
+local function CollectDebuffs(frame, unit, now)
+	local cache, filters = frame.debuffCache, UnitDB(frame).debuffs.filters
+	local unitName = UnitName(unit)
+	local k
+	for k in pairs(cache) do cache[k] = nil end
+	frame.debuffCacheName = frame.UnitName
+	local i
+	for i = 1, MAX_DEBUFFS do
+		local ok, texture, count = pcall(UnitDebuff, unit, i)
+		if ok and texture then
+			local name, left, duration = LVD:GetDebuff(unit, i)
+			local _, _, mine = LVD:GetStamp(unitName, name)
+			if name and PassesFilters(filters, mine, duration) then
+				table.insert(cache, {
+					texture = texture,
+					count = tonumber(count) or 0,
+					expiration = left and (now + left) or nil,
+				})
+			end
 		end
 	end
 end
 
--- ---------------------------------------------------------------------
--- Diagnostics -- `E` is a local upvalue in every module file, not reachable
--- from the console; call these instead as:
---   /run ElvUI[1].NamePlates:Report()
---   /run ElvUI[1].NamePlates:Dump()              -- first 10 WorldFrame children
---   /run ElvUI[1].NamePlates:Dump(nil, 3)        -- just WorldFrame child [3]
---   /run ElvUI[1].NamePlates:DumpAdopted()       -- all adopted plates
---   /run ElvUI[1].NamePlates:DumpAdopted(1)      -- just entry [1]
---   /run ElvUI[1].NamePlates:DumpMouseFocus()    -- whatever is under the mouse RIGHT NOW
---   /run ElvUI[1].NamePlates:FindByText("Elder Mottled Boar")  -- find by name, WorldFrame's
---                                                                  DIRECT children only
---   /run ElvUI[1].NamePlates:FindByTextDeep("Elder Mottled Boar")  -- same, but the WHOLE UI
---                                                                      tree (slower, one-shot,
---                                                                      use if FindByText finds
---                                                                      nothing)
--- Every entry prints as SEVERAL short chat messages, not one long line --
--- see Dump()'s own comment for why (a native chat frame scrolls per
--- MESSAGE, not per wrapped visual line).
--- Root-causing "nothing got replaced" needs to know WHICH of the two
--- detectors (or neither) matched WorldFrame's children, not another
--- blind theory.
--- ---------------------------------------------------------------------
-function NP:Report()
-	E:Print(string.format(
-		"worldChildren=%d adopted=%d rejected(this pass)=%d",
-		stats.worldChildren, stats.adopted, stats.rejected))
-	for reason, n in pairs(rejectReasons) do
-		E:Print("  rejected (" .. tostring(n) .. "x): " .. tostring(reason))
+-- The kept list without the debuffs that ran out or have no time; called
+-- while the unit is not read live.
+local function PruneDebuffs(frame, now)
+	local cache = frame.debuffCache
+	if frame.debuffCacheName ~= frame.UnitName then
+		local k
+		for k in pairs(cache) do cache[k] = nil end
+		return
+	end
+	local i = getn(cache)
+	while i > 0 do
+		local aura = cache[i]
+		if not aura.expiration or aura.expiration <= now then
+			table.remove(cache, i)
+		end
+		i = i - 1
 	end
 end
 
--- Prints ONLY the plates actually adopted (never the whole WorldFrame
--- child list) -- short enough to fit on screen unlike Dump(). Pass an
--- index (`/run ElvUI[1].NamePlates:DumpAdopted(1)`) to print just ONE
--- entry -- the chat frame's own scrollback may not reach an earlier
--- entry, and one line never needs scrolling.
--- Also prints the native plate's own name/type and the health bar's
--- min/max (not just its current value): a "plate" with name="Item Name"
--- and plateVisible=false is a completely unrelated native frame, not a
--- nameplate at all (see ScanWorldFrame's own comment for the actual bug
--- this traces back to).
-function NP:DumpAdopted(onlyIndex)
-	local total = table.getn(plateOrder)
-	local first, last = 1, total
-	if onlyIndex then first, last = onlyIndex, onlyIndex end
-	if not onlyIndex then E:Print(string.format("%d plate(s) adopted:", total)) end
+-- Real ElvUI's aura time text: whole units with their suffix, tenths in red
+-- under 4 seconds.
+local function SetAuraTime(aura, left)
+	if not left then
+		aura.timeLeft:SetText("")
+		return
+	end
+	local value, id = E:GetTimeInfo(left, 4)
+	local color = E.TimeColors[id] or E.TimeColors[3]
+	local format = E.TimeFormats[id] and E.TimeFormats[id][2] or "%d"
+	aura.timeLeft:SetText(string.format(format, value))
+	aura.timeLeft:SetTextColor(color[1], color[2], color[3])
+end
 
-	for i = first, last do
-		local overlay = plateOrder[i]
-		if overlay then
-			local parts = overlay.parts
-			local visible = Call1(overlay.plate, "IsVisible")
-			local shown = Call1(overlay, "IsShown")
-			local alpha = tonumber(Call1(overlay, "GetAlpha")) or -1
-			local plateName = Call1(overlay.plate, "GetName")
-			local plateType = ObjectType(overlay.plate)
-			local minV, maxV = Call1(overlay.health, "GetMinMaxValues")
-			-- Split into several SHORT messages, not one long line -- a
-			-- native chat frame scrolls per MESSAGE, not per wrapped
-			-- visual line, so one message that wraps taller than the
-			-- visible chat panel can never be fully seen no matter how
-			-- you scroll. Several short messages are each individually
-			-- scrollable instead.
-			E:Print(string.format("[%d] plate=%s(%s) detector=%s",
-				i, tostring(plateType), tostring(plateName), tostring(parts.detector)))
-			E:Print(string.format("  visible=%s shown=%s alpha=%.2f",
-				tostring(visible), tostring(shown), alpha))
-			E:Print(string.format("  name=%s level=%s",
-				tostring(Call1(parts.name, "GetText")), tostring(Call1(parts.level, "GetText"))))
-			E:Print(string.format("  health=%s (%s-%s)",
-				tostring(Call1(overlay.health, "GetValue")), tostring(minV), tostring(maxV)))
+local function DrawDebuffs(frame, now)
+	local icons, cache = frame.Debuffs.icons, frame.debuffCache
+	local i
+	for i = 1, getn(icons) do
+		local aura, data = icons[i], cache[i]
+		if data and i <= UnitDB(frame).debuffs.numAuras then
+			aura.icon:SetTexture(data.texture)
+			if data.count > 1 then aura.count:SetText(data.count) else aura.count:SetText("") end
+			SetAuraTime(aura, data.expiration and (data.expiration - now))
+			aura:Show()
 		else
-			E:Print(string.format("[%d] no such adopted plate (only %d adopted)", i, total))
+			aura:Hide()
 		end
 	end
 end
 
--- Dumps whatever frame is directly under the mouse cursor right now --
--- point the mouse at the REAL native nameplate (health bar or name text)
--- in-game, then run this, instead of guessing which of the WorldFrame
--- scan's many children is the actual plate: Dump()/DumpAdopted() only
--- find unrelated native frames (GameTooltip, GroupLootFrame1-4), never
--- the plate itself, since blind scanning doesn't converge on it -- this
--- identifies the real target directly instead. Read-only.
-function NP:DumpMouseFocus()
-	local ok, focus = pcall(GetMouseFocus)
-	if not ok or not focus then
-		E:Print("GetMouseFocus() returned nothing -- move the mouse over the plate first")
+-- The client hands a native plate to another unit once its unit dies or
+-- leaves the plate range, and hides it in between (Unreal Azeroth: a plate
+-- whose unit is merely off screen stays shown). The debuffs the plate kept
+-- are dropped then, and when its health reads 0, so a later unit of the same
+-- name does not inherit them.
+local function ForgetUnit(frame)
+	local cache = frame.debuffCache
+	local k
+	for k in pairs(cache) do cache[k] = nil end
+	frame.debuffCacheName = nil
+	frame.auraNext = 0
+end
+
+function NP:UpdateAuras(frame, now)
+	if not frame.Debuffs:IsShown() or now < (frame.auraNext or 0) then return end
+	frame.auraNext = now + AURA_INTERVAL
+	local unit = LVD and LiveUnit(frame)
+	if unit then
+		CollectDebuffs(frame, unit, now)
+	else
+		PruneDebuffs(frame, now)
+	end
+	DrawDebuffs(frame, now)
+end
+
+-- 1.12.1 and Unreal Azeroth take no arguments; the two-argument form of
+-- later clients is only a fallback.
+local function ReadComboPoints()
+	local ok, points = pcall(GetComboPoints)
+	if ok and tonumber(points) then return tonumber(points) end
+	ok, points = pcall(GetComboPoints, "player", "target")
+	return (ok and tonumber(points)) or 0
+end
+
+-- Real ElvUI's UpdateElement_CPoints: the player's combo points on the
+-- target's plate, hostile plates only, coloured by real ElvUI's
+-- comboBar.colors.
+function NP:UpdateComboPoints(frame)
+	local holder = frame.CPoints
+	local points = 0
+	if self.db.comboPoints and frame.isTarget and frame.healthShown
+		and frame.UnitType ~= "FRIENDLY_PLAYER" and frame.UnitType ~= "FRIENDLY_NPC" then
+		points = self.comboPoints or 0
+	end
+	if points == frame.comboShown then return end
+	frame.comboShown = points
+	if points <= 0 then
+		holder:Hide()
 		return
 	end
-
-	E:Print(string.format("focus: %s(%s)", tostring(ObjectType(focus)), tostring(Call1(focus, "GetName"))))
-
-	local ok2, regions = pcall(function() return { focus:GetRegions() } end)
-	local textures, fontstrings, texts, paths = 0, 0, {}, {}
-	if ok2 and type(regions) == "table" then
-		for j = 1, table.getn(regions) do
-			local rtype = ObjectType(regions[j])
-			if rtype == "Texture" then
-				textures = textures + 1
-				local path = Call1(regions[j], "GetTexture")
-				if type(path) == "string" and table.getn(paths) < 3 then
-					table.insert(paths, string.sub(path, -28))
-				end
-			elseif rtype == "FontString" then
-				fontstrings = fontstrings + 1
-				local text = Call1(regions[j], "GetText")
-				if type(text) == "string" and table.getn(texts) < 3 then
-					table.insert(texts, text)
-				end
-			end
-		end
+	local colors = self.db.comboBar.colors
+	local i
+	for i = 1, MAX_COMBO do
+		local c = colors[i]
+		if c then holder[i]:SetVertexColor(c.r, c.g, c.b) end
+		if i <= points then holder[i]:Show() else holder[i]:Hide() end
 	end
-	local ok3, subs = pcall(function() return { focus:GetChildren() } end)
-	local childTypes, childCount = {}, 0
-	if ok3 and type(subs) == "table" then
-		childCount = table.getn(subs)
-		for j = 1, childCount do
-			if table.getn(childTypes) < 4 then
-				local hasValue = false
-				pcall(function() hasValue = type(subs[j].GetValue) == "function" end)
-				table.insert(childTypes, (ObjectType(subs[j]) or "?") .. (hasValue and "*" or ""))
-			end
-		end
-	end
+	holder:Show()
+end
 
-	E:Print(string.format("  tex=%d fs=%d children=%d", textures, fontstrings, childCount))
-	E:Print("  texts={" .. table.concat(texts, ",") .. "}")
-	E:Print("  paths={" .. table.concat(paths, ",") .. "}")
-	E:Print("  childTypes={" .. table.concat(childTypes, ",") .. "}")
-
-	-- Also walk up one parent level -- the plate's actual health-bar-
-	-- shaped part might be a CHILD of what's directly under the cursor
-	-- (e.g. hovering the health bar itself lands on the bar, not its
-	-- WorldFrame-level container), so the container's own identity matters
-	-- too for matching it back to a Dump()/Report() entry.
-	local ok4, parent = pcall(focus.GetParent, focus)
-	if ok4 and parent then
-		E:Print(string.format("  parent: %s(%s)", tostring(ObjectType(parent)), tostring(Call1(parent, "GetName"))))
+-- Real ElvUI's non-target transparency. On the 1.12.1 client the dimmed
+-- plate's own alpha multiplies with it, as in ElvUI-vanilla.
+function NP:UpdateAlpha(frame)
+	if self.hasTarget and not frame.isTarget then
+		frame:SetAlpha(self.db.nonTargetTransparency)
+	else
+		frame:SetAlpha(1)
 	end
 end
 
--- Recursive, whole-UI-tree version of FindByText() -- walks EVERY frame
--- reachable from `root` (default UIParent, covers WorldFrame too since
--- it's normally a descendant), not just WorldFrame's direct children.
--- Exists to test the theory that the nameplate isn't nested under
--- WorldFrame's direct children at all: FindByText() (direct children
--- only) can find nothing for a real mob's exact name even though the
--- plate is visibly on screen, so this rules out the narrower possibility
--- that it's just nested somewhere else in the tree before concluding the
--- bigger finding (that the native plate isn't a Lua/FrameXML frame at
--- all -- see this file's own top-of-file banner). One-shot diagnostic
--- call, not a repeating poll -- a slower full-tree walk is acceptable
--- here (unlike ScanWorldFrame's own per-tick budget concern, see its own
--- comment on the freeze this avoids), but still capped by maxVisit as a
--- safety ceiling regardless of how large the live UI tree turns out to
--- be.
-function NP:FindByTextDeep(needle, root, maxVisit)
-	if type(needle) ~= "string" or needle == "" then
-		E:Print("usage: /run ElvUI[1].NamePlates:FindByTextDeep(\"Mob Name\")")
+-- ---------------------------------------------------------------------
+-- Layout
+-- ---------------------------------------------------------------------
+local function ConfigureHealthBar(frame)
+	local db = NP.db
+	local unitDB = UnitDB(frame).healthbar
+	local bar = frame.HealthBar
+	if not frame.healthShown then
+		bar:Hide()
 		return
 	end
-	root = root or UIParent
-	maxVisit = maxVisit or 5000
-	local visited, found = 0, 0
 
-	local function Walk(frame, depth)
-		if visited >= maxVisit then return end
-		visited = visited + 1
+	-- Real ElvUI: the target scale on the target, the threat scale on the rest.
+	local scale = ThreatScale(frame)
+	if frame.isTarget and db.useTargetScale then scale = db.targetScale end
+	bar:ClearAllPoints()
+	bar:SetPoint("TOP", frame, "CENTER", 0, UnitDB(frame).castbar.height + 3)
+	bar:SetWidth(unitDB.width * scale)
+	bar:SetHeight(unitDB.height * scale)
+	Util.SetStatusBarTexture(bar, Fetch("statusbar", db.statusbar))
 
-		local ok, regions = pcall(function() return { frame:GetRegions() } end)
-		if ok and type(regions) == "table" then
-			for j = 1, table.getn(regions) do
-				if ObjectType(regions[j]) == "FontString" then
-					local text = Call1(regions[j], "GetText")
-					if type(text) == "string" and string.find(text, needle, 1, true) then
-						found = found + 1
-						E:Print(string.format("depth=%d %s(%s)", depth,
-							tostring(ObjectType(frame)), tostring(Call1(frame, "GetName"))))
-						E:Print("  matched text: " .. text)
-					end
-				end
-			end
-		end
-
-		local ok2, kids = pcall(function() return { frame:GetChildren() } end)
-		if ok2 and type(kids) == "table" then
-			for i = 1, table.getn(kids) do
-				if kids[i] and visited < maxVisit then Walk(kids[i], depth + 1) end
-			end
-		end
+	local general = E.db.general
+	Util.SetStatusBarBackgroundColor(bar, general.backdropfadecolor.r, general.backdropfadecolor.g, general.backdropfadecolor.b, general.backdropfadecolor.a)
+	local i
+	for i = 1, 4 do
+		SetColor(bar.borderLines[i], general.bordercolor)
 	end
 
-	Walk(root, 0)
-	E:Print(string.format("visited=%d found=%d (maxVisit=%d, root=%s)",
-		visited, found, maxVisit, tostring(Call1(root, "GetName"))))
+	E:FontTemplate(bar.text, Fetch("font", db.font), db.fontSize, db.fontOutline)
+	bar:Show()
 end
 
--- Searches every WorldFrame child's fontstring text for `needle` (plain
--- substring, no pattern magic) and prints only the matches -- the
--- targeted alternative to DumpMouseFocus(), needed because
--- DumpMouseFocus() returns nothing even with the mouse directly over a
--- real, visible native nameplate. Shares a plausible root cause with bug
--- report EF-225 ("Nameplates are not clickable to target the mobs"): if
--- the native plate frame isn't mouse-enabled at all, neither
--- click-to-target nor GetMouseFocus() would ever see it, which is
--- exactly what both symptoms describe. Since hovering can't identify the
--- frame, this identifies it by CONTENT instead: Tab-target (not click --
--- per EF-225, click doesn't work) a real mob, note its exact name, then
--- run `/run ElvUI[1].NamePlates:FindByText("Elder Mottled Boar")` --
--- prints just the WorldFrame child(ren) whose own fontstring text
--- contains that name, instead of dumping dozens of irrelevant entries.
-function NP:FindByText(needle)
-	if type(needle) ~= "string" or needle == "" then
-		E:Print("usage: /run ElvUI[1].NamePlates:FindByText(\"Mob Name\")")
-		return
+local function ConfigureTexts(frame)
+	local db = NP.db
+	local font = Fetch("font", db.font)
+	local name, level, bar = frame.Name, frame.Level, frame.HealthBar
+	E:FontTemplate(name, font, db.fontSize, db.fontOutline)
+	E:FontTemplate(level, font, db.fontSize, db.fontOutline)
+	name:ClearAllPoints()
+	level:ClearAllPoints()
+	if frame.healthShown then
+		level:SetJustifyH("RIGHT")
+		level:SetPoint("BOTTOMRIGHT", bar, "TOPRIGHT", 0, BORDER * 2)
+		name:SetJustifyH("LEFT")
+		name:SetPoint("BOTTOMLEFT", bar, "TOPLEFT", 0, BORDER * 2)
+		name:SetPoint("BOTTOMRIGHT", level, "BOTTOMLEFT", 0, 0)
+	else
+		name:SetJustifyH("CENTER")
+		name:SetPoint("BOTTOM", frame, "CENTER", 0, 0)
+		level:SetJustifyH("LEFT")
+		level:SetPoint("LEFT", name, "RIGHT", 0, 0)
 	end
-	local count = tonumber(Call1(WorldFrame, "GetNumChildren")) or 0
-	local ok, kids = pcall(function() return { WorldFrame:GetChildren() } end)
-	if not ok or type(kids) ~= "table" then
-		E:Print("GetChildren() failed")
+end
+
+-- Real ElvUI's ConfigureElement_CastBar, the icon always on the right (its
+-- iconPosition setting is not read there either).
+local function ConfigureCastBar(frame)
+	local db = NP.db
+	local unitDB = UnitDB(frame)
+	local castDB = unitDB.castbar
+	local bar, health = frame.CastBar, frame.HealthBar
+	local font = Fetch("font", db.font)
+
+	-- Sized explicitly rather than by a second anchor: the fill is laid out
+	-- from GetWidth, which the 1.12.1 client reports scaled for frames sized
+	-- by their anchors.
+	bar:ClearAllPoints()
+	bar:SetPoint("TOPLEFT", health, "BOTTOMLEFT", 0, -castDB.offset)
+	bar:SetWidth(health:GetWidth())
+	bar:SetHeight(castDB.height)
+	Util.SetStatusBarTexture(bar, Fetch("statusbar", db.statusbar))
+	Util.SetStatusBarColor(bar, db.castColor.r, db.castColor.g, db.castColor.b, 1)
+
+	local general = E.db.general
+	local fade = general.backdropfadecolor
+	Util.SetStatusBarBackgroundColor(bar, fade.r, fade.g, fade.b, fade.a)
+	local i
+	for i = 1, 4 do
+		SetColor(bar.borderLines[i], general.bordercolor)
+		SetColor(bar.Icon.borderLines[i], general.bordercolor)
+	end
+
+	local icon = bar.Icon
+	icon:ClearAllPoints()
+	icon:SetPoint("TOPLEFT", health, "TOPRIGHT", castDB.offset, 0)
+	icon:SetPoint("BOTTOMLEFT", bar, "BOTTOMRIGHT", castDB.offset, 0)
+	icon:SetWidth(castDB.height + unitDB.healthbar.height + castDB.offset)
+
+	bar.Spark:SetWidth(15)
+	bar.Spark:SetHeight(castDB.height * 2)
+
+	E:FontTemplate(bar.Name, font, db.fontSize, db.fontOutline)
+	E:FontTemplate(bar.Time, font, db.fontSize, db.fontOutline)
+	bar.Time:ClearAllPoints()
+	bar.Time:SetPoint("TOPRIGHT", bar, "BOTTOMRIGHT", 0, -BORDER * 3)
+	bar.Time:SetJustifyH("RIGHT")
+	bar.Name:ClearAllPoints()
+	bar.Name:SetPoint("TOPLEFT", bar, "BOTTOMLEFT", 0, -BORDER * 3)
+	bar.Name:SetPoint("TOPRIGHT", bar.Time, "TOPLEFT", 0, 0)
+	bar.Name:SetJustifyH("LEFT")
+	if castDB.hideSpellName then bar.Name:Hide() else bar.Name:Show() end
+	if castDB.hideTime then bar.Time:Hide() else bar.Time:Show() end
+
+	bar.spell, bar.startTime, bar.holdUntil = nil, nil, nil
+	bar:Hide()
+end
+
+-- Real ElvUI's debuff row: above the name, as wide as the health bar, the
+-- icons sharing that width and filled from the right. Icons scale with the
+-- target health bar.
+local function ConfigureDebuffs(frame)
+	local db = NP.db
+	local unitDB = UnitDB(frame)
+	local debuffDB = unitDB.debuffs
+	local row, health = frame.Debuffs, frame.HealthBar
+	if not frame.healthShown or not debuffDB.enable then
+		row:Hide()
 		return
 	end
 
-	local found = 0
+	local count = debuffDB.numAuras
+	local scale = 1
+	if frame.isTarget and db.useTargetScale then scale = db.targetScale end
+	local width = (health:GetWidth() - count) / count - 3
+	local height = debuffDB.baseHeight * scale
+	local font = Fetch("font", db.font)
+	local general = E.db.general
+
+	local icons = row.icons
+	local i
 	for i = 1, count do
-		local child = kids[i]
-		if child then
-			local ok2, regions = pcall(function() return { child:GetRegions() } end)
-			if ok2 and type(regions) == "table" then
-				for j = 1, table.getn(regions) do
-					if ObjectType(regions[j]) == "FontString" then
-						local text = Call1(regions[j], "GetText")
-						if type(text) == "string" and string.find(text, needle, 1, true) then
-							found = found + 1
-							E:Print(string.format("[%d] %s(%s)",
-								i, tostring(ObjectType(child)), tostring(Call1(child, "GetName"))))
-							E:Print("  matched text: " .. text)
-							break
-						end
-					end
-				end
-			end
+		local aura = icons[i] or ConstructAuraIcon(row)
+		icons[i] = aura
+		aura:ClearAllPoints()
+		if i == 1 then
+			aura:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
+		else
+			aura:SetPoint("RIGHT", icons[i - 1], "LEFT", -AURA_SPACING, 0)
 		end
+		aura:SetWidth(width)
+		aura:SetHeight(height)
+		E:FontTemplate(aura.timeLeft, font, db.fontSize, db.fontOutline)
+		E:FontTemplate(aura.count, font, db.fontSize, db.fontOutline)
+		local j
+		for j = 1, 4 do SetColor(aura.borderLines[j], general.bordercolor) end
 	end
-	if found == 0 then
-		E:Print("no WorldFrame child's fontstring text contains \"" .. needle .. "\"")
+	for i = count + 1, getn(icons) do icons[i]:Hide() end
+
+	local offset = 3
+	if unitDB.showName then offset = offset + db.fontSize + 5 end
+	row:ClearAllPoints()
+	row:SetPoint("BOTTOMLEFT", health, "TOPLEFT", 0, offset)
+	row:SetPoint("BOTTOMRIGHT", health, "TOPRIGHT", 0, offset)
+	row:SetHeight(height)
+	row:Show()
+	frame.auraNext = 0
+end
+
+local function ConfigureRaidIcon(frame)
+	local icon = frame.RaidIcon
+	if not icon then return end
+	pcall(icon.ClearAllPoints, icon)
+	if frame.healthShown then
+		pcall(icon.SetPoint, icon, "RIGHT", frame.HealthBar, "LEFT", -6, 0)
+	else
+		pcall(icon.SetPoint, icon, "BOTTOM", frame.Name, "TOP", 0, 3)
 	end
 end
 
--- Prints the first `max` (default 10) WorldFrame children's own shape --
--- object type, region/child counts, and the actual texture paths/
--- fontstring text found -- whether or not they were adopted. Read-only,
--- mutates nothing. Use this when Report() shows 0 adopted and the reject
--- reasons alone aren't enough to tell what's actually there.
---
--- Pass an index (`/run ElvUI[1].NamePlates:Dump(nil, 3)` dumps only
--- WorldFrame child [3]) to inspect just one -- and every entry is now
--- SEVERAL short messages, not one long line, for the same reason
--- DumpAdopted() was split: a native chat frame scrolls per MESSAGE, not
--- per wrapped visual line, so one long message that wraps taller than
--- the visible chat panel can never be fully seen no matter how you
--- scroll.
-function NP:Dump(max, onlyIndex)
-	max = max or 10
-	local count = tonumber(Call1(WorldFrame, "GetNumChildren")) or 0
-	local ok, kids = pcall(function() return { WorldFrame:GetChildren() } end)
-	if not ok or type(kids) ~= "table" then
-		E:Print("GetChildren() failed")
+-- Strata and level of one of the plate's frames.
+local function Place(f, strata, level)
+	f:SetFrameStrata(strata)
+	f:SetFrameLevel(level)
+end
+
+-- Every frame of the plate takes the native plate's strata (BACKGROUND on
+-- Unreal Azeroth): a frame created as its child gets MEDIUM there, the
+-- strata of the action bars and most of the UI, and its levels would then
+-- interleave with theirs. Within that strata the target is raised above
+-- every other plate, as in real ElvUI. Every child frame is set again with
+-- it: on Unreal Azeroth a child frame left at or below its parent's level is
+-- not drawn. The target indicators and the name-only glow take the lowest
+-- level, behind the bars and the text.
+local function ConfigureLevels(frame)
+	local plate = frame.plate
+	local ok, base = pcall(plate.GetFrameLevel, plate)
+	if not ok or type(base) ~= "number" then base = 0 end
+	local okStrata, strata = pcall(plate.GetFrameStrata, plate)
+	if not okStrata or type(strata) ~= "string" then strata = "BACKGROUND" end
+	local level = base + 1
+	if frame.isTarget then level = level + TARGET_LEVEL end
+	Place(frame, strata, level)
+	Place(frame.Glow, strata, level + 1)
+	Place(frame.Glow2, strata, level + 1)
+	Place(frame.TopArrow, strata, level + 1)
+	Place(frame.LeftArrow, strata, level + 1)
+	Place(frame.RightArrow, strata, level + 1)
+	Place(frame.Name.NameOnlyGlow, strata, level + 1)
+	Place(frame.TextHolder, strata, level + 2)
+	Place(frame.Debuffs, strata, level + 2)
+	Place(frame.CastBar, strata, level + 2)
+	Place(frame.CastBar.Icon, strata, level + 3)
+	Place(frame.CastBar.Spark, strata, level + 3)
+	Place(frame.HealthBar, strata, level + 2)
+	Place(frame.HealthBar.textHolder, strata, level + 3)
+	Place(frame.CPoints, strata, level + 4)
+	local icons = frame.Debuffs.icons
+	local i
+	for i = 1, getn(icons) do
+		Place(icons[i], strata, level + 3)
+	end
+end
+
+function NP:ConfigurePlate(frame)
+	local unitDB = UnitDB(frame)
+	frame.healthShown = unitDB.healthbar.enable or (frame.isTarget and self.db.alwaysShowTargetHealth)
+	frame.uiScale = uiScale
+	frame:SetScale(ScaleFactor(frame.plate))
+	-- `false`, not nil: UpdateGlow's key for "no glow" is nil, and the
+	-- indicators shown before the re-layout must still be hidden.
+	frame.glowKey = false
+	frame.dirty = nil
+
+	MuteNative(frame)
+	ConfigureHealthBar(frame)
+	ConfigureCastBar(frame)
+	ConfigureDebuffs(frame)
+	ConfigureTexts(frame)
+	ConfigureRaidIcon(frame)
+	ConfigureLevels(frame)
+
+	if frame.healthShown then
+		self:UpdateHealth(frame)
+		Util.RefreshStatusBar(frame.HealthBar)
+		self:UpdateHealthColor(frame)
+	end
+	self:UpdateName(frame)
+	self:UpdateLevel(frame)
+	self:UpdateHighlight(frame)
+	self:UpdateCast(frame)
+	self:UpdateAuras(frame, GetTime())
+	frame.comboShown = nil
+	self:UpdateComboPoints(frame)
+	self:UpdateGlow(frame)
+	self:UpdateAlpha(frame)
+end
+
+-- ---------------------------------------------------------------------
+-- Update loop
+-- ---------------------------------------------------------------------
+function NP:ScanPlates()
+	local count = WorldFrame:GetNumChildren()
+	if count == numChildren then return end
+	numChildren = count
+	local kids = { WorldFrame:GetChildren() }
+	local i
+	for i = 1, getn(kids) do
+		local frame = kids[i]
+		if not frame.UnitFrame and IsNamePlate(frame) then
+			self:OnCreated(frame)
+		end
+	end
+end
+
+-- Per-frame values that do not need a new layout.
+function NP:RefreshPlate(frame)
+	if frame.healthShown then
+		local value, high = NativeHealth(frame)
+		if value ~= frame.healthValue or high ~= frame.healthMax then
+			if value <= 0 then ForgetUnit(frame) end
+			self:UpdateHealth(frame)
+			self:UpdateGlow(frame)
+		end
+	end
+	if NativeText(frame.oldLevel) ~= frame.levelText then
+		self:UpdateLevel(frame)
+	end
+	local mouseover = IsShown(frame.oldHighlight)
+	if mouseover ~= frame.isMouseover then
+		frame.isMouseover = mouseover
+		self:UpdateHighlight(frame)
+	end
+	if frame.hasTarget ~= self.hasTarget then
+		frame.hasTarget = self.hasTarget
+		self:UpdateAlpha(frame)
+	end
+	self:UpdateCast(frame)
+	self:UpdateAuras(frame, GetTime())
+	self:UpdateComboPoints(frame)
+	KeepMuted(frame)
+end
+
+-- Unreal Azeroth does not hide an addon frame with its hidden native plate:
+-- the frame stays drawn where the client parks the plate (the left screen
+-- edge), so it is hidden and shown here along with the plate, and also while
+-- the plate is held at a screen edge.
+function NP:UpdatePlate(frame)
+	local shown = IsShown(frame.plate)
+	if not shown and frame.plateShown then ForgetUnit(frame) end
+	frame.plateShown = shown
+	if not shown or AtScreenEdge(frame.plate) then
+		if frame.active then
+			frame.active = nil
+			frame:Hide()
+		end
 		return
 	end
-
-	local first, last = 1, count
-	if onlyIndex then
-		first, last = onlyIndex, onlyIndex
-	else
-		E:Print(string.format("WorldFrame has %d children, showing up to %d:", count, max))
+	local name = NativeText(frame.oldName)
+	local reaction, unitType = UnitInfo(frame)
+	local isTarget = self.hasTarget and IsLit(frame.plate)
+	-- Real ElvUI: a hostile "NPC" the class cache knows is an enemy player.
+	local class
+	if unitType ~= "FRIENDLY_NPC" and E.ClassCache then class = E.ClassCache:GetClassByName(name) end
+	if unitType == "ENEMY_NPC" and class then unitType = "ENEMY_PLAYER" end
+	local threat
+	if unitType == "ENEMY_NPC" or unitType == "ENEMY_PLAYER" then
+		threat = ThreatStatus(name)
 	end
+	if frame.dirty or not frame.active or name ~= frame.UnitName or unitType ~= frame.UnitType
+		or reaction ~= frame.UnitReaction or isTarget ~= frame.isTarget or frame.uiScale ~= uiScale
+		or class ~= frame.UnitClass or threat ~= frame.threatStatus then
+		frame.active = true
+		frame.UnitName = name
+		frame.UnitType = unitType
+		frame.UnitReaction = reaction
+		frame.UnitClass = class
+		frame.threatStatus = threat
+		frame.isTarget = isTarget
+		frame.isMouseover = IsShown(frame.oldHighlight)
+		frame.hasTarget = self.hasTarget
+		frame:Show()
+		self:ConfigurePlate(frame)
+		return
+	end
+	self:RefreshPlate(frame)
+end
 
-	local shown = 0
-	for i = first, last do
-		if not onlyIndex and shown >= max then break end
-		local child = kids[i]
-		if child then
-			shown = shown + 1
-			local ok2, regions = pcall(function() return { child:GetRegions() } end)
-			local textures, fontstrings, texts, paths = 0, 0, {}, {}
-			if ok2 and type(regions) == "table" then
-				for j = 1, table.getn(regions) do
-					local rtype = ObjectType(regions[j])
-					if rtype == "Texture" then
-						textures = textures + 1
-						local path = Call1(regions[j], "GetTexture")
-						if type(path) == "string" and table.getn(paths) < 3 then
-							table.insert(paths, string.sub(path, -28))
-						end
-					elseif rtype == "FontString" then
-						fontstrings = fontstrings + 1
-						local text = Call1(regions[j], "GetText")
-						if type(text) == "string" and table.getn(texts) < 3 then
-							table.insert(texts, text)
-						end
-					end
-				end
-			end
-			local ok3, subs = pcall(function() return { child:GetChildren() } end)
-			local children = (ok3 and type(subs) == "table") and table.getn(subs) or 0
+-- A failing plate update is reported once, not on every frame.
+local reported
 
-			E:Print(string.format("[%d] %s adopted=%s",
-				i, tostring(ObjectType(child)), tostring(registry[child] ~= nil)))
-			E:Print(string.format("  tex=%d fs=%d children=%d", textures, fontstrings, children))
-			E:Print("  texts={" .. table.concat(texts, ",") .. "}")
-			E:Print("  paths={" .. table.concat(paths, ",") .. "}")
-		elseif onlyIndex then
-			E:Print(string.format("[%d] no such WorldFrame child (has %d)", i, count))
+local function OnUpdate()
+	NP:ScanPlates()
+	NP.hasTarget = Compat.bool(UnitExists("target"))
+	NP.comboPoints = NP.hasTarget and ReadComboPoints() or 0
+	uiScale = ReadUIScale()
+	ScanThreat(GetTime())
+	local i
+	for i = 1, getn(plates) do
+		local ok, err = pcall(NP.UpdatePlate, NP, plates[i])
+		if not ok and not reported then
+			reported = true
+			local handler = geterrorhandler and geterrorhandler() or _ERRORMESSAGE
+			if handler then handler(err) end
 		end
 	end
 end
 
--- ---------------------------------------------------------------------
--- Lifecycle
--- ---------------------------------------------------------------------
+-- Re-applies the layout of every plate on its next update; the config calls
+-- this after a change.
+function NP:ConfigureAll()
+	self.db = E.db.nameplates
+	if not self.Frame then return end
+	local i
+	for i = 1, getn(plates) do
+		plates[i].dirty = true
+	end
+end
+
+-- Real ElvUI's combat toggles: TOGGLE_ON shows the plates in combat and hides
+-- them out of it, TOGGLE_OFF the other way round, DISABLED leaves them.
+local function ApplyCombatToggle(setting, inCombat, show, hide)
+	if setting == "TOGGLE_ON" then
+		if inCombat then show() else hide() end
+	elseif setting == "TOGGLE_OFF" then
+		if inCombat then hide() else show() end
+	end
+end
+
+local function ApplyCombatToggles(inCombat)
+	local db = NP.db
+	if ShowFriendNameplates and HideFriendNameplates then
+		ApplyCombatToggle(db.showFriendlyCombat, inCombat, ShowFriendNameplates, HideFriendNameplates)
+	end
+	if ShowNameplates and HideNameplates then
+		ApplyCombatToggle(db.showEnemyCombat, inCombat, ShowNameplates, HideNameplates)
+	end
+end
+
+function NP:PLAYER_REGEN_DISABLED()
+	ApplyCombatToggles(true)
+end
+
+function NP:PLAYER_REGEN_ENABLED()
+	ApplyCombatToggles(false)
+end
+
+function NP:CHARACTER_POINTS_CHANGED()
+	self:CheckRole()
+	self:ConfigureAll()
+end
+
+-- The client does not remember whether enemy nameplates were shown (the V
+-- key), so they start hidden every session; the module turns them on after
+-- each loading screen unless the enemy combat toggle decides. Friendly
+-- plates (Shift-V) are left to the player and the friendly combat toggle.
+function NP:PLAYER_ENTERING_WORLD()
+	if self.db.showEnemyCombat == "DISABLED" and ShowNameplates then ShowNameplates() end
+	ApplyCombatToggles(Compat.bool(UnitAffectingCombat("player")))
+	self:CheckRole()
+end
+
 function NP:Initialize()
-	-- Hard-disabled, confirmed dead end -- see this file's own top-of-file
-	-- banner comment. Unconditional return, independent of
-	-- E.private.nameplates.enable, so this can't be turned back on by a
-	-- config change or a copied-in real profile.
-	return
+	self.db = E.db.nameplates
+	if not E.private.nameplates.enable then return end
+
+	self.hasTarget = false
+	-- The cast tracker is shared with the target cast bar and starts once,
+	-- whichever of the two asks first.
+	UF = E.UnitFrames
+	if UF and UF.InitializeCastTracker then UF:InitializeCastTracker() end
+	self.Frame = CreateFrame("Frame")
+	self.Frame:SetScript("OnUpdate", OnUpdate)
+	self:RegisterEvent("PLAYER_ENTERING_WORLD")
+	self:RegisterEvent("PLAYER_REGEN_DISABLED")
+	self:RegisterEvent("PLAYER_REGEN_ENABLED")
+	self:RegisterEvent("CHARACTER_POINTS_CHANGED")
+	self:PLAYER_ENTERING_WORLD()
+	E.NamePlates = self
 end
 
 local function InitializeCallback()

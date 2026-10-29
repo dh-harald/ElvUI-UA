@@ -309,3 +309,7 @@ L["Lua error recorded. Type /elvui errors to view it."] = "Error de Lua registra
 L["Lua error window: opens automatically."] = "Ventana de error de Lua: se abre automáticamente."
 L["Lua error window: does not open automatically. /elvui errors shows recorded errors."] = "Ventana de error de Lua: no se abre automáticamente. /elvui errors muestra los errores registrados."
 
+--Class Cache
+L["Class DB cache wiped."] = "Caché de clases (base de datos) vaciada."
+L["Class session cache wiped."] = "Caché de clases (sesión) vaciada."
+

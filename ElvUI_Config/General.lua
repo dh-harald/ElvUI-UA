@@ -415,6 +415,60 @@ E.Options.args.general = {
 				},
 			},
 		},
+		-- Real ElvUI's class cache group (Core/ClassCache.lua), without its
+		-- LibWho toggle (classCacheRequestInfo): LibWho-2.0 is not shipped.
+		classCache = {
+			order = 4,
+			type = "group",
+			name = L["Class Cache"],
+			args = {
+				header = { order = 1, type = "header", name = L["Class Cache"] },
+				classCacheEnable = {
+					order = 2,
+					type = "toggle",
+					name = L["Enable"],
+					desc = L["Remembers the class of the players you see (target, mouseover, group, friends, guild, battleground score), so the nameplates can colour players by class."],
+					get = function() return E.private.general.classCache end,
+					set = function(_, value)
+						E.private.general.classCache = value
+						if E.ClassCache then E.ClassCache:ToggleModule() end
+						if E.NamePlates then E.NamePlates:ConfigureAll() end
+					end,
+				},
+				cache = {
+					order = 4,
+					type = "group",
+					name = L["Cache"],
+					guiInline = true,
+					disabled = function() return not E.private.general.classCache end,
+					args = {
+						classCacheStoreInDB = {
+							order = 1,
+							type = "toggle",
+							name = L["Store cache in DB"],
+							desc = L["Keeps the cache between sessions; otherwise it is wiped on relog or UI reload."],
+							get = function() return E.db.general.classCacheStoreInDB end,
+							set = function(_, value)
+								E.db.general.classCacheStoreInDB = value
+								if E.ClassCache then E.ClassCache:SwitchCacheType() end
+							end,
+						},
+						wipeClassCacheGlobal = {
+							order = 2,
+							type = "execute",
+							name = L["Wipe DB Cache"],
+							func = function() if E.ClassCache then E.ClassCache:WipeCache(true) end end,
+						},
+						wipeClassCacheLocal = {
+							order = 3,
+							type = "execute",
+							name = L["Wipe Session Cache"],
+							func = function() if E.ClassCache then E.ClassCache:WipeCache() end end,
+						},
+					},
+				},
+			},
+		},
 		-- Real ElvUI's totem tracker group (current ElvUI keeps it under
 		-- general > blizzardImprovements; ElvUI-vanilla's commented-out copy
 		-- sits here, at order 5). Read by Modules/Misc/Totems.lua.

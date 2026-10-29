@@ -259,9 +259,22 @@ local function UnitFrameFont(name)
 	return (LSM and LSM:Fetch("font", name or E.db.unitframe.font)) or "Fonts\\FRIZQT__.TTF"
 end
 
+-- Every string styled here is remembered, so UF:Update_FontStrings can apply a
+-- changed general font live (real ElvUI's function of the same name).
+local fontStrings = {}
+
 local function ApplyFont(fontString)
 	local db = E.db.unitframe
+	fontStrings[fontString] = true
 	pcall(fontString.SetFont, fontString, UnitFrameFont(), db.fontSize, ResolveOutline(db.fontOutline))
+end
+
+function UF:Update_FontStrings()
+	local fontString
+	for fontString in pairs(fontStrings) do
+		ApplyFont(fontString)
+	end
+	self:UpdateAll()
 end
 
 -- frame.Health -- a Util.CreateStatusBar bar, inset from the panel's own

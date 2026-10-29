@@ -350,3 +350,7 @@ L["To copy: click the text, then Ctrl+A and Ctrl+C."] = true
 L["Lua error recorded. Type /elvui errors to view it."] = true
 L["Lua error window: opens automatically."] = true
 L["Lua error window: does not open automatically. /elvui errors shows recorded errors."] = true
+
+--Class Cache
+L["Class DB cache wiped."] = true
+L["Class session cache wiped."] = true

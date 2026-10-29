@@ -1346,6 +1346,59 @@ E.Options.args.unitframe = {
 					},
 					},
 				},
+				-- Real ElvUI's fontGroup: the default font of every unit frame
+				-- text. A text with its own font settings keeps them.
+				fontGroup = {
+					order = 30,
+					type = "group",
+					name = L["Fonts"],
+					guiInline = true,
+					get = function(info) return E.db.unitframe[ info[getn(info)] ] end,
+					set = function(info, value)
+						E.db.unitframe[ info[getn(info)] ] = value
+						if E.UnitFrames then E.UnitFrames:Update_FontStrings() end
+					end,
+					args = {
+					font = {
+						order = 4,
+						type = "select",
+						dialogControl = "LSM30_Font",
+						name = L["Default Font"],
+						desc = L["The font that the unitframes will use."],
+						values = function()
+							local LSM = LibStub("LibSharedMedia-3.0", true)
+							local list = {}
+							if LSM then
+								local names = LSM:List("font")
+								local i
+								for i = 1, table.getn(names) do
+									list[names[i]] = names[i]
+								end
+							end
+							return list
+						end,
+					},
+					fontSize = {
+						order = 5,
+						type = "range",
+						name = L["Font Size"],
+						desc = L["Set the font size for unitframes."],
+						min = 4, max = 32, step = 1,
+					},
+					fontOutline = {
+						order = 6,
+						type = "select",
+						name = L["Font Outline"],
+						desc = L["Set the font outline."],
+						values = {
+							["NONE"] = L["None"],
+							["OUTLINE"] = L["Outline"],
+							["MONOCHROMEOUTLINE"] = L["Monochrome Outline"],
+							["THICKOUTLINE"] = L["Thick Outline"],
+						},
+					},
+					},
+				},
 					},
 				},
 				allColorsGroup = {
