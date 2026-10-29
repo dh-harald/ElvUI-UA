@@ -640,9 +640,10 @@ P.datatexts = {
 -- The subset of real ElvUI's `P["nameplates"]` (ElvUI-vanilla
 -- Settings/Profile.lua:202) that the NamePlates module and skin read, with
 -- real ElvUI's values. Of the per-unit-type `units` tree the health bar, cast
--- bar, debuff, name and level parts are declared; buffs, combo points and the
--- elite icon come with their elements. Of a `filters.priority` string only
--- the tokens "Personal" and "blockNoDuration" are read (no aura lists).
+-- bar, buff, debuff, name and level parts are declared; the elite icon comes
+-- with its element. The aura `filters` are read by
+-- Modules/UnitFrames/AuraFilter.lua (lists: G.unitframe.aurafilters).
+-- ElvUI-vanilla's FRIENDLY_PLAYER buffs have no baseHeight; 18 is used.
 P.nameplates = {
 	statusbar = "ElvUI Norm",
 	font = "PT Sans Narrow",
@@ -725,6 +726,11 @@ P.nameplates = {
 				timeToHold = 0,
 				iconPosition = "RIGHT",
 			},
+			buffs = {
+				enable = true,
+				numAuras = 4,
+				filters = { minDuration = 0, maxDuration = 0, priority = "Blacklist,blockNoDuration,Personal,TurtleBuffs" },
+			},
 			debuffs = {
 				enable = true,
 				numAuras = 4,
@@ -754,6 +760,12 @@ P.nameplates = {
 				timeToHold = 0,
 				iconPosition = "RIGHT",
 			},
+			buffs = {
+				enable = true,
+				numAuras = 4,
+				baseHeight = 18,
+				filters = { minDuration = 0, maxDuration = 120, priority = "Blacklist,PlayerBuffs,TurtleBuffs" },
+			},
 			debuffs = {
 				enable = true,
 				numAuras = 4,
@@ -782,6 +794,12 @@ P.nameplates = {
 				timeToHold = 0,
 				iconPosition = "RIGHT",
 			},
+			buffs = {
+				enable = true,
+				numAuras = 4,
+				baseHeight = 18,
+				filters = { minDuration = 0, maxDuration = 0, priority = "Blacklist,blockNoDuration,Personal,TurtleBuffs" },
+			},
 			debuffs = {
 				enable = true,
 				numAuras = 4,
@@ -808,6 +826,12 @@ P.nameplates = {
 				channelTimeFormat = "CURRENT",
 				timeToHold = 0,
 				iconPosition = "RIGHT",
+			},
+			buffs = {
+				enable = true,
+				numAuras = 4,
+				baseHeight = 18,
+				filters = { minDuration = 0, maxDuration = 0, priority = "Blacklist,blockNoDuration,PlayerBuffs,TurtleBuffs" },
 			},
 			debuffs = {
 				enable = true,
@@ -1660,3 +1684,21 @@ P.unitframe.units.party = {
 		maxDuration = 0,
 	},
 }
+
+-- Aura filter priority strings of the frame-attached icon grids, read by
+-- Modules/UnitFrames/AuraFilter.lua (UF:AuraPasses) together with the same
+-- table's minDuration / maxDuration. Retail ElvUI's defaults verbatim
+-- (Game/Shared/Defaults/Profile.lua); ElvUI-vanilla's aura code reads
+-- `priority` too but declares no default.
+P.unitframe.units.player.buffs.priority = "Blacklist,Whitelist,blockNoDuration,Personal,NonPersonal"
+P.unitframe.units.player.debuffs.priority = "Blacklist,Personal,NonPersonal"
+P.unitframe.units.target.buffs.priority = "Blacklist,Personal,NonPersonal"
+P.unitframe.units.target.debuffs.priority = "Blacklist,Friendly:Dispellable,Personal"
+P.unitframe.units.targettarget.buffs.priority = "Blacklist,Personal,Dispellable"
+P.unitframe.units.targettarget.debuffs.priority = "Blacklist,Friendly:Dispellable,Personal,CCDebuffs"
+P.unitframe.units.pet.buffs.priority = "Blacklist,Whitelist,Personal"
+P.unitframe.units.pet.debuffs.priority = "Blacklist,Dispellable,CCDebuffs"
+P.unitframe.units.pettarget.buffs.priority = "Blacklist,Personal,NonPersonal"
+P.unitframe.units.pettarget.debuffs.priority = "Blacklist,Dispellable,RaidDebuffs"
+P.unitframe.units.party.buffs.priority = "Blacklist,TurtleBuffs"
+P.unitframe.units.party.debuffs.priority = "Blacklist,Dispellable,RaidDebuffs,CCDebuffs"

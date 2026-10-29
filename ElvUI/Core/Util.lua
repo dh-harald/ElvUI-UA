@@ -116,6 +116,56 @@ E.InversePoints = {
 	CENTER = "CENTER",
 }
 
+-- Debuff types each class can remove from a friendly unit, read by the aura
+-- filters' "Dispellable" entry (Modules/UnitFrames/AuraFilter.lua).
+-- ElvUI-vanilla's E.DispelClasses (its Core/core.lua), corrected to the 1.12
+-- spell set: a Shaman has Cure Poison and Cure Disease but no curse removal.
+-- The Warlock's pet dispel is handled in E:IsDispellableByMe.
+-- The character's level is not checked, so a low-level character counts as
+-- able to remove what its class can remove at all.
+E.DispelClasses = {
+	PRIEST = { Magic = true, Disease = true },
+	SHAMAN = { Poison = true, Disease = true },
+	PALADIN = { Magic = true, Poison = true, Disease = true },
+	MAGE = { Curse = true },
+	DRUID = { Curse = true, Poison = true },
+}
+
+-- A Warlock removes Magic only through the Felhunter's Devour Magic, found on
+-- the pet action bar by its icon, which is the same in every client
+-- language. Unreal Azeroth reports the icon as an engine asset path
+-- ("/Game/Interface/Icons/Spell_Nature_Purge_TEX"), the 1.12.1 client as
+-- "Interface\Icons\Spell_Nature_Purge", hence the substring test. Cached for
+-- a second: the unit frames ask once per debuff on every poll tick.
+local DEVOUR_MAGIC_ICON = "spell_nature_purge"
+local petDispelCheckedAt, petCanDispel = 0, false
+
+local function PetCanDevourMagic()
+	local now = GetTime()
+	if now - petDispelCheckedAt < 1 then return petCanDispel end
+	petDispelCheckedAt, petCanDispel = now, false
+	if not GetPetActionInfo then return false end
+	local i
+	for i = 1, 10 do
+		local ok, _, _, texture = pcall(GetPetActionInfo, i)
+		if ok and type(texture) == "string"
+			and string.find(string.lower(texture), DEVOUR_MAGIC_ICON, 1, true) then
+			petCanDispel = true
+			break
+		end
+	end
+	return petCanDispel
+end
+
+function E:IsDispellableByMe(debuffType)
+	if not debuffType then return false end
+	if self.myclass == "WARLOCK" then
+		return debuffType == "Magic" and PetCanDevourMagic()
+	end
+	local types = self.DispelClasses[self.myclass]
+	return types and types[debuffType] and true or false
+end
+
 -- Abbreviates a number the way real ElvUI's own `E:ShortValue` does
 -- (ElvUI-vanilla/ElvUI/Core/math.lua:15-73): 1700 -> "1.7K". Driven by
 -- two profile fields, `E.db.general.numberPrefixStyle` (which prefix set) and

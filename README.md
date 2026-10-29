@@ -134,8 +134,10 @@ Two addons ship together:
   the target scaled up with ElvUI's target indicator (glow or arrows) and
   the other plates faded, low-health glow, mouseover highlight, raid icon,
   optional health text, cast bar with spell icon (from the combat log, like
-  the target cast bar), your own debuffs with time left (remembered on
-  every plate you targeted or hovered), combo points on the target's plate;
+  the target cast bar), buffs and debuffs filtered like ElvUI's (your own
+  debuffs with time left, crowd control, defensive cooldowns on enemy
+  players; ElvUI's Classic aura lists, matched by name) and remembered on
+  every plate you targeted or hovered, combo points on the target's plate;
   threat colour and scale (from whom the mob is attacking, tank-aware; with
   LibVanillaThreat-1.0 loaded, also the "about to pull it off your pet"
   transition colours),
@@ -182,8 +184,9 @@ Two addons ship together:
   action slot)
 - A handful of native windows not yet reskinned (Tabard and a few more
   niche ones)
-- NamePlates: buffs, aura filter lists, threat transition colours, style
-  filters, and the click settings
+- NamePlates: style filters, the click settings, and an editor for the
+  per-element aura filter priority (the aura lists themselves are editable
+  under Filters)
 - Heal prediction: channelled heals (Tranquility, Mend Pet, bandages) are not
   predicted, Chain Heal only on its first target, and another player's
   heal-over-time only by estimate until its first tick (the HealComm protocol

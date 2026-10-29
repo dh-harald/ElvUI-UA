@@ -80,7 +80,7 @@ L["You don't have enough money to repair."] = "No tienes suficiente dinero para 
 L["Leave %s"] = "Salir de %s"
 
 --Tooltip (fallbacks for a missing client global)
-L["Level"] = "Level"
+L["Level"] = "Nivel"
 L["Rare"] = "Raro"
 L["Dead"] = "Dead"
 L["Currently Equipped"] = "Actualmente equipado"

@@ -178,7 +178,53 @@ end
 -- UnitFrames.lua's own "Buffs/Debuffs" header comment on the 3 duration
 -- tiers) -- an aura with no known duration always passes through
 -- regardless of these, same as real ElvUI's own behavior.
-local function AuraArgs(getTable, order)
+--
+-- `filters` is real ElvUI's inline group: the two duration limits and the
+-- filter-priority editor (retail ElvUI's specialFilters / filter /
+-- resetPriority / filterPriority) for the table's `priority` string.
+-- ElvUI-vanilla's useBlacklist / useWhitelist / noDuration / useFilter
+-- controls are left out: its aura code no longer reads those keys.
+local function AuraFilterGroup(getTable, order, dbKey, key)
+	local group = {
+		type = "group",
+		name = L["Filters"],
+		order = order,
+		guiInline = true,
+		args = {
+			minDuration = {
+				type = "range",
+				name = L["Min Duration"],
+				desc = L["Only show an aura if its remaining duration is at least this many seconds. 0 = no minimum. Has no effect on an aura with no known duration."],
+				order = 1,
+				min = 0, max = 300, step = 1,
+				get = function() return getTable().minDuration end,
+				set = function(_, value) getTable().minDuration = value end,
+			},
+			maxDuration = {
+				type = "range",
+				name = L["Max Duration"],
+				desc = L["Only show an aura if its remaining duration is at most this many seconds. 0 = no maximum. Has no effect on an aura with no known duration."],
+				order = 2,
+				min = 0, max = 600, step = 1,
+				get = function() return getTable().maxDuration end,
+				set = function(_, value) getTable().maxDuration = value end,
+			},
+		},
+	}
+	-- No apply step: the frames re-read their settings on the next poll tick.
+	local editor = Shared.FilterPriorityArgs(
+		"unitframe." .. dbKey .. "." .. key,
+		getTable,
+		function() return P.unitframe.units[dbKey][key].priority end,
+		function() end,
+		nil,
+		3)
+	local option, entry
+	for option, entry in pairs(editor) do group.args[option] = entry end
+	return group
+end
+
+local function AuraArgs(getTable, order, dbKey, key)
 	return {
 		enable = {
 			type = "toggle",
@@ -259,8 +305,8 @@ local function AuraArgs(getTable, order)
 		-- offered: INDEX (the order the client hands the auras back) and
 		-- TIME_REMAINING. Upstream also lists DURATION, NAME and PLAYER --
 		-- deliberately left out rather than shown broken: we track remaining time
-		-- but not total duration, have no aura-name lookup for buffs (only
-		-- debuffs, via the tooltip scan), and no caster information at all.
+		-- but not total duration, read names only for filtering, and know the
+		-- caster only for the player's own casts.
 		sortMethod = {
 			type = "select",
 			name = L["Sort By"],
@@ -300,24 +346,7 @@ local function AuraArgs(getTable, order)
 			get = function() return getTable().yOffset end,
 			set = function(_, value) getTable().yOffset = value end,
 		},
-		minDuration = {
-			type = "range",
-			name = L["Min Duration"],
-			desc = L["Only show an aura if its remaining duration is at least this many seconds. 0 = no minimum. Has no effect on an aura with no known duration."],
-			order = order + 5,
-			min = 0, max = 300, step = 1,
-			get = function() return getTable().minDuration end,
-			set = function(_, value) getTable().minDuration = value end,
-		},
-		maxDuration = {
-			type = "range",
-			name = L["Max Duration"],
-			desc = L["Only show an aura if its remaining duration is at most this many seconds. 0 = no maximum. Has no effect on an aura with no known duration."],
-			order = order + 6,
-			min = 0, max = 600, step = 1,
-			get = function() return getTable().maxDuration end,
-			set = function(_, value) getTable().maxDuration = value end,
-		},
+		filters = AuraFilterGroup(getTable, order + 21, dbKey, key),
 	}
 end
 
@@ -1087,7 +1116,7 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasCastba
 			name = L["Buffs"],
 			order = 8,
 			args = (function()
-				local buffArgs = AuraArgs(function() return unitTable().buffs end, 2)
+				local buffArgs = AuraArgs(function() return unitTable().buffs end, 2, dbKey, "buffs")
 				buffArgs.intro = {
 					type = "description",
 					order = 1,
@@ -1106,7 +1135,7 @@ local function UnitFrameArgs(dbKey, hasRestIcon, hasDebuffs, hasBuffs, hasCastba
 			name = L["Debuffs"],
 			order = 9,
 			args = (function()
-				local debuffArgs = AuraArgs(function() return unitTable().debuffs end, 2)
+				local debuffArgs = AuraArgs(function() return unitTable().debuffs end, 2, dbKey, "debuffs")
 				debuffArgs.intro = {
 					type = "description",
 					order = 1,
@@ -1243,7 +1272,7 @@ end
 E.Options.args.unitframe = {
 	type = "group",
 	name = L["UnitFrames"],
-	order = 7,
+	order = 2,
 	-- "tree" (a real sidebar-nested dropdown), not "tab": the
 	-- general/player/pet/target/target-of-target/pet-target
 	-- sections live under UnitFrame's own dropdown menu, matching

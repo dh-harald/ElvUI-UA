@@ -1,4 +1,5 @@
 local E, L, V, P, G = unpack(ElvUI)
+local _G = _G or getfenv()
 local NP = E:NewModule("NamePlates", "AceEvent-3.0")
 
 -- NamePlates -- real ElvUI's nameplates (ElvUI-vanilla Modules/NamePlates),
@@ -53,8 +54,8 @@ local NP = E:NewModule("NamePlates", "AceEvent-3.0")
 -- (UnitFrames/CastTracker.lua), which has no channels and cannot tell
 -- same-named units apart.
 --
--- Debuffs: read while the plate is the target or under the mouse and kept
--- on the plate until they run out (see UpdateAuras).
+-- Buffs and debuffs: read while the plate is the target or under the mouse
+-- and kept on the plate until they run out (see UpdateAuras).
 --
 -- Threat: each hostile mob's own target, refined by LibVanillaThreat-1.0
 -- when an addon loads it (see ScanThreat).
@@ -62,8 +63,8 @@ local NP = E:NewModule("NamePlates", "AceEvent-3.0")
 -- Class colours: from the class cache (Core/ClassCache.lua) by name; a
 -- hostile plate whose name the cache knows is an enemy player.
 --
--- Not ported yet: buffs, style filters, motion type, click-through and
--- clickable size, the elite icon, and the size animation.
+-- Not ported yet: style filters, motion type, click-through and clickable
+-- size, the elite icon, and the size animation.
 
 local LSM = LibStub("LibSharedMedia-3.0", true)
 local LVD = LibStub("LibVanillaDurations-1.0", true)
@@ -84,6 +85,11 @@ local ICON_COORDS = { 0.08, 0.92, 0.08, 0.92 }
 local BUBBLE = MEDIA .. "bubbleTex"
 local MAX_COMBO = 5
 local MAX_DEBUFFS = 16
+local MAX_BUFFS = 32
+-- ElvUI-vanilla's FRIENDLY_PLAYER buffs have no baseHeight; its aura code
+-- falls back to 18.
+local AURA_HEIGHT = 18
+local SCAN_TIP = "ElvUI_NamePlateScanTooltip"
 -- Real ElvUI polls aura timers at this interval.
 local AURA_INTERVAL = 0.1
 -- Real ElvUI's spacing between aura icons (E.Border + E.Spacing * 3).
@@ -378,11 +384,16 @@ local function ConstructAuraIcon(row)
 	return aura
 end
 
-local function ConstructDebuffs(frame)
+-- An aura row; `side` is where its first icon sits (ElvUI-vanilla: buffs
+-- fill from the left, debuffs from the right).
+local function ConstructAuraRow(frame, side)
 	local row = CreateFrame("Frame", nil, frame)
 	row:SetFrameLevel(frame:GetFrameLevel() + 1)
-	row:SetHeight(18)
+	row:SetHeight(AURA_HEIGHT)
 	row.icons = {}
+	row.cache = {}
+	row.names = {}
+	row.side = side
 	row:Hide()
 	return row
 end
@@ -452,8 +463,10 @@ function NP:OnCreated(plate)
 
 	frame.HealthBar = ConstructHealthBar(frame)
 	frame.CastBar = ConstructCastBar(frame)
-	frame.Debuffs = ConstructDebuffs(frame)
-	frame.debuffCache = {}
+	frame.Buffs = ConstructAuraRow(frame, "LEFT")
+	frame.Buffs.key = "buffs"
+	frame.Debuffs = ConstructAuraRow(frame, "RIGHT")
+	frame.Debuffs.key = "debuffs"
 	frame.CPoints = ConstructComboPoints(frame)
 	ConstructGlow(frame)
 	ConstructTexts(frame)
@@ -533,9 +546,11 @@ end
 -- threat settings unused), so the mob's own target decides who it attacks:
 -- every group member's target, the pet's, the player's target and mouseover
 -- are read; a hostile mob in combat whose target is the player is status 3
--- ("tanking"), one targeting anybody else is status 0. The state is kept by
--- the mob's name for THREAT_MEMORY seconds, so plates of mobs nobody targets
--- keep it a while; same-named mobs share it.
+-- ("tanking"), one targeting anybody else is status 0, and one with no
+-- target at all (fleeing, feared) has no status: its plate falls back to the
+-- reaction colour and normal size. The state is kept by the mob's name for
+-- THREAT_MEMORY seconds, so plates of mobs nobody targets keep it a while;
+-- same-named mobs share it.
 --
 -- LibVanillaThreat-1.0, when an addon loads it, refines that within the
 -- observed victim, never against it. It estimates only the player's and the
@@ -583,10 +598,13 @@ end
 local function ReadThreat(unit, now)
 	if not Compat.bool(UnitExists(unit)) or Compat.bool(UnitIsDeadOrGhost(unit)) then return end
 	if not Compat.bool(UnitCanAttack("player", unit)) or not Compat.bool(UnitAffectingCombat(unit)) then return end
-	local mobTarget = unit .. "target"
-	if not Compat.bool(UnitExists(mobTarget)) then return end
 	local name = UnitName(unit)
 	if not name then return end
+	local mobTarget = unit .. "target"
+	if not Compat.bool(UnitExists(mobTarget)) then
+		threatByName[name] = { status = false, time = now }
+		return
+	end
 	local status = Compat.bool(UnitIsUnit(mobTarget, "player")) and 3 or 0
 	threatByName[name] = { status = RefineThreat(status, name, mobTarget), time = now }
 end
@@ -611,10 +629,11 @@ local function ScanThreat(now)
 end
 
 -- The plate's threat status: the observed one, else (out of a group) the
--- library's top threat holder.
+-- library's top threat holder. A mob seen without a target stays without a
+-- status, whatever the library holds.
 local function ThreatStatus(name)
 	local entry = threatByName[name]
-	if entry then return entry.status end
+	if entry then return entry.status or nil end
 	local lib = threatSolo and ThreatLib()
 	if not lib then return nil end
 	local value, top = lib:GetMaxThreatOnTarget(name)
@@ -952,47 +971,76 @@ function NP:UpdateCast(frame)
 	end
 end
 
--- Debuffs, after pfUI's nameplates: a plate carries no unit, so its debuffs
--- are read while it is the target or under the mouse, and kept on the plate
--- until they run out; the plate shows the kept list the rest of the time.
--- The list is dropped when the plate shows another name. Names and times
--- come from LibVanillaDurations-1.0; "mine" is its stamp of the player's
--- own cast (UnitFrames/OwnAuras.lua). Debuffs without a known duration are
--- kept only while the unit is read live.
+-- Buffs and debuffs, after pfUI's nameplates: a plate carries no unit, so
+-- its auras are read while it is the target or under the mouse, and kept on
+-- the plate until they run out; the plate shows the kept lists the rest of
+-- the time. A list is dropped when the plate shows another name. Debuff
+-- names and times come from LibVanillaDurations-1.0, where "mine" is the
+-- stamp of the player's own cast (UnitFrames/OwnAuras.lua). Buff names come
+-- from a tooltip scan; a buff has a time only when the player cast it
+-- (OwnAuras), and that also makes it "mine". Auras without a known duration
+-- are kept only while the unit is read live. Filtering is real ElvUI's
+-- `filters` (UnitFrames/AuraFilter.lua).
 local function LiveUnit(frame)
 	if frame.isTarget and UnitName("target") == frame.UnitName then return "target" end
 	if frame.isMouseover and UnitName("mouseover") == frame.UnitName then return "mouseover" end
 	return nil
 end
 
--- Real ElvUI's filters.priority tokens that need no aura list: "Personal"
--- (the player's own debuffs only) and "blockNoDuration". The list tokens
--- (Blacklist, CCDebuffs, RaidDebuffs, ...) have no lists here.
-local function HasToken(priority, token)
-	return type(priority) == "string" and string.find("," .. priority .. ",", "," .. token .. ",", 1, true) ~= nil
+local function IsFriendly(frame)
+	return frame.UnitType == "FRIENDLY_PLAYER" or frame.UnitType == "FRIENDLY_NPC"
 end
 
-local function PassesFilters(filters, mine, duration)
-	if HasToken(filters.priority, "Personal") and not mine then return false end
-	if not duration then return not HasToken(filters.priority, "blockNoDuration") end
-	if filters.maxDuration and filters.maxDuration > 0 and duration > filters.maxDuration then return false end
-	if filters.minDuration and filters.minDuration > 0 and duration < filters.minDuration then return false end
-	return true
+local scanTip
+
+-- First line of the buff's tooltip. The owner is set on every scan: the
+-- Hide at the end clears it, and on the 1.12 client an unowned tooltip is
+-- not filled.
+local function ScanBuffName(unit, index)
+	if not scanTip then
+		local ok, tip = pcall(CreateFrame, "GameTooltip", SCAN_TIP, nil, "GameTooltipTemplate")
+		if not ok or not tip then return nil end
+		scanTip = tip
+	end
+	pcall(scanTip.SetOwner, scanTip, UIParent, "ANCHOR_NONE")
+	pcall(scanTip.ClearLines, scanTip)
+	local name
+	if pcall(scanTip.SetUnitBuff, scanTip, unit, index) then
+		local line = _G[SCAN_TIP .. "TextLeft1"]
+		name = line and line:GetText()
+	end
+	pcall(scanTip.Hide, scanTip)
+	if name == "" then name = nil end
+	return name
+end
+
+-- Buff names per slot, scanned again only when the slot's texture or the
+-- unit's name changes.
+local function BuffName(row, unit, unitName, index, texture)
+	local slot = row.names[index]
+	if not slot or slot.texture ~= texture or slot.unitName ~= unitName then
+		slot = { texture = texture, unitName = unitName, name = ScanBuffName(unit, index) }
+		row.names[index] = slot
+	end
+	return slot.name
+end
+
+local function StartCollect(frame, row)
+	local cache = Compat.wipe(row.cache)
+	row.cacheName = frame.UnitName
+	return cache, UnitDB(frame)[row.key].filters, IsFriendly(frame)
 end
 
 local function CollectDebuffs(frame, unit, now)
-	local cache, filters = frame.debuffCache, UnitDB(frame).debuffs.filters
+	local cache, filters, friendly = StartCollect(frame, frame.Debuffs)
 	local unitName = UnitName(unit)
-	local k
-	for k in pairs(cache) do cache[k] = nil end
-	frame.debuffCacheName = frame.UnitName
 	local i
 	for i = 1, MAX_DEBUFFS do
-		local ok, texture, count = pcall(UnitDebuff, unit, i)
+		local ok, texture, count, dispelType = pcall(UnitDebuff, unit, i)
 		if ok and texture then
 			local name, left, duration = LVD:GetDebuff(unit, i)
 			local _, _, mine = LVD:GetStamp(unitName, name)
-			if name and PassesFilters(filters, mine, duration) then
+			if name and UF:AuraPasses(filters, name, mine, friendly, duration, E:IsDispellableByMe(dispelType)) then
 				table.insert(cache, {
 					texture = texture,
 					count = tonumber(count) or 0,
@@ -1003,13 +1051,33 @@ local function CollectDebuffs(frame, unit, now)
 	end
 end
 
--- The kept list without the debuffs that ran out or have no time; called
+local function CollectBuffs(frame, unit, now)
+	local row = frame.Buffs
+	local cache, filters, friendly = StartCollect(frame, row)
+	local unitName = UnitName(unit)
+	local i
+	for i = 1, MAX_BUFFS do
+		local ok, texture, count = pcall(UnitBuff, unit, i)
+		if not ok or not texture then break end
+		local name = BuffName(row, unit, unitName, i, texture)
+		local left, duration
+		if name and UF.GetOwnAuraTimeLeft then left, duration = UF:GetOwnAuraTimeLeft(unitName, name) end
+		if name and UF:AuraPasses(filters, name, left ~= nil, friendly, duration) then
+			table.insert(cache, {
+				texture = texture,
+				count = tonumber(count) or 0,
+				expiration = left and (now + left) or nil,
+			})
+		end
+	end
+end
+
+-- The kept list without the auras that ran out or have no time; called
 -- while the unit is not read live.
-local function PruneDebuffs(frame, now)
-	local cache = frame.debuffCache
-	if frame.debuffCacheName ~= frame.UnitName then
-		local k
-		for k in pairs(cache) do cache[k] = nil end
+local function PruneAuras(frame, row, now)
+	local cache = row.cache
+	if row.cacheName ~= frame.UnitName then
+		Compat.wipe(cache)
 		return
 	end
 	local i = getn(cache)
@@ -1036,45 +1104,83 @@ local function SetAuraTime(aura, left)
 	aura.timeLeft:SetTextColor(color[1], color[2], color[3])
 end
 
-local function DrawDebuffs(frame, now)
-	local icons, cache = frame.Debuffs.icons, frame.debuffCache
+-- Fills the row's icons from its kept list; returns how many are shown.
+local function DrawAuras(frame, row, now)
+	local icons, cache = row.icons, row.cache
+	local limit = UnitDB(frame)[row.key].numAuras
+	local shown = 0
 	local i
 	for i = 1, getn(icons) do
 		local aura, data = icons[i], cache[i]
-		if data and i <= UnitDB(frame).debuffs.numAuras then
+		if data and i <= limit then
 			aura.icon:SetTexture(data.texture)
 			if data.count > 1 then aura.count:SetText(data.count) else aura.count:SetText("") end
 			SetAuraTime(aura, data.expiration and (data.expiration - now))
 			aura:Show()
+			shown = shown + 1
 		else
 			aura:Hide()
 		end
 	end
+	return shown
+end
+
+-- ElvUI-vanilla: the debuff row sits above the name and the buff row above
+-- the debuffs, or in the debuffs' place while no debuff is shown.
+local function AuraRowOffset(frame)
+	local offset = 3
+	if UnitDB(frame).showName then offset = offset + NP.db.fontSize + 5 end
+	return offset
+end
+
+local function AnchorAuraRow(frame, row, above)
+	row:ClearAllPoints()
+	if above then
+		row:SetPoint("BOTTOMLEFT", above, "TOPLEFT", 0, 3)
+		row:SetPoint("BOTTOMRIGHT", above, "TOPRIGHT", 0, 3)
+	else
+		local offset = AuraRowOffset(frame)
+		row:SetPoint("BOTTOMLEFT", frame.HealthBar, "TOPLEFT", 0, offset)
+		row:SetPoint("BOTTOMRIGHT", frame.HealthBar, "TOPRIGHT", 0, offset)
+	end
+end
+
+local function PlaceBuffs(frame, aboveDebuffs)
+	if frame.buffsAbove == aboveDebuffs then return end
+	frame.buffsAbove = aboveDebuffs
+	AnchorAuraRow(frame, frame.Buffs, aboveDebuffs and frame.Debuffs or nil)
 end
 
 -- The client hands a native plate to another unit once its unit dies or
 -- leaves the plate range, and hides it in between (Unreal Azeroth: a plate
--- whose unit is merely off screen stays shown). The debuffs the plate kept
--- are dropped then, and when its health reads 0, so a later unit of the same
+-- whose unit is merely off screen stays shown). The auras the plate kept are
+-- dropped then, and when its health reads 0, so a later unit of the same
 -- name does not inherit them.
 local function ForgetUnit(frame)
-	local cache = frame.debuffCache
-	local k
-	for k in pairs(cache) do cache[k] = nil end
-	frame.debuffCacheName = nil
+	local rows = { frame.Buffs, frame.Debuffs }
+	local i
+	for i = 1, 2 do
+		Compat.wipe(rows[i].cache)
+		rows[i].cacheName = nil
+	end
 	frame.auraNext = 0
 end
 
 function NP:UpdateAuras(frame, now)
-	if not frame.Debuffs:IsShown() or now < (frame.auraNext or 0) then return end
+	local buffs, debuffs = frame.Buffs, frame.Debuffs
+	if not (buffs.enabled or debuffs.enabled) or now < (frame.auraNext or 0) then return end
 	frame.auraNext = now + AURA_INTERVAL
-	local unit = LVD and LiveUnit(frame)
-	if unit then
-		CollectDebuffs(frame, unit, now)
-	else
-		PruneDebuffs(frame, now)
+	local unit = LiveUnit(frame)
+	local numDebuffs = 0
+	if debuffs.enabled then
+		if unit and LVD then CollectDebuffs(frame, unit, now) else PruneAuras(frame, debuffs, now) end
+		numDebuffs = DrawAuras(frame, debuffs, now)
 	end
-	DrawDebuffs(frame, now)
+	if buffs.enabled then
+		if unit then CollectBuffs(frame, unit, now) else PruneAuras(frame, buffs, now) end
+		DrawAuras(frame, buffs, now)
+		PlaceBuffs(frame, numDebuffs > 0)
+	end
 end
 
 -- 1.12.1 and Unreal Azeroth take no arguments; the two-argument form of
@@ -1229,24 +1335,24 @@ local function ConfigureCastBar(frame)
 	bar:Hide()
 end
 
--- Real ElvUI's debuff row: above the name, as wide as the health bar, the
--- icons sharing that width and filled from the right. Icons scale with the
--- target health bar.
-local function ConfigureDebuffs(frame)
+-- Real ElvUI's aura row: as wide as the health bar, the icons sharing that
+-- width. Icons scale with the target health bar. The rows are anchored by
+-- AnchorAuraRow / PlaceBuffs.
+local function ConfigureAuraRow(frame, row)
 	local db = NP.db
-	local unitDB = UnitDB(frame)
-	local debuffDB = unitDB.debuffs
-	local row, health = frame.Debuffs, frame.HealthBar
-	if not frame.healthShown or not debuffDB.enable then
+	local auraDB = UnitDB(frame)[row.key]
+	local health = frame.HealthBar
+	if not frame.healthShown or not auraDB or not auraDB.enable then
+		row.enabled = nil
 		row:Hide()
 		return
 	end
 
-	local count = debuffDB.numAuras
+	local count = auraDB.numAuras
 	local scale = 1
 	if frame.isTarget and db.useTargetScale then scale = db.targetScale end
 	local width = (health:GetWidth() - count) / count - 3
-	local height = debuffDB.baseHeight * scale
+	local height = (auraDB.baseHeight or AURA_HEIGHT) * scale
 	local font = Fetch("font", db.font)
 	local general = E.db.general
 
@@ -1256,8 +1362,12 @@ local function ConfigureDebuffs(frame)
 		local aura = icons[i] or ConstructAuraIcon(row)
 		icons[i] = aura
 		aura:ClearAllPoints()
-		if i == 1 then
+		if i == 1 and row.side == "LEFT" then
+			aura:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 0, 0)
+		elseif i == 1 then
 			aura:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
+		elseif row.side == "LEFT" then
+			aura:SetPoint("LEFT", icons[i - 1], "RIGHT", AURA_SPACING, 0)
 		else
 			aura:SetPoint("RIGHT", icons[i - 1], "LEFT", -AURA_SPACING, 0)
 		end
@@ -1270,13 +1380,16 @@ local function ConfigureDebuffs(frame)
 	end
 	for i = count + 1, getn(icons) do icons[i]:Hide() end
 
-	local offset = 3
-	if unitDB.showName then offset = offset + db.fontSize + 5 end
-	row:ClearAllPoints()
-	row:SetPoint("BOTTOMLEFT", health, "TOPLEFT", 0, offset)
-	row:SetPoint("BOTTOMRIGHT", health, "TOPRIGHT", 0, offset)
 	row:SetHeight(height)
+	row.enabled = true
 	row:Show()
+end
+
+local function ConfigureAuras(frame)
+	ConfigureAuraRow(frame, frame.Debuffs)
+	ConfigureAuraRow(frame, frame.Buffs)
+	AnchorAuraRow(frame, frame.Debuffs, nil)
+	frame.buffsAbove = nil
 	frame.auraNext = 0
 end
 
@@ -1291,14 +1404,24 @@ local function ConfigureRaidIcon(frame)
 	end
 end
 
--- Strata and level of one of the plate's frames.
+-- Strata and level of one of the plate's frames; a nil strata keeps the
+-- frame's own.
 local function Place(f, strata, level)
-	f:SetFrameStrata(strata)
+	if strata then f:SetFrameStrata(strata) end
 	f:SetFrameLevel(level)
 end
 
+-- The strata names SetFrameStrata accepts. The 1.12.1 client reports a
+-- native plate's strata as "UNKNOWN", which SetFrameStrata rejects with an
+-- error.
+local STRATA = {
+	BACKGROUND = true, LOW = true, MEDIUM = true, HIGH = true,
+	DIALOG = true, FULLSCREEN = true, FULLSCREEN_DIALOG = true, TOOLTIP = true,
+}
+
 -- Every frame of the plate takes the native plate's strata (BACKGROUND on
--- Unreal Azeroth): a frame created as its child gets MEDIUM there, the
+-- Unreal Azeroth; the 1.12.1 client reports none, and the frames keep
+-- their own there): a frame created as its child gets MEDIUM on UA, the
 -- strata of the action bars and most of the UI, and its levels would then
 -- interleave with theirs. Within that strata the target is raised above
 -- every other plate, as in real ElvUI. Every child frame is set again with
@@ -1310,7 +1433,7 @@ local function ConfigureLevels(frame)
 	local ok, base = pcall(plate.GetFrameLevel, plate)
 	if not ok or type(base) ~= "number" then base = 0 end
 	local okStrata, strata = pcall(plate.GetFrameStrata, plate)
-	if not okStrata or type(strata) ~= "string" then strata = "BACKGROUND" end
+	if not okStrata or not STRATA[strata] then strata = nil end
 	local level = base + 1
 	if frame.isTarget then level = level + TARGET_LEVEL end
 	Place(frame, strata, level)
@@ -1321,6 +1444,7 @@ local function ConfigureLevels(frame)
 	Place(frame.RightArrow, strata, level + 1)
 	Place(frame.Name.NameOnlyGlow, strata, level + 1)
 	Place(frame.TextHolder, strata, level + 2)
+	Place(frame.Buffs, strata, level + 2)
 	Place(frame.Debuffs, strata, level + 2)
 	Place(frame.CastBar, strata, level + 2)
 	Place(frame.CastBar.Icon, strata, level + 3)
@@ -1328,10 +1452,12 @@ local function ConfigureLevels(frame)
 	Place(frame.HealthBar, strata, level + 2)
 	Place(frame.HealthBar.textHolder, strata, level + 3)
 	Place(frame.CPoints, strata, level + 4)
-	local icons = frame.Debuffs.icons
 	local i
-	for i = 1, getn(icons) do
-		Place(icons[i], strata, level + 3)
+	for i = 1, getn(frame.Buffs.icons) do
+		Place(frame.Buffs.icons[i], strata, level + 3)
+	end
+	for i = 1, getn(frame.Debuffs.icons) do
+		Place(frame.Debuffs.icons[i], strata, level + 3)
 	end
 end
 
@@ -1348,7 +1474,7 @@ function NP:ConfigurePlate(frame)
 	MuteNative(frame)
 	ConfigureHealthBar(frame)
 	ConfigureCastBar(frame)
-	ConfigureDebuffs(frame)
+	ConfigureAuras(frame)
 	ConfigureTexts(frame)
 	ConfigureRaidIcon(frame)
 	ConfigureLevels(frame)

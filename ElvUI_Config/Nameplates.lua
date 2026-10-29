@@ -36,18 +36,31 @@ end
 
 -- Real ElvUI's "Personal Auras" toggle, kept as the "Personal" token of the
 -- filters' priority string: that string is the real profile key the module
--- reads, and the toggle adds or removes the token.
+-- reads. Any entry that lets personal auras through counts, with or
+-- without a "Friendly:" / "Enemy:" / "allow" prefix ("blockPersonal" does
+-- not); switching off removes those entries, switching on appends a plain
+-- "Personal" when none is left.
+local function ShowsPersonal(token)
+	local real, _, _, block = E.UnitFrames:GetFilterNameInfo(token)
+	return real == "Personal" and not block
+end
+
 local function HasPersonal(filters)
-	return string.find("," .. (filters.priority or "") .. ",", ",Personal,", 1, true) ~= nil
+	local tokens = E.ConfigShared.SplitPriority(filters.priority)
+	local i
+	for i = 1, getn(tokens) do
+		if ShowsPersonal(tokens[i]) then return true end
+	end
+	return false
 end
 
 local function SetPersonal(filters, value)
+	if value and HasPersonal(filters) then return end
+	local all = E.ConfigShared.SplitPriority(filters.priority)
 	local tokens = {}
-	local rest = filters.priority or ""
-	while rest ~= "" do
-		local _, stop, token = string.find(rest, "^([^,]*),?")
-		if token ~= "" and token ~= "Personal" then table.insert(tokens, token) end
-		rest = string.sub(rest, stop + 1)
+	local i
+	for i = 1, getn(all) do
+		if not ShowsPersonal(all[i]) then table.insert(tokens, all[i]) end
 	end
 	if value then table.insert(tokens, "Personal") end
 	filters.priority = table.concat(tokens, ",")
@@ -407,6 +420,95 @@ local reactionsTab = {
 
 -- Real ElvUI's GetUnitSettings, health / level / name tabs only. Level and
 -- name keep real ElvUI's `enable` entries backed by `showLevel` / `showName`.
+-- Real ElvUI's buffsGroup / debuffsGroup. Its `filter` select is retail's
+-- "Add Regular Filter" of the priority editor: ElvUI-vanilla's wrote
+-- `filters.filter`, which nothing reads; the lists take effect through the
+-- priority string. Maximum Duration starts at 0 (real ElvUI: 5), which means
+-- no limit. ElvUI-vanilla's FRIENDLY_PLAYER buffs have no baseHeight; the
+-- module uses 18.
+local function AuraGroup(unit, key, order, name)
+	local function AuraDB() return E.db.nameplates.units[unit][key] end
+	local function Disabled() return NotRunning() or not E.db.nameplates.units[unit].healthbar.enable end
+	local group = {
+		order = order,
+		type = "group",
+		name = name,
+		get = function(info) return AuraDB()[ info[getn(info)] ] end,
+		set = function(info, value)
+			AuraDB()[ info[getn(info)] ] = value
+			ConfigureAll()
+		end,
+		disabled = Disabled,
+		args = {
+			header = { order = 0, type = "header", name = name },
+			enable = { order = 1, type = "toggle", name = L["Enable"] },
+			numAuras = {
+				order = 2,
+				type = "range",
+				name = L["# Displayed Auras"],
+				desc = L["Controls how many auras are displayed, this will also affect the size of the auras."],
+				min = 1, max = 8, step = 1,
+			},
+			baseHeight = {
+				order = 3,
+				type = "range",
+				name = L["Icon Base Height"],
+				desc = L["Base Height for the Aura Icon"],
+				min = 6, max = 60, step = 1,
+				get = function() return AuraDB().baseHeight or 18 end,
+			},
+			filtersGroup = {
+				order = 4,
+				type = "group",
+				name = L["Filters"],
+				guiInline = true,
+				get = function(info) return AuraDB().filters[ info[getn(info)] ] end,
+				set = function(info, value)
+					AuraDB().filters[ info[getn(info)] ] = value
+					ConfigureAll()
+				end,
+				args = {
+					personal = {
+						order = 1,
+						type = "toggle",
+						name = L["Personal Auras"],
+						get = function() return HasPersonal(AuraDB().filters) end,
+						set = function(_, value)
+							SetPersonal(AuraDB().filters, value)
+							ConfigureAll()
+						end,
+					},
+					-- Retail ElvUI's control; ElvUI-vanilla declares the key
+					-- without one. 0 = no minimum.
+					minDuration = {
+						order = 1.5,
+						type = "range",
+						name = L["Minimum Duration"],
+						min = 0, max = 3000, step = 1,
+					},
+					maxDuration = {
+						order = 2,
+						type = "range",
+						name = L["Maximum Duration"],
+						min = 0, max = 3000, step = 1,
+					},
+				},
+			},
+		},
+	}
+	local editor = E.ConfigShared.FilterPriorityArgs(
+		"nameplates." .. unit .. "." .. key,
+		function() return AuraDB().filters end,
+		function() return P.nameplates.units[unit][key].filters.priority end,
+		ConfigureAll,
+		Disabled,
+		3)
+	local filterArgs = group.args.filtersGroup.args
+	local option, entry
+	for option, entry in pairs(editor) do filterArgs[option] = entry end
+	return group
+end
+
 local function GetUnitSettings(unit, name)
 	return {
 		order = 100,
@@ -495,67 +597,8 @@ local function GetUnitSettings(unit, name)
 					},
 				},
 			},
-			-- Real ElvUI's debuffsGroup without its aura-list select: no
-			-- aura lists exist here. Maximum Duration starts at 0 (real ElvUI:
-			-- 5), which is the default and means no limit.
-			debuffsGroup = {
-				order = 5,
-				type = "group",
-				name = L["Debuffs"],
-				get = function(info) return E.db.nameplates.units[unit].debuffs[ info[getn(info)] ] end,
-				set = function(info, value)
-					E.db.nameplates.units[unit].debuffs[ info[getn(info)] ] = value
-					ConfigureAll()
-				end,
-				disabled = function() return NotRunning() or not E.db.nameplates.units[unit].healthbar.enable end,
-				args = {
-					header = { order = 0, type = "header", name = L["Debuffs"] },
-					enable = { order = 1, type = "toggle", name = L["Enable"] },
-					numAuras = {
-						order = 2,
-						type = "range",
-						name = L["# Displayed Auras"],
-						desc = L["Controls how many auras are displayed, this will also affect the size of the auras."],
-						min = 1, max = 8, step = 1,
-					},
-					baseHeight = {
-						order = 3,
-						type = "range",
-						name = L["Icon Base Height"],
-						desc = L["Base Height for the Aura Icon"],
-						min = 6, max = 60, step = 1,
-					},
-					filtersGroup = {
-						order = 4,
-						type = "group",
-						name = L["Filters"],
-						guiInline = true,
-						get = function(info) return E.db.nameplates.units[unit].debuffs.filters[ info[getn(info)] ] end,
-						set = function(info, value)
-							E.db.nameplates.units[unit].debuffs.filters[ info[getn(info)] ] = value
-							ConfigureAll()
-						end,
-						args = {
-							personal = {
-								order = 1,
-								type = "toggle",
-								name = L["Personal Auras"],
-								get = function() return HasPersonal(E.db.nameplates.units[unit].debuffs.filters) end,
-								set = function(_, value)
-									SetPersonal(E.db.nameplates.units[unit].debuffs.filters, value)
-									ConfigureAll()
-								end,
-							},
-							maxDuration = {
-								order = 2,
-								type = "range",
-								name = L["Maximum Duration"],
-								min = 0, max = 3000, step = 1,
-							},
-						},
-					},
-				},
-			},
+			buffsGroup = AuraGroup(unit, "buffs", 4, L["Buffs"]),
+			debuffsGroup = AuraGroup(unit, "debuffs", 5, L["Debuffs"]),
 			levelGroup = {
 				order = 6,
 				type = "group",
@@ -627,7 +670,7 @@ end
 -- Key `nameplate`, singular, as real ElvUI's options arg; the DB key is the
 -- plural `nameplates`.
 E.Options.args.nameplate = {
-	order = 9,
+	order = 2,
 	type = "group",
 	name = L["NamePlates"],
 	childGroups = "tree",

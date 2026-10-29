@@ -1563,7 +1563,8 @@ function UF:GetOrCreateAuraIcon(container, index, cooldownStyle)
 	return icon
 end
 
--- Returns texture, count, timeLeft (or nil), hasRealDuration (boolean).
+-- Returns texture, count, timeLeft (or nil), hasRealDuration (boolean),
+-- dispelType (a debuff's "Magic" / "Curse" / "Disease" / "Poison", or nil).
 -- `index` is 1-based throughout this module (matches UnitBuff/UnitDebuff's
 -- own convention) -- converted to GetPlayerBuff's 0-based index here.
 -- Exposed as a UF: method for the same reason as GetOrCreateAuraIcon above.
@@ -1580,13 +1581,20 @@ function UF:GetAuraInfo(unit, auraType, index)
 		local okTime, timeLeft = pcall(GetPlayerBuffTimeLeft, buffIndex)
 		timeLeft = (okTime and timeLeft and timeLeft > 0) and timeLeft or nil
 
-		return texture, (okApp and count) or 1, timeLeft, true
+		local dispelType
+		if auraType == "debuff" and GetPlayerBuffDispelType then
+			local okType, value = pcall(GetPlayerBuffDispelType, buffIndex)
+			dispelType = okType and value or nil
+		end
+
+		return texture, (okApp and count) or 1, timeLeft, true, dispelType
 	end
 
 	local nativeFn = (auraType == "buff") and UnitBuff or UnitDebuff
-	local okTex, texture, count = pcall(nativeFn, unit, index)
+	local okTex, texture, count, dispelType = pcall(nativeFn, unit, index)
 	if not okTex or not texture then return nil end
-	return texture, count, nil, false
+	if auraType == "buff" then dispelType = nil end
+	return texture, count, nil, false, dispelType
 end
 
 -- Aura time text in the cooldown text's format (E:GetTimeInfo /
@@ -1594,6 +1602,73 @@ end
 function UF:FormatDebuffTimeLeft(seconds)
 	local timerValue, formatId = E:GetTimeInfo(seconds, 4)
 	return string.format(E.TimeFormats[formatId][2], timerValue)
+end
+
+-- Aura names for UF:AuraPasses (AuraFilter.lua). Another unit's debuff
+-- names come from LibVanillaDurations-1.0; every other name is the first
+-- line of a scan tooltip (SetPlayerBuff for the player's own auras, the
+-- call the hover tooltip uses; SetUnitBuff for another unit's buffs),
+-- cached per grid slot: UpdateAuras runs on every poll tick, the scan only
+-- when the slot's texture or the unit's name changes.
+local AURA_SCAN_TIP = "ElvUI_UFAuraScanTooltip"
+local auraScanTip
+
+local function ScanAuraName(unit, auraType, index)
+	if not auraScanTip then
+		local ok, tip = pcall(CreateFrame, "GameTooltip", AURA_SCAN_TIP, nil, "GameTooltipTemplate")
+		if not ok or not tip then return nil end
+		auraScanTip = tip
+	end
+	-- The owner is set on every scan: the Hide below clears it, and on the
+	-- 1.12 client an unowned tooltip is not filled.
+	pcall(auraScanTip.SetOwner, auraScanTip, UIParent, "ANCHOR_NONE")
+	pcall(auraScanTip.ClearLines, auraScanTip)
+	local filled = false
+	if unit == "player" then
+		local filter = (auraType == "buff") and "HELPFUL" or "HARMFUL"
+		local ok, buffIndex = pcall(GetPlayerBuff, index - 1, filter)
+		if ok and buffIndex and buffIndex >= 0 then
+			filled = pcall(auraScanTip.SetPlayerBuff, auraScanTip, buffIndex)
+		end
+	else
+		filled = pcall(auraScanTip.SetUnitBuff, auraScanTip, unit, index)
+	end
+	local name
+	if filled then
+		local line = _G[AURA_SCAN_TIP .. "TextLeft1"]
+		name = line and line:GetText()
+	end
+	pcall(auraScanTip.Hide, auraScanTip)
+	if name == "" then name = nil end
+	return name
+end
+
+local function AuraName(container, unit, unitName, auraType, index, texture)
+	if unit ~= "player" and auraType == "debuff" then
+		return LVD and LVD:GetDebuffName(unit, index)
+	end
+	container.auraNames = container.auraNames or {}
+	local slot = container.auraNames[index]
+	if not slot or slot.texture ~= texture or slot.unitName ~= unitName then
+		slot = { texture = texture, unitName = unitName, name = ScanAuraName(unit, auraType, index) }
+		container.auraNames[index] = slot
+	end
+	return slot.name
+end
+
+-- Whether the player applied the aura, as far as the own-cast stamps know
+-- it: LibVanillaDurations-1.0 for debuffs, OwnAuras.lua for buffs. Also
+-- returns the time left those stamps give for another unit's buff, which
+-- the client does not report.
+local function OwnAura(unitName, auraType, name)
+	if not name then return false end
+	if auraType == "debuff" then
+		if not LVD then return false end
+		local _, _, mine = LVD:GetStamp(unitName, name)
+		return mine and true or false
+	end
+	local left = UF.GetOwnAuraTimeLeft and UF:GetOwnAuraTimeLeft(unitName, name)
+	return left ~= nil, left
 end
 
 -- `dbKey`/`unit` split matches UpdateFrame's own (Party's 4 frames
@@ -1625,8 +1700,12 @@ function UF:UpdateAuras(frame, auraType)
 	-- before this existed.
 	local numRows = auraSettings.numrows or 0
 	local maxIcons = (numRows > 0) and (perRow * numRows) or MAX_AURAS
-	local minDuration = auraSettings.minDuration or 0
-	local maxDuration = auraSettings.maxDuration or 0
+
+	local unitName = UnitName(unit)
+	local okFriend, friend = pcall(UnitIsFriend, "player", unit)
+	local okAttack, attackable = pcall(UnitCanAttack, "player", unit)
+	local isFriend = okFriend and ElvUI.Compat.bool(friend)
+		and not (okAttack and ElvUI.Compat.bool(attackable))
 
 	-- TWO PASSES, because sorting needs the whole set before anything is placed:
 	-- collect first, then order, then lay out. A single pass could only ever
@@ -1634,7 +1713,7 @@ function UF:UpdateAuras(frame, auraType)
 	local collected = {}
 	local i
 	for i = 1, MAX_AURAS do
-		local texture, count, timeLeft, hasRealDuration = self:GetAuraInfo(unit, auraType, i)
+		local texture, count, timeLeft, hasRealDuration, dispelType = self:GetAuraInfo(unit, auraType, i)
 		if not texture then break end
 
 		-- Debuff-only approximated duration (tier 2 above) -- only when
@@ -1644,16 +1723,17 @@ function UF:UpdateAuras(frame, auraType)
 			_, timeLeft = LVD:GetDebuff(unit, i)
 		end
 
-		-- minDuration/maxDuration (real ElvUI fields, `0` = no filter on
-		-- that side) -- only meaningful once there's a timeLeft to
-		-- compare; an aura with no known duration always passes
-		-- through, matching real ElvUI's own "can't filter what you
-		-- can't measure" behavior.
-		local passesFilter = true
-		if timeLeft then
-			if minDuration > 0 and timeLeft < minDuration then passesFilter = false end
-			if maxDuration > 0 and timeLeft > maxDuration then passesFilter = false end
-		end
+		-- `priority` + minDuration / maxDuration through the shared filter
+		-- (AuraFilter.lua). The duration limits compare the time LEFT, not
+		-- the full duration as in real ElvUI: the player's own auras report
+		-- nothing else. An aura with no known time passes them, and counts
+		-- as "NoDuration" for the priority string. Another unit's buff is
+		-- timed only from the player's own casts, for the filter alone.
+		local name = AuraName(container, unit, unitName, auraType, i, texture)
+		local isPlayer, ownLeft = OwnAura(unitName, auraType, name)
+		local filterTime = timeLeft or ownLeft
+		local passesFilter = self:AuraPasses(auraSettings, name, isPlayer, isFriend, filterTime,
+			E:IsDispellableByMe(dispelType))
 
 		if passesFilter then
 			table.insert(collected, {

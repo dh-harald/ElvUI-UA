@@ -102,6 +102,19 @@ Compat.getn = table.getn or function(t)
 	return n
 end
 
+-- Empties a table in place (table.wipe, absent on both clients). On Lua 5.0
+-- clearing the keys is not enough for an array: table.insert/remove keep
+-- the array size in a hidden table, so table.getn would still report the
+-- old length after a `for k in pairs(t) do t[k] = nil end` and an index
+-- loop would hit nil entries. table.setn resets it; on Lua 5.1 table.setn
+-- is obsolete and raises an error, hence the pcall.
+function Compat.wipe(t)
+	local k
+	for k in pairs(t) do t[k] = nil end
+	if table.setn then pcall(table.setn, t, 0) end
+	return t
+end
+
 -- select(): cannot be shimmed as a generic vararg-forwarding function on
 -- Lua 5.0 (see the vararg note above). Use these against an already
 -- captured `arg` table instead of ever writing `select(...)`.

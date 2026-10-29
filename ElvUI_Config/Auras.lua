@@ -108,7 +108,7 @@ end
 E.Options.args.auras = {
 	type = "group",
 	name = L["Auras"],
-	order = 8,
+	order = 2,
 	childGroups = "tab",
 	args = {
 		intro = {

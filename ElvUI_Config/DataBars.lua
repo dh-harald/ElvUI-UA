@@ -62,7 +62,7 @@ end
 E.Options.args.databars = {
 	type = "group",
 	name = L["DataBars"],
-	order = 4,
+	order = 2,
 	childGroups = "tab",
 	args = {
 		intro = {

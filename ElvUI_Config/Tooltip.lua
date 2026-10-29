@@ -89,7 +89,7 @@ end
 E.Options.args.tooltip = {
 	type = "group",
 	name = L["Tooltip"],
-	order = 1,
+	order = 2,
 	childGroups = "tab",
 	get = function(info) return E.db.tooltip[ info[getn(info)] ] end,
 	set = function(info, value) E.db.tooltip[ info[getn(info)] ] = value end,

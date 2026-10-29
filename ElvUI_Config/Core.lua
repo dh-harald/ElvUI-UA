@@ -67,6 +67,284 @@ function Shared.UpdateMinimapSettings()
 	end
 end
 
+-- The entries of an aura filter `priority` string (comma-separated, read by
+-- ElvUI's Modules/UnitFrames/AuraFilter.lua), in order.
+function Shared.SplitPriority(priority)
+	local tokens = {}
+	local token
+	for token in ElvUI.Compat.gmatch(priority or "", "[^,]+") do
+		table.insert(tokens, token)
+	end
+	return tokens
+end
+
+-- The special filters AuraFilter.lua can evaluate on these clients. Retail's
+-- others (CastByUnit, Boss, Mount, ...) need data the clients do not report
+-- and are not offered.
+local SPECIAL_FILTERS = {
+	Personal = "Auras cast by yourself.",
+	NonPersonal = "Auras cast by anyone other than yourself.",
+	NoDuration = "Auras with no duration.",
+	Dispellable = "Debuffs your class can remove.",
+	NotDispellable = "Auras your class cannot remove.",
+}
+
+local function FilterNameInfo(token)
+	return E.UnitFrames:GetFilterNameInfo(token)
+end
+
+-- Retail ElvUI's C.DragGetTitle.
+local function PriorityTitle(token)
+	local real, friend, enemy, block, allow = FilterNameInfo(token)
+	local text = real
+	if block then
+		text = "|cFF999999" .. L["Block"] .. "|r " .. text
+	elseif allow then
+		text = "|cFFCCCCCC" .. L["Allow"] .. "|r " .. text
+	end
+	if friend then
+		text = "|cFF33FF33" .. L["Friendly"] .. "|r " .. text
+	elseif enemy then
+		text = "|cFFFF3333" .. L["Enemy"] .. "|r " .. text
+	end
+	return text
+end
+
+-- Retail ElvUI's C.SetFilterPriority state cycles. Unit side: all units ->
+-- "Friendly:" -> "Enemy:" -> all units. Type: the list's own type ->
+-- "allow" -> "block" -> the list's own type.
+local function Retyped(token, unitSide)
+	local real, friend, enemy, block, allow = FilterNameInfo(token)
+	local state = real
+	if unitSide then
+		if friend then
+			state = "Enemy:" .. real
+		elseif not enemy then
+			state = "Friendly:" .. real
+		end
+		if allow then
+			state = "allow" .. state
+		elseif block then
+			state = "block" .. state
+		end
+	else
+		if friend then
+			state = "Friendly:" .. real
+		elseif enemy then
+			state = "Enemy:" .. real
+		end
+		if allow then
+			state = "block" .. state
+		elseif not block then
+			state = "allow" .. state
+		end
+	end
+	return state
+end
+
+local function Contains(tokens, token)
+	local i
+	for i = 1, table.getn(tokens) do
+		if tokens[i] == token then return true end
+	end
+	return false
+end
+
+-- Selected entry index per editor id; survives redraws, not reloads.
+local prioritySelection = {}
+
+-- Real ElvUI's filter-priority editor (retail ElvUI_Options
+-- Game/Shared/UnitFrames.lua specialFilters / filter / resetPriority /
+-- filterPriority). Retail drags the entries of a list and retypes them with
+-- shift- / ctrl-click; LibConfig-1.0 has no drag list, so an entry is picked
+-- in a dropdown and moved, retyped or removed with buttons. Adding an entry
+-- already in the string, or retyping into one, does nothing (as in retail).
+--
+-- `id` keys the selection, `Filters()` returns the db table holding
+-- `priority`, `Default()` the default string, `Changed()` applies an edit and
+-- `Disabled()` (optional) is the enclosing group's disabled test: the buttons
+-- have their own, which replaces the inherited one. Orders start at `order`.
+-- Returns the option entries to merge into a group's args.
+function Shared.FilterPriorityArgs(id, Filters, Default, Changed, Disabled, order)
+	local function Tokens()
+		return Shared.SplitPriority(Filters().priority)
+	end
+
+	local function Store(tokens)
+		Filters().priority = table.concat(tokens, ",")
+		Changed()
+	end
+
+	local function Selected()
+		local tokens = Tokens()
+		local index = prioritySelection[id]
+		if index and tokens[index] then return index, tokens end
+		return nil, tokens
+	end
+
+	local function Off()
+		return Disabled and Disabled() or false
+	end
+
+	local function NoSelection()
+		return Off() or Selected() == nil
+	end
+
+	local function Add(token)
+		local tokens = Tokens()
+		if Contains(tokens, token) then return end
+		table.insert(tokens, token)
+		prioritySelection[id] = table.getn(tokens)
+		Store(tokens)
+	end
+
+	local function Move(delta)
+		local index, tokens = Selected()
+		local target = index and index + delta
+		if not (target and tokens[target]) then return end
+		tokens[index], tokens[target] = tokens[target], tokens[index]
+		prioritySelection[id] = target
+		Store(tokens)
+	end
+
+	local function Retype(unitSide)
+		local index, tokens = Selected()
+		if not index then return end
+		local state = Retyped(tokens[index], unitSide)
+		if Contains(tokens, state) then return end
+		tokens[index] = state
+		Store(tokens)
+	end
+
+	return {
+		specialFilters = {
+			order = order,
+			type = "select",
+			name = L["Add Special Filter"],
+			desc = L["These filters don't use a list of spells like the regular filters. Instead, they use the WoW API and some code logic to determine if an aura should be allowed or blocked."],
+			values = function()
+				local values = {}
+				local name
+				for name in pairs(SPECIAL_FILTERS) do values[name] = name end
+				return values
+			end,
+			get = function() return nil end,
+			set = function(_, value) Add(value) end,
+		},
+		filter = {
+			order = order + 1,
+			type = "select",
+			name = L["Add Regular Filter"],
+			desc = L["These filters use a list of spells to determine if an aura should be allowed or blocked. The content of these filters can be modified in the Filters section of the config."],
+			values = function()
+				local values = {}
+				local name
+				for name in pairs(E.global.unitframe.aurafilters) do values[name] = name end
+				return values
+			end,
+			get = function() return nil end,
+			set = function(_, value) Add(value) end,
+		},
+		resetPriority = {
+			order = order + 2,
+			type = "execute",
+			name = L["Reset Priority"],
+			desc = L["Reset filter priority to the default state."],
+			func = function()
+				prioritySelection[id] = nil
+				Filters().priority = Default() or ""
+				Changed()
+			end,
+		},
+		filterPriority = {
+			order = order + 3,
+			type = "select",
+			width = "full",
+			name = L["Filter Priority"],
+			desc = L["Entries are checked from the top; the first one that matches an aura decides whether it is shown."],
+			values = function()
+				local tokens = Tokens()
+				local count = table.getn(tokens)
+				-- Zero-padded so the dropdown's text sort keeps the order.
+				local pattern = "%0" .. string.len(tostring(count)) .. "d. %s"
+				local values = {}
+				local i
+				for i = 1, count do
+					values[i] = string.format(pattern, i, PriorityTitle(tokens[i]))
+				end
+				return values
+			end,
+			get = function() return (Selected()) end,
+			set = function(_, value) prioritySelection[id] = value end,
+		},
+		moveUp = {
+			order = order + 4,
+			type = "execute",
+			name = L["Move Up"],
+			disabled = function()
+				local index = Selected()
+				return Off() or not index or index == 1
+			end,
+			func = function() Move(-1) end,
+		},
+		moveDown = {
+			order = order + 5,
+			type = "execute",
+			name = L["Move Down"],
+			disabled = function()
+				local index, tokens = Selected()
+				return Off() or not index or index == table.getn(tokens)
+			end,
+			func = function() Move(1) end,
+		},
+		friendState = {
+			order = order + 6,
+			type = "execute",
+			name = L["Friendly / Enemy"],
+			desc = L["Switches the entry between all units, friendly units only and enemy units only."],
+			disabled = NoSelection,
+			func = function() Retype(true) end,
+		},
+		typeState = {
+			order = order + 7,
+			type = "execute",
+			name = L["Allow / Block"],
+			desc = L["Switches the entry between its list's own type, always allow and always block."],
+			disabled = NoSelection,
+			func = function() Retype(false) end,
+		},
+		removePriority = {
+			order = order + 8,
+			type = "execute",
+			name = L["Remove"],
+			disabled = NoSelection,
+			func = function()
+				local index, tokens = Selected()
+				if not index then return end
+				table.remove(tokens, index)
+				prioritySelection[id] = nil
+				Store(tokens)
+			end,
+		},
+		priorityDesc = {
+			order = order + 9,
+			type = "description",
+			name = function()
+				local index, tokens = Selected()
+				if not index then return "" end
+				local real = FilterNameInfo(tokens[index])
+				if SPECIAL_FILTERS[real] then return L[SPECIAL_FILTERS[real]] end
+				local list = E.global.unitframe.aurafilters[real]
+				if list then
+					return list.type == "Blacklist" and L["Blacklist"] or L["Whitelist"]
+				end
+				return L["No such filter: this entry matches nothing."]
+			end,
+			hidden = function() return Selected() == nil end,
+		},
+	}
+end
+
 -- The options table itself. Registered HERE, before the per-module files load:
 -- LibConfig-1.0 stores it by reference, so every `E.Options.args.<module> = ...`
 -- those files add afterwards is picked up without re-registering.
@@ -237,7 +515,7 @@ E.PopupDialogs["PROFILE_DELETE"] = {
 E.Options.args.profiles = {
 	type = "group",
 	name = L["Profiles"],
-	order = 11,
+	order = 4,
 	args = {
 		-- Entry KEYS, labels, descriptions and relative order all follow
 		-- AceDBOptions-3.0's own profile panel (its optionsTable: desc /

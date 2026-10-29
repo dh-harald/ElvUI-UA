@@ -104,7 +104,7 @@ end
 E.Options.args.maps = {
 	type = "group",
 	name = L["Map"],
-	order = 3,
+	order = 2,
 	childGroups = "tab",
 	args = {
 		-- `worldMap`, not `map`, and split into `generalGroup` +

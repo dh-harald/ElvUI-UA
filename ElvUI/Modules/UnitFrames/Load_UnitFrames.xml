@@ -5,6 +5,7 @@
 	<Script file="PortraitUA.lua"/>
 	<Script file="PortraitLegacy.lua"/>
 	<Script file="OwnAuras.lua"/>
+	<Script file="AuraFilter.lua"/>
 	<Script file="CastTracker.lua"/>
 	<Script file="ComboPoints.lua"/>
 	<Script file="EnergyManaRegen.lua"/>

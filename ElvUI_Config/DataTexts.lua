@@ -108,7 +108,7 @@ end
 E.Options.args.datatexts = {
 	type = "group",
 	name = L["DataTexts"],
-	order = 5,
+	order = 2,
 	childGroups = "tab",
 	args = {
 		intro = {
