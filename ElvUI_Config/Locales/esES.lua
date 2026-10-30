@@ -876,3 +876,6 @@ L["Speed"] = "Velocidad"
 
 --UnitFrames auras
 L["Count Font Size"] = "Tamaño de Fuente del Contador"
+
+--NamePlates aura fonts
+L["Stack Counter"] = "Contador de acumulaciones"

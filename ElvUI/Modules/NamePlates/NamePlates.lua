@@ -1431,7 +1431,10 @@ local function ConfigureAuraRow(frame, row)
 	if frame.isTarget and db.useTargetScale then scale = db.targetScale end
 	local width = (health:GetWidth() - count) / count - 3
 	local height = (auraDB.baseHeight or AURA_HEIGHT) * scale
-	local font = Fetch("font", db.font)
+	-- Real ElvUI's profile keys for the aura texts; ElvUI-vanilla declares them
+	-- without reading them.
+	local durationFont = Fetch("font", db.durationFont)
+	local stackFont = Fetch("font", db.stackFont)
 	local general = E.db.general
 
 	local icons = row.icons
@@ -1451,8 +1454,8 @@ local function ConfigureAuraRow(frame, row)
 		end
 		aura:SetWidth(width)
 		aura:SetHeight(height)
-		E:FontTemplate(aura.timeLeft, font, db.fontSize, db.fontOutline)
-		E:FontTemplate(aura.count, font, db.fontSize, db.fontOutline)
+		E:FontTemplate(aura.timeLeft, durationFont, db.durationFontSize, db.durationFontOutline)
+		E:FontTemplate(aura.count, stackFont, db.stackFontSize, db.stackFontOutline)
 		local j
 		for j = 1, 4 do SetColor(aura.borderLines[j], general.bordercolor) end
 	end

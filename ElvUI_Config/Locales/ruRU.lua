@@ -876,3 +876,6 @@ L["Speed"] = "Скорость"
 
 --UnitFrames auras
 L["Count Font Size"] = "Размер шрифта стаков"
+
+--NamePlates aura fonts
+L["Stack Counter"] = "Количество стаков"

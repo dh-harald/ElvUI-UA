@@ -876,3 +876,6 @@ L["Speed"] = "Vitesse"
 
 --UnitFrames auras
 L["Count Font Size"] = "Taille du texte du décompte"
+
+--NamePlates aura fonts
+L["Stack Counter"] = "Compteur de pile"

@@ -876,3 +876,6 @@ L["Speed"] = "Geschwindigkeit"
 
 --UnitFrames auras
 L["Count Font Size"] = "Schriftart Größe der Anzahl"
+
+--NamePlates aura fonts
+L["Stack Counter"] = "Stapel-Zähler"

@@ -245,6 +245,40 @@ local generalTab = {
 	},
 }
 
+local OUTLINE_VALUES = {
+	["NONE"] = L["None"],
+	["OUTLINE"] = "OUTLINE",
+	["MONOCHROMEOUTLINE"] = "MONOCROMEOUTLINE",
+	["THICKOUTLINE"] = "THICKOUTLINE",
+}
+
+-- Font, size and outline of one text, as `<prefix>Font`, `<prefix>FontSize`
+-- and `<prefix>FontOutline`.
+local function FontOptions(prefix, order)
+	return {
+		[prefix .. "Font"] = {
+			order = order,
+			type = "select",
+			dialogControl = "LSM30_Font",
+			name = L["Font"],
+			values = MediaValues("font"),
+		},
+		[prefix .. "FontSize"] = {
+			order = order + 1,
+			type = "range",
+			name = L["Font Size"],
+			min = 4, max = 34, step = 1,
+		},
+		[prefix .. "FontOutline"] = {
+			order = order + 2,
+			type = "select",
+			name = L["Font Outline"],
+			desc = L["Set the font outline."],
+			values = OUTLINE_VALUES,
+		},
+	}
+end
+
 local fontTab = {
 	order = 100,
 	type = "group",
@@ -268,12 +302,22 @@ local fontTab = {
 			type = "select",
 			name = L["Font Outline"],
 			desc = L["Set the font outline."],
-			values = {
-				["NONE"] = L["None"],
-				["OUTLINE"] = "OUTLINE",
-				["MONOCHROMEOUTLINE"] = "MONOCROMEOUTLINE",
-				["THICKOUTLINE"] = "THICKOUTLINE",
-			},
+			values = OUTLINE_VALUES,
+		},
+		-- Real ElvUI's profile keys; it offers no control for them.
+		durationGroup = {
+			order = 7,
+			type = "group",
+			name = L["Duration"],
+			guiInline = true,
+			args = FontOptions("duration", 1),
+		},
+		stackGroup = {
+			order = 8,
+			type = "group",
+			name = L["Stack Counter"],
+			guiInline = true,
+			args = FontOptions("stack", 1),
 		},
 	},
 }

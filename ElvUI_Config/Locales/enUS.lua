@@ -899,3 +899,6 @@ L["Speed"] = true
 
 --UnitFrames auras
 L["Count Font Size"] = true
+
+--NamePlates aura fonts
+L["Stack Counter"] = true
