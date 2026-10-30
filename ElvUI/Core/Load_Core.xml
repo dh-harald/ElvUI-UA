@@ -9,6 +9,7 @@
 	<Script file="Movers.lua"/>
 	<Script file="Profiles.lua"/>
 	<Script file="Cooldowns.lua"/>
+	<Script file="Who.lua"/>
 	<Script file="ClassCache.lua"/>
 	<Script file="MirrorTimers.lua"/>
 	<Script file="Install.lua"/>

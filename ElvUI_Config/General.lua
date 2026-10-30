@@ -415,8 +415,7 @@ E.Options.args.general = {
 				},
 			},
 		},
-		-- Real ElvUI's class cache group (Core/ClassCache.lua), without its
-		-- LibWho toggle (classCacheRequestInfo): LibWho-2.0 is not shipped.
+		-- Real ElvUI's class cache group (Core/ClassCache.lua).
 		classCache = {
 			order = 4,
 			type = "group",
@@ -427,13 +426,23 @@ E.Options.args.general = {
 					order = 2,
 					type = "toggle",
 					name = L["Enable"],
-					desc = L["Remembers the class of the players you see (target, mouseover, group, friends, guild, battleground score), so the nameplates can colour players by class."],
+					desc = L["Remembers the class of the players you see (target, mouseover, group, friends, guild, battleground score, /who), so the chat and the nameplates can colour players by class."],
 					get = function() return E.private.general.classCache end,
 					set = function(_, value)
 						E.private.general.classCache = value
 						if E.ClassCache then E.ClassCache:ToggleModule() end
 						if E.NamePlates then E.NamePlates:ConfigureAll() end
 					end,
+				},
+				-- Real ElvUI asks LibWho; here it is Core/Who.lua's silent /who.
+				classCacheRequestInfo = {
+					order = 3,
+					type = "toggle",
+					name = L["Request info for class cache"],
+					desc = L["Looks up the class of a chat sender not in the cache with a silent /who query, one every few seconds. The name is coloured from that sender's next message on."],
+					get = function() return E.db.general.classCacheRequestInfo end,
+					set = function(_, value) E.db.general.classCacheRequestInfo = value end,
+					disabled = function() return not E.private.general.classCache end,
 				},
 				cache = {
 					order = 4,

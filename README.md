@@ -86,8 +86,10 @@ Two addons ship together:
   end it with "Interrupted". Mobs that share a name cannot be told apart,
   and channelled spells of others are not shown
 - DataBars (XP/Reputation), DataTexts
-- Chat, with sender names and mentioned player names in class colour
-  (from the class cache; names of players not met yet stay uncoloured)
+- Chat, with sender names, mentioned player names and player names in
+  system messages (/who answers, friends coming online) in class colour,
+  from the class cache; optionally (General → Class Cache → Request info)
+  an unknown sender is looked up with a silent /who
 - Bags/Bank, with gray items sold automatically at a vendor (one at a
   time, with an adjustable interval and an optional progress bar), item
   quality and quest item borders, a "!" on items that start a quest, an

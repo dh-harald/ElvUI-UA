@@ -849,10 +849,11 @@ end
 -- with these deviations:
 --   - `CH:GetPlayerLink` (real `CH:GetColoredName`, colour placed outside
 --     the link -- see there) and `CheckKeyword`'s class-coloured mentions
---     read `Core/ClassCache.lua`, which knows only players met in game
---     (target, mouseover, group, friends, guild, battleground board):
---     the /who lookups real ElvUI can add are not ported, so an unknown
---     name stays uncoloured.
+--     read `Core/ClassCache.lua`. An unknown sender is looked up with a
+--     silent /who (Core/Who.lua) when `classCacheRequestInfo` is on, and
+--     colours from their next message.
+--   - Added: `CH:ColorSystemPlayers` class-colours player names in system
+--     messages (/who answers, friends coming online).
 --   - `E.media.hexvaluecolor` is read through this file's own `AccentHex()`
 --     accessor (it only exists from `OnInitialize` onwards, so it cannot be
 --     captured in a load-time local).
@@ -1143,11 +1144,47 @@ end
 -- "|Hplayer:X|h[|cff..X|r]|h"; Unreal Azeroth draws a colour code there as
 -- plain text, so the colour wraps the whole link instead (the brackets take
 -- it too), the form item links use.
+-- An unknown sender is handed to CC:RequestClass (silent /who, when
+-- `classCacheRequestInfo` is on), which colours their later messages.
 function CH:GetPlayerLink(name)
 	local link = "|Hplayer:"..name.."|h["..name.."]|h"
-	local hex = ClassHex(CC:GetClassByName(name))
+	local class = CC:GetClassByName(name)
+	if not class then CC:RequestClass(name) end
+	local hex = ClassHex(class)
 	if not hex then return link end
 	return hex..link.."|r"
+end
+
+-- Player names in a system message (a /who answer, a friend coming online)
+-- in their class colour; not real ElvUI, which leaves system messages
+-- alone. The 1.12.1 client writes such names as player links; Unreal
+-- Azeroth's /who lines (WHO_LIST_FORMAT "[%s]: Level %d %s %s - %s") start
+-- with a plain "[Name]: ". A name the cache lacks is first looked for in
+-- the last /who answer, which a /who line's own row already is when the
+-- line arrives -- so the answer to a /who is coloured as it is printed.
+function CH:ColorSystemPlayers(message)
+	if not message or not E.private.general.classCache then return message end
+	local whoRead
+	local function Hex(name)
+		local class = CC:GetClassByName(name)
+		if not class and not whoRead then
+			whoRead = true
+			CC:CacheWhoResults()
+			class = CC:GetClassByName(name)
+		end
+		return ClassHex(class)
+	end
+	message = string.gsub(message, "(|Hplayer:([^:|]+)[^|]*|h.-|h)", function(link, name)
+		local hex = Hex(name)
+		if hex then return hex..link.."|r" end
+		return link
+	end)
+	message = string.gsub(message, "^%[([^%]|]+)%]: ", function(name)
+		local hex = Hex(name)
+		if hex then return hex.."["..name.."]|r: " end
+		return "["..name.."]: "
+	end)
+	return message
 end
 
 function CH:DisableChatThrottle()
@@ -1532,7 +1569,9 @@ function CH:ChatFrame_OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, arg6, a
 			end
 		end
 
-		if msgType == "SYSTEM" or msgType == "TEXT_EMOTE" or msgType == "SKILL" or msgType == "LOOT" or msgType == "MONEY"
+		if msgType == "SYSTEM" then
+			self:AddMessage(CH:ConcatenateTimeStamp(CH:ColorSystemPlayers(arg1)), info.r, info.g, info.b, info.id)
+		elseif msgType == "TEXT_EMOTE" or msgType == "SKILL" or msgType == "LOOT" or msgType == "MONEY"
 			or msgType == "OPENING" or msgType == "TRADESKILLS" or msgType == "PET_INFO" then
 			self:AddMessage(CH:ConcatenateTimeStamp(arg1), info.r, info.g, info.b, info.id)
 		elseif string.sub(msgType, 1, 7) == "COMBAT_" then
@@ -1618,10 +1657,12 @@ function CH:ChatFrame_OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, arg6, a
 				-- The three verbs are matched against the client's own chat
 				-- line (built from its CHAT_*_GET globals), so their
 				-- translations must use that locale's client wording, and
-				-- must not contain Lua pattern magic characters.
-				body = string.gsub(body, "^(.-|h) "..L["whispers"], "%1")
-				body = string.gsub(body, "^(.-|h) "..L["says"], "%1")
-				body = string.gsub(body, "^(.-|h) "..L["yells"], "%1")
+				-- must not contain Lua pattern magic characters. A class-
+				-- coloured sender link ends in "|h|r" (CH:GetPlayerLink),
+				-- hence the optional colour reset before the verb.
+				body = string.gsub(body, "^(.-|h[|r]*) "..L["whispers"], "%1")
+				body = string.gsub(body, "^(.-|h[|r]*) "..L["says"], "%1")
+				body = string.gsub(body, "^(.-|h[|r]*) "..L["yells"], "%1")
 				body = string.gsub(body, "<"..GlobalStrings.AFK..">", "[|cffFF0000"..L["AFK"].."|r] ")
 				body = string.gsub(body, "<"..GlobalStrings.DND..">", "[|cffE7E716"..L["DND"].."|r] ")
 				body = string.gsub(body, "^%["..GlobalStrings.CHAT_MSG_RAID_WARNING.."%]", "["..L["RW"].."]")

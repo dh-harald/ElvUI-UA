@@ -8,20 +8,31 @@ local CC = E:NewModule("ClassCache", "AceEvent-3.0")
 -- `E.db.general.classCacheStoreInDB` is on, otherwise kept for the session.
 --
 -- Sources: the target and mouseover, party and raid members (UnitClass,
--- already a file name), the friends list, the guild roster and the
--- battleground score board. Those three give the class as display text;
--- upper-cased it is the file name for every 1.12 class in English, and a
--- name that does not come out as a known class is skipped (other locales).
+-- already a file name), the friends list, the guild roster, the
+-- battleground score board and /who results (the player's own and the
+-- lookups below). All but the first give the class as display text, turned
+-- into the file name by ClassFromText.
 --
--- Not ported: real ElvUI's LibWho /who lookups
--- (`classCacheRequestInfo`); LibWho-2.0 is not shipped.
+-- `classCacheRequestInfo` (real ElvUI's LibWho option): a chat sender not
+-- in the cache is looked up with a silent /who (Core/Who.lua); a name with
+-- no answer is not asked again for NOT_FOUND_RETRY seconds.
 
 local Compat = ElvUI.Compat
 
+local NOT_FOUND_RETRY = 600
+
 local sessionCache = {}
+local notFound = {}   -- name -> GetTime() before which it is not asked again
+local requested = {}  -- names with a lookup waiting for its answer
+
+-- Localized class name -> file name, learned from UnitClass (which returns
+-- both) on every unit cached; this is what makes the display-text sources
+-- work on a non-English client. 1.12 has no LOCALIZED_CLASS_NAMES table.
+local classTokens = {}
 
 local function ClassFromText(text)
 	if type(text) ~= "string" then return nil end
+	if classTokens[text] then return classTokens[text] end
 	local class = string.upper(text)
 	if RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] then return class end
 	return nil
@@ -49,8 +60,46 @@ end
 
 local function CacheUnit(unit)
 	if not Compat.bool(UnitExists(unit)) or not Compat.bool(UnitIsPlayer(unit)) then return end
-	local _, class = UnitClass(unit)
-	if class then CC:CachePlayer(UnitName(unit), class) end
+	local localized, class = UnitClass(unit)
+	if class then
+		if localized then classTokens[localized] = class end
+		CC:CachePlayer(UnitName(unit), class)
+	end
+end
+
+-- Every row of the last /who answer, from the Social frame's list, a chat
+-- /who or a Core/Who.lua lookup alike.
+function CC:CacheWhoResults()
+	local i
+	for i = 1, (GetNumWhoResults() or 0) do
+		local name, _, _, _, class = GetWhoInfo(i)
+		self:CachePlayer(name, ClassFromText(class))
+	end
+end
+
+function CC:WHO_LIST_UPDATE()
+	self:CacheWhoResults()
+end
+
+-- Looks up a name the cache does not know yet, when `classCacheRequestInfo`
+-- is on. The answer only lands in the cache: whatever was already drawn
+-- with the name stays as it was.
+function CC:RequestClass(name)
+	if not name or name == "" or not E.private.general.classCache then return end
+	if not E.db.general.classCacheRequestInfo or not E.Who then return end
+	if self:GetClassByName(name) then return end
+	if notFound[name] and GetTime() < notFound[name] then return end
+	if requested[name] then return end
+	requested[name] = true
+	E.Who:Query(name, function(result)
+		requested[name] = nil
+		local class = result and ClassFromText(result.class)
+		if class then
+			CC:CachePlayer(name, class)
+		else
+			notFound[name] = GetTime() + NOT_FOUND_RETRY
+		end
+	end)
 end
 
 function CC:PLAYER_TARGET_CHANGED()
@@ -103,7 +152,7 @@ end
 local EVENTS = {
 	"PLAYER_TARGET_CHANGED", "UPDATE_MOUSEOVER_UNIT", "PARTY_MEMBERS_CHANGED",
 	"RAID_ROSTER_UPDATE", "FRIENDLIST_UPDATE", "GUILD_ROSTER_UPDATE",
-	"UPDATE_BATTLEFIELD_SCORE",
+	"UPDATE_BATTLEFIELD_SCORE", "WHO_LIST_UPDATE",
 }
 
 -- Event by event: UnregisterAllEvents does not work on Unreal Azeroth.
@@ -119,6 +168,7 @@ function CC:ToggleModule()
 	end
 	if enable then
 		self:CachePlayer(E.myname, E.myclass)
+		CacheUnit("player")
 		self:PARTY_MEMBERS_CHANGED()
 		self:RAID_ROSTER_UPDATE()
 	end
