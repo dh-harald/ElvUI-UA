@@ -49,6 +49,28 @@ local function EnableDisableReputationBar()
 	end
 end
 
+-- Threat Bar (Modules/DataBars/ThreatBar.lua). Retail's "threat" group, on
+-- the keys the bar reads.
+local function UpdateThreat()
+	if E.DataBars and E.DataBars.UpdateThreat then
+		E.DataBars:UpdateThreatDimensions()
+		E.DataBars:UpdateThreat()
+	end
+end
+
+local function FontValues()
+	local LSM = LibStub("LibSharedMedia-3.0", true)
+	local list = {}
+	if LSM then
+		local names = LSM:List("font")
+		local i
+		for i = 1, table.getn(names) do
+			list[names[i]] = names[i]
+		end
+	end
+	return list
+end
+
 -- DataBars: real ElvUI's own top-level category
 -- (E.Options.args.databars, ElvUI-vanilla/ElvUI_Config/
 -- DataBars.lua:12-17, childGroups="tab" with "experience"/
@@ -417,6 +439,85 @@ E.Options.args.databars = {
 						UpdateReputation()
 					end,
 					disabled = function() return not E.db.databars.reputation.enable end,
+				},
+			},
+		},
+		threat = {
+			type = "group",
+			name = L["Threat"],
+			order = 3,
+			get = function(info) return E.db.databars.threat[ info[getn(info)] ] end,
+			set = function(info, value)
+				E.db.databars.threat[ info[getn(info)] ] = value
+				UpdateThreat()
+			end,
+			disabled = function() return not E.db.databars.threat.enable end,
+			args = {
+				header = {
+					type = "header",
+					name = L["Threat Bar"],
+					order = 1,
+				},
+				enable = {
+					type = "toggle",
+					name = L["Enable"],
+					desc = L["Shows your threat on your target in combat, over the right chat's datatext panel, if you have a pet or a group. Stays hidden while the mob attacks someone whose threat is unknown."],
+					order = 2,
+					disabled = false,
+				},
+				displayText = {
+					type = "toggle",
+					name = L["Display Text"],
+					order = 3,
+				},
+				tankStatus = {
+					type = "toggle",
+					name = L["Tank Colors"],
+					order = 4,
+				},
+				width = {
+					type = "range",
+					name = L["Width"],
+					desc = L["Used once the bar is moved with /moveui. Until then it covers the datatext panel."],
+					order = 5,
+					min = 5,
+					max = 800,
+					step = 1,
+				},
+				height = {
+					type = "range",
+					name = L["Height"],
+					desc = L["Used once the bar is moved with /moveui. Until then it covers the datatext panel."],
+					order = 6,
+					min = 5,
+					max = 100,
+					step = 1,
+				},
+				font = {
+					type = "select",
+					name = L["Font"],
+					dialogControl = "LSM30_Font",
+					order = 7,
+					values = FontValues,
+				},
+				fontSize = {
+					type = "range",
+					name = L["Font Size"],
+					order = 8,
+					min = 6,
+					max = 22,
+					step = 1,
+				},
+				fontOutline = {
+					type = "select",
+					name = L["Font Outline"],
+					order = 9,
+					values = {
+						["NONE"] = L["None"],
+						["OUTLINE"] = L["Outline"],
+						["MONOCHROMEOUTLINE"] = L["Monochrome Outline"],
+						["THICKOUTLINE"] = L["Thick Outline"],
+					},
 				},
 			},
 		},

@@ -729,6 +729,10 @@ L["Color aurabar debuffs by type."] = true
 --DataBars
 L["DataBars"] = true
 L["Experience and reputation bars."] = true
+L["Display Text"] = true
+L["Tank Colors"] = true
+L["Shows your threat on your target in combat, over the right chat's datatext panel, if you have a pet or a group. Stays hidden while the mob attacks someone whose threat is unknown."] = true
+L["Used once the bar is moved with /moveui. Until then it covers the datatext panel."] = true
 L["XP Bar"] = true
 L["Mouseover"] = true
 L["Hide At Max Level"] = true

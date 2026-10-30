@@ -51,6 +51,8 @@ L["Accept"] = "Accepter"
 L["Cancel"] = "Annuler"
 
 --DataBars
+L["ABOVE_THREAT_FORMAT"] = "%s: %.0f%% [%.0f%% excès |cff%02x%02x%02x%s|r]"
+L["Threat Bar"] = "Barre de menace"
 L["Experience"] = "Expérience"
 L["XP:"] = "XP:"
 L["Remaining:"] = "Restant:"

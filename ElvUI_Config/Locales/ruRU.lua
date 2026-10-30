@@ -706,6 +706,10 @@ L["Color aurabar debuffs by type."] = "Окрашивать полосы аур-
 --DataBars
 L["DataBars"] = "Инфо-полосы"
 L["Experience and reputation bars."] = "Полосы опыта и репутации."
+L["Display Text"] = "Показывать текст"
+L["Tank Colors"] = "Цвета танка"
+L["Shows your threat on your target in combat, over the right chat's datatext panel, if you have a pet or a group. Stays hidden while the mob attacks someone whose threat is unknown."] = "Показывает вашу угрозу по цели в бою поверх инфопанели правого чата, если у вас есть питомец или группа. Скрыта, пока противник атакует того, чья угроза неизвестна."
+L["Used once the bar is moved with /moveui. Until then it covers the datatext panel."] = "Применяется после перемещения полосы через /moveui. До этого она закрывает инфопанель."
 L["XP Bar"] = "Индикатор опыта"
 L["Mouseover"] = "При наведении"
 L["Hide At Max Level"] = "Прятать на максимальном уровне"

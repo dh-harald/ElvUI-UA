@@ -706,6 +706,10 @@ L["Color aurabar debuffs by type."] = "Colore les affaiblissement de la barre d'
 --DataBars
 L["DataBars"] = "Barres d'expériences"
 L["Experience and reputation bars."] = "Barres d'expérience et de réputation."
+L["Display Text"] = "Afficher le texte"
+L["Tank Colors"] = "Couleurs de tank"
+L["Shows your threat on your target in combat, over the right chat's datatext panel, if you have a pet or a group. Stays hidden while the mob attacks someone whose threat is unknown."] = "Affiche votre menace sur votre cible en combat, par-dessus le panneau d'informations du chat de droite, si vous avez un familier ou un groupe. Reste masquée tant que l'ennemi attaque quelqu'un dont la menace est inconnue."
+L["Used once the bar is moved with /moveui. Until then it covers the datatext panel."] = "Utilisé une fois la barre déplacée avec /moveui. Jusque-là, elle recouvre le panneau d'informations."
 L["XP Bar"] = "Barre d'expérience"
 L["Mouseover"] = "Au survol de la souris"
 L["Hide At Max Level"] = "Cacher au niveau maximum"

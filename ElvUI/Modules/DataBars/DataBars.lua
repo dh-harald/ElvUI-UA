@@ -14,8 +14,8 @@ local E, L, V, P, G = unpack(ElvUI)
 local M = E:NewModule("DataBars", "AceEvent-3.0")
 E.DataBars = M
 
--- Settings: `P.databars.experience` / `P.databars.reputation`
--- (Settings/Profile.lua).
+-- Settings: `P.databars.experience` / `P.databars.reputation` /
+-- `P.databars.threat` (Settings/Profile.lua).
 
 -- Ported from real ElvUI's own DataBars.lua, adapted to this project's
 -- available primitives -- no E:SetInside/
@@ -128,18 +128,21 @@ function M:Initialize()
 	self.db = E.db.databars
 	self:LoadExperienceBar()
 	self:LoadReputationBar()
+	self:LoadThreatBar()
 
-	-- Both bars hide themselves when they have nothing to show (no watched
-	-- faction / max level), which would also take their own mover drag
-	-- handle down with them -- the handle is a CHILD of the frame it moves.
-	-- Both UpdateXXX functions already keep the frame visible while
+	-- The bars hide themselves when they have nothing to show (no watched
+	-- faction / max level / not in combat), which would also take their own
+	-- mover drag handle down with them -- the handle is a CHILD of the frame
+	-- it moves. The UpdateXXX functions already keep the frame visible while
 	-- E.moversUnlocked is true; this just makes them re-evaluate the
-	-- INSTANT move mode toggles, instead of on their next 2s poll tick
+	-- INSTANT move mode toggles, instead of on their next poll tick
 	-- (which read as "the bar is missing from /moveui" in practice).
 	if E.RegisterMoverStateCallback then
 		E:RegisterMoverStateCallback(function()
 			M:UpdateExperience()
 			M:UpdateReputation()
+			M:UpdateThreatDimensions()
+			M:UpdateThreat()
 		end)
 	end
 end

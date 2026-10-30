@@ -51,6 +51,8 @@ L["Accept"] = "接受"
 L["Cancel"] = "取消"
 
 --DataBars
+L["ABOVE_THREAT_FORMAT"] = "%s: %.0f%% [%.0f%% 以上 |cff%02x%02x%02x%s|r]"
+L["Threat Bar"] = "仇恨条"
 L["Experience"] = "经验/声望条"
 L["XP:"] = "经验:"
 L["Remaining:"] = "剩余:"

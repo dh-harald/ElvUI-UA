@@ -616,6 +616,19 @@ P.databars = {
 		orientation = "HORIZONTAL",
 		hideInCombat = false,
 	},
+	-- Retail's keys and sizes (ElvUI-vanilla has no such bar). Until its mover
+	-- is moved the bar covers RightChatDataPanel, and `width`/`height` only
+	-- apply after that.
+	threat = {
+		enable = true,
+		width = 222,
+		height = 10,
+		font = "PT Sans Narrow",
+		fontSize = 11,
+		fontOutline = "NONE",
+		displayText = true,
+		tankStatus = true,
+	},
 }
 
 -- ---------------------------------------------------------------------

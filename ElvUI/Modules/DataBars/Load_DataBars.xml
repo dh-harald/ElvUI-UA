@@ -2,4 +2,5 @@
 	<Script file="DataBars.lua"/>
 	<Script file="XPBar.lua"/>
 	<Script file="ReputationBar.lua"/>
+	<Script file="ThreatBar.lua"/>
 </Ui>

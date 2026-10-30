@@ -86,7 +86,13 @@ Two addons ship together:
   and icons from pfUI's spell database; kicks, stuns and other interrupts
   end it with "Interrupted". Mobs that share a name cannot be told apart,
   and channelled spells of others are not shown
-- DataBars (XP/Reputation), DataTexts
+- DataBars (XP/Reputation/Threat), DataTexts
+- Threat bar (from retail ElvUI): in combat, with a pet or a group, your
+  threat on your target covers the right chat's datatext panel, or sits
+  anywhere with /moveui. The client has no threat data, so it comes from
+  LibVanillaThreat-1.0, which estimates it from the combat log and syncs it
+  over the addon channel; the bar stays hidden while the mob attacks someone
+  without the library. On non-English clients threat modifiers do not apply
 - Chat, with sender names, mentioned player names and player names in
   system messages (/who answers, friends coming online) in class colour,
   from the class cache; optionally (General → Class Cache → Request info)
