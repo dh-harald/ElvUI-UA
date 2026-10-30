@@ -58,23 +58,12 @@ local Compat = ElvUI.Compat
 local M = E:NewModule("ActionBars", "AceEvent-3.0")
 E.ActionBars = M
 
--- LibSharedMedia-3.0 -- font media registered in Media/SharedMedia.lua
--- (the client's own 4 built-in font files). ElvUI_Config/Core.lua's font
--- picker is a plain "select" reading LSM:List("font") -- NOT the
--- LSM30_Font AceGUI widget since AceGUI isn't vendored here. Neither this
--- (LSM:Fetch + SetFont) nor a SetFontObject/virtual-Font-object approach
--- actually changes the rendered font on UA -- see ApplyFont() below.
+-- LibSharedMedia-3.0 -- font media registered in Media/SharedMedia.lua.
 local LSM = LibStub("LibSharedMedia-3.0", true)
 
 -- Settings: `V.actionbar` (Settings/Private.lua), `P.actionbar` plus the
 -- per-bar `P.actionbar.bar1..bar5`/`barPet`/`barShapeShift` tables
 -- (Settings/Profile.lua).
---
--- The font settings are kept in the config UI even though they currently
--- have NO visible effect on UA -- neither this SetFont-based mechanism nor
--- a SetFontObject approach changes the rendered font there; see ApplyFont()
--- below. NOT ported: the text color picker and the Stack/Hotkey Text
--- Position X/Y offset group.
 
 -- `prefix..i` must produce the ACTUAL native button name -- "ActionButton"
 -- already ends in "Button" (native names are ActionButton1..12), but the
@@ -297,13 +286,6 @@ local function HideChrome()
 	end
 end
 
--- Mapping LSM font names to XML-declared virtual Font objects +
--- SetFontObject (Media/Fonts.xml) was tried as an alternative to the
--- simpler LSM:Fetch + SetFont version below, since SetFont itself is a
--- no-op on UA -- SetFontObject had no visible effect either. Kept to the
--- simpler LSM:Fetch + SetFont version since it's no more or less
--- functional and simpler to reason about. Neither mechanism currently
--- changes the rendered font on UA.
 local function ApplyFont(fontString)
 	if not fontString then return end
 	local desiredFamily = E.db.actionbar.font
@@ -528,13 +510,17 @@ local function StyleButton(button, showGrid)
 	-- Module-wide, not per-bar -- matches real ElvUI's own config, which
 	-- puts these in the "general" group, not the per-bar groups.
 	local hotkey = _G[name.."HotKey"]
-	-- The guard tracks the POSITION as well as the on/off mode: without the
-	-- position in the signature, changing hotkeyTextPosition/XOffset/YOffset
-	-- would only take effect the next time the mode itself was toggled.
+	local color = E.db.actionbar.fontColor
+	local colorState = color.r.."|"..color.g.."|"..color.b
+	-- The guard tracks the POSITION and the colour as well as the on/off mode:
+	-- without them in the signature, changing hotkeyTextPosition/XOffset/YOffset
+	-- or `fontColor` would only take effect the next time the mode itself was
+	-- toggled.
 	local hotkeyState = tostring(E.db.actionbar.hotkeytext)
 		.."|"..tostring(E.db.actionbar.hotkeyTextPosition)
 		.."|"..tostring(E.db.actionbar.hotkeyTextXOffset)
 		.."|"..tostring(E.db.actionbar.hotkeyTextYOffset)
+		.."|"..colorState
 	if hotkey and button.elvHotkeyMode ~= hotkeyState then
 		if E.db.actionbar.hotkeytext then
 			hotkey:ClearAllPoints()
@@ -542,12 +528,15 @@ local function StyleButton(button, showGrid)
 				E.db.actionbar.hotkeyTextPosition or "TOPRIGHT",
 				E.db.actionbar.hotkeyTextXOffset or 0,
 				E.db.actionbar.hotkeyTextYOffset or -3)
-			pcall(hotkey.SetTextColor, hotkey, 0.9, 0.9, 0.9)
+			pcall(hotkey.SetTextColor, hotkey, color.r, color.g, color.b)
 			-- Same re-assertion problem as SetNormalTexture/SetTexCoord --
 			-- real ElvUI overrides this exact method for this exact
 			-- reason (`hotkey.SetVertexColor = E.noop`), applied here
 			-- pre-emptively.
 			hotkey.SetVertexColor = E.noop
+			-- Clearing the hidden branch's shadowing field reaches the real
+			-- method again, so the text returns without a reload.
+			if hotkey.Show == E.noop then hotkey.Show = nil end
 			hotkey:Show()
 		else
 			hotkey:Hide()
@@ -572,6 +561,7 @@ local function StyleButton(button, showGrid)
 			macroName:ClearAllPoints()
 			macroName:SetPoint("BOTTOM", button, "BOTTOM", 0, 2)
 			pcall(macroName.SetJustifyH, macroName, "CENTER")
+			if macroName.Show == E.noop then macroName.Show = nil end
 			macroName:Show()
 		else
 			macroName:Hide()
@@ -580,6 +570,19 @@ local function StyleButton(button, showGrid)
 		button.elvMacroMode = E.db.actionbar.macrotext
 	end
 	ApplyFont(macroName)
+
+	-- Stack count, real ElvUI's `countText*` and `fontColor`.
+	local count = _G[name.."Count"]
+	local countPoint = E.db.actionbar.countTextPosition
+	local countX, countY = E.db.actionbar.countTextXOffset, E.db.actionbar.countTextYOffset
+	local countState = countPoint.."|"..countX.."|"..countY.."|"..colorState
+	if count and button.elvCountMode ~= countState then
+		pcall(count.ClearAllPoints, count)
+		pcall(count.SetPoint, count, countPoint, button, countPoint, countX, countY)
+		pcall(count.SetTextColor, count, color.r, color.g, color.b)
+		button.elvCountMode = countState
+	end
+	ApplyFont(count)
 end
 
 -- `P` (Engine[4]) is only ever touched above, at file-load time, to

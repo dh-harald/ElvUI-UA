@@ -238,7 +238,10 @@ E.Options.args.actionbar = {
 					desc = L["Display bind names on action buttons."],
 					order = 1,
 					get = function() return E.db.actionbar.hotkeytext end,
-					set = function(_, value) E.db.actionbar.hotkeytext = value end,
+					set = function(_, value)
+						E.db.actionbar.hotkeytext = value
+						UpdateAllActionBars()
+					end,
 				},
 				macrotext = {
 					type = "toggle",
@@ -246,7 +249,10 @@ E.Options.args.actionbar = {
 					desc = L["Display macro names on action buttons."],
 					order = 2,
 					get = function() return E.db.actionbar.macrotext end,
-					set = function(_, value) E.db.actionbar.macrotext = value end,
+					set = function(_, value)
+						E.db.actionbar.macrotext = value
+						UpdateAllActionBars()
+					end,
 				},
 				lockActionBars = {
 					type = "toggle",
@@ -321,6 +327,46 @@ E.Options.args.actionbar = {
 					-- `general` -- the same 'right setting, wrong place' trap the rest
 					-- of this refactor keeps finding. Live: the position is part of
 					-- StyleButton's re-apply signature.
+						countTextPosition = {
+							type = "select",
+							name = L["Stack Text Position"],
+							order = 1,
+							values = {
+								["BOTTOMRIGHT"] = "BOTTOMRIGHT",
+								["BOTTOMLEFT"] = "BOTTOMLEFT",
+								["TOPRIGHT"] = "TOPRIGHT",
+								["TOPLEFT"] = "TOPLEFT",
+								["BOTTOM"] = "BOTTOM",
+								["TOP"] = "TOP",
+							},
+							get = function() return E.db.actionbar.countTextPosition end,
+							set = function(_, value)
+								E.db.actionbar.countTextPosition = value
+								UpdateAllActionBars()
+							end,
+						},
+						countTextXOffset = {
+							type = "range",
+							name = L["Stack Text X-Offset"],
+							order = 2,
+							min = -10, max = 10, step = 1,
+							get = function() return E.db.actionbar.countTextXOffset end,
+							set = function(_, value)
+								E.db.actionbar.countTextXOffset = value
+								UpdateAllActionBars()
+							end,
+						},
+						countTextYOffset = {
+							type = "range",
+							name = L["Stack Text Y-Offset"],
+							order = 3,
+							min = -10, max = 10, step = 1,
+							get = function() return E.db.actionbar.countTextYOffset end,
+							set = function(_, value)
+								E.db.actionbar.countTextYOffset = value
+								UpdateAllActionBars()
+							end,
+						},
 						hotkeyTextPosition = {
 							type = "select",
 							name = L["Hotkey Text Position"],
@@ -363,6 +409,21 @@ E.Options.args.actionbar = {
 						},
 						},
 					},
+					fontColor = {
+						order = 7,
+						type = "color",
+						name = L["Color"],
+						width = "full",
+						get = function()
+							local t = E.db.actionbar.fontColor
+							return t.r, t.g, t.b
+						end,
+						set = function(_, r, g, b)
+							local t = E.db.actionbar.fontColor
+							t.r, t.g, t.b = r, g, b
+							UpdateAllActionBars()
+						end,
+					},
 					font = {
 						type = "select",
 						name = L["Font"],
@@ -381,18 +442,23 @@ E.Options.args.actionbar = {
 							return list
 						end,
 						get = function() return E.db.actionbar.font end,
-						set = function(_, value) E.db.actionbar.font = value end,
+						set = function(_, value)
+							E.db.actionbar.font = value
+							UpdateAllActionBars()
+						end,
 					},
 					fontSize = {
 						type = "range",
 						name = L["Font Size"],
-						desc = L["Applies to keybind and macro text. Currently a no-op on UA (SetFont doesn't apply size there) -- kept for real 1.12.1 and in case UA fixes this."],
 						order = 5,
 						min = 4,
 						max = 32,
 						step = 1,
 						get = function() return E.db.actionbar.fontSize end,
-						set = function(_, value) E.db.actionbar.fontSize = value end,
+						set = function(_, value)
+							E.db.actionbar.fontSize = value
+							UpdateAllActionBars()
+						end,
 					},
 					-- Values matched to real ElvUI's own domain exactly
 					-- (ElvUI-vanilla/ElvUI_Config/
@@ -415,7 +481,10 @@ E.Options.args.actionbar = {
 							["THICKOUTLINE"] = L["Thick Outline"],
 						},
 						get = function() return E.db.actionbar.fontOutline end,
-						set = function(_, value) E.db.actionbar.fontOutline = value end,
+						set = function(_, value)
+							E.db.actionbar.fontOutline = value
+							UpdateAllActionBars()
+						end,
 					},
 					},
 				},
