@@ -21,6 +21,11 @@
 -- - Strata raised from the native HIGH to DIALOG, as in real ElvUI: the
 --   bag frames sit on DIALOG, and the split frame opens anchored to a bag
 --   slot.
+--
+-- TicketStatusFrame (shown while a GM ticket is open), per
+-- `FrameXML/HelpFrame.xml`: a native `<Backdrop>` and no art regions. The
+-- ticket icon lives on the `TicketStatusButton` child and stays, it is the
+-- button that opens the ticket popup.
 
 local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
@@ -78,8 +83,27 @@ local function ApplyStackSplitSkin()
 	if not ok then S:ReportSkinProblem() end
 end
 
+local function ApplyTicketStatusChrome(frame)
+	S:StripTextures(frame, false)
+	S:CreatePanel(frame)
+end
+
+local ticketStatusSkinApplied = false
+local function ApplyTicketStatusSkin()
+	if ticketStatusSkinApplied then return end
+	local frame = _G.TicketStatusFrame
+	if not frame then return end
+	ticketStatusSkinApplied = true
+
+	ApplyTicketStatusChrome(frame)
+
+	local ok = S:TryHookScript(frame, "OnShow", function() ApplyTicketStatusChrome(frame) end)
+	if not ok then S:ReportSkinProblem() end
+end
+
 local function LoadSkin()
 	ApplyStackSplitSkin()
+	ApplyTicketStatusSkin()
 end
 
 S:AddBlizzardSkin("misc", LoadSkin)
