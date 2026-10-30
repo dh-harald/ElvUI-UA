@@ -23,7 +23,7 @@ end
 -- Shared per-bar args for the "Bar 1".."Bar 5" tabs -- ported from real
 -- ElvUI_Config/ActionBars.lua's own `for i = 1, 5 do ... end` block, minus
 -- the fields that need infrastructure this project doesn't have (anchor
--- point, width/height multiplier, backdrop spacing, mouseover-fade,
+-- point, width/height multiplier, backdrop spacing,
 -- restorePosition/movers -- see Modules/ActionBars.lua's file header for
 -- the full skip list). `enabled` is reload-required (enabling/disabling a
 -- bar reparents or releases its native buttons, which UpdateBar doesn't
@@ -165,6 +165,30 @@ local function BarArgs(id)
 			end,
 			disabled = function() return not E.db.actionbar[key].enabled end,
 		},
+		mouseover = {
+			type = "toggle",
+			name = L["Mouse Over"],
+			desc = L["The frame is not shown unless you mouse over the frame."],
+			order = 7,
+			get = function() return E.db.actionbar[key].mouseover end,
+			set = function(_, value)
+				E.db.actionbar[key].mouseover = value
+				UpdateActionBar(id)
+			end,
+			disabled = function() return not E.db.actionbar[key].enabled end,
+		},
+		inheritGlobalFade = {
+			type = "toggle",
+			name = L["Inherit Global Fade"],
+			desc = L["Inherit the global fade, mousing over, targetting, setting focus, losing health, entering combat will set the remove transparency. Otherwise it will use the transparency level in the general actionbar settings for global fade alpha."],
+			order = 8,
+			get = function() return E.db.actionbar[key].inheritGlobalFade end,
+			set = function(_, value)
+				E.db.actionbar[key].inheritGlobalFade = value
+				UpdateActionBar(id)
+			end,
+			disabled = function() return not E.db.actionbar[key].enabled end,
+		},
 		alpha = {
 			type = "range",
 			name = L["Alpha"],
@@ -253,6 +277,18 @@ E.Options.args.actionbar = {
 						E.db.actionbar.macrotext = value
 						UpdateAllActionBars()
 					end,
+				},
+				-- Read on every UpdateBarFade tick, so it needs no refresh.
+				globalFadeAlpha = {
+					type = "range",
+					name = L["Global Fade Transparency"],
+					desc = L["Transparency level when not in combat, no target exists, full health, not casting, and no focus target exists."],
+					order = 4,
+					min = 0,
+					max = 1,
+					step = 0.01,
+					get = function() return E.db.actionbar.globalFadeAlpha end,
+					set = function(_, value) E.db.actionbar.globalFadeAlpha = value end,
 				},
 				lockActionBars = {
 					type = "toggle",
@@ -576,6 +612,28 @@ E.Options.args.actionbar = {
 						E.PetBar:UpdateBar()
 					end,
 				},
+				mouseover = {
+					type = "toggle",
+					name = L["Mouse Over"],
+					desc = L["The frame is not shown unless you mouse over the frame."],
+					order = 9,
+					get = function() return E.db.actionbar.barPet.mouseover end,
+					set = function(_, value)
+						E.db.actionbar.barPet.mouseover = value
+						E.PetBar:UpdateBar()
+					end,
+				},
+				inheritGlobalFade = {
+					type = "toggle",
+					name = L["Inherit Global Fade"],
+					desc = L["Inherit the global fade, mousing over, targetting, setting focus, losing health, entering combat will set the remove transparency. Otherwise it will use the transparency level in the general actionbar settings for global fade alpha."],
+					order = 10,
+					get = function() return E.db.actionbar.barPet.inheritGlobalFade end,
+					set = function(_, value)
+						E.db.actionbar.barPet.inheritGlobalFade = value
+						E.PetBar:UpdateBar()
+					end,
+				},
 				alpha = {
 					type = "range",
 					name = L["Alpha"],
@@ -704,6 +762,28 @@ E.Options.args.actionbar = {
 					get = function() return E.db.actionbar.barShapeShift.buttonspacing end,
 					set = function(_, value)
 						E.db.actionbar.barShapeShift.buttonspacing = value
+						E.StanceBar:UpdateBar()
+					end,
+				},
+				mouseover = {
+					type = "toggle",
+					name = L["Mouse Over"],
+					desc = L["The frame is not shown unless you mouse over the frame."],
+					order = 9,
+					get = function() return E.db.actionbar.barShapeShift.mouseover end,
+					set = function(_, value)
+						E.db.actionbar.barShapeShift.mouseover = value
+						E.StanceBar:UpdateBar()
+					end,
+				},
+				inheritGlobalFade = {
+					type = "toggle",
+					name = L["Inherit Global Fade"],
+					desc = L["Inherit the global fade, mousing over, targetting, setting focus, losing health, entering combat will set the remove transparency. Otherwise it will use the transparency level in the general actionbar settings for global fade alpha."],
+					order = 10,
+					get = function() return E.db.actionbar.barShapeShift.inheritGlobalFade end,
+					set = function(_, value)
+						E.db.actionbar.barShapeShift.inheritGlobalFade = value
 						E.StanceBar:UpdateBar()
 					end,
 				},

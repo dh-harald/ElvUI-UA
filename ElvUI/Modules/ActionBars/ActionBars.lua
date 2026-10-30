@@ -34,9 +34,8 @@
 -- module-wide hotkeytext/macrotext/lockActionBars from its "general"
 -- group. Deliberately NOT ported (needs infrastructure this project
 -- doesn't have, or is much lower value for a first pass): anchor
--- point/widthMult/heightMult/backdropSpacing, mouseover-fade/
--- inheritGlobalFade (no fade system), restorePosition (no mover system,
--- no E:CreateMover), pet bar, stance bar, microbar, per-state button
+-- point/widthMult/heightMult/backdropSpacing, restorePosition (no mover
+-- system, no E:CreateMover), pet bar, stance bar, microbar, per-state button
 -- colors, the LSM font group, keyDown, useRangeColorText, the Cooldown
 -- Text/Keybind Mode shortcuts.
 --
@@ -676,7 +675,9 @@ local function PositionOneBar(bar, barSettings)
 
 	bar:SetWidth(barWidth)
 	bar:SetHeight(barHeight)
-	pcall(bar.SetAlpha, bar, barSettings.alpha or 1)
+	if not (barSettings.mouseover or barSettings.inheritGlobalFade) then
+		pcall(bar.SetAlpha, bar, barSettings.alpha or 1)
+	end
 	pcall(bar.Show, bar)
 	local backdropAlpha = barSettings.backdrop and 1 or 0
 	pcall(bar.SetBackdropColor, bar, 0.1, 0.1, 0.1, backdropAlpha)
@@ -802,6 +803,164 @@ local function InstallActionButtonGetPagedID()
 	end
 end
 
+-- Mouse-over and global fade, real ElvUI's `mouseover`, `inheritGlobalFade` and
+-- `globalFadeAlpha`. A holder's alpha reaches its buttons on both clients, so
+-- the holder is what fades. Hover is measured with MouseIsOver on a timer rather
+-- than with OnEnter/OnLeave hooks on the buttons, so the gaps between buttons
+-- count as well. A faded bar still takes clicks, as in real ElvUI. Only bars with
+-- one of the two switches on are touched here; the others keep the alpha their
+-- own positioning sets.
+local FADE_INTERVAL = 0.05
+-- Alpha change per tick: a full fade takes real ElvUI's 0.2 seconds.
+local FADE_STEP = FADE_INTERVAL / 0.2
+-- On Unreal Azeroth a bar's alpha does not reach the cooldown swipe with its
+-- text, the checked highlight or the pet autocast glow, and these cannot be
+-- dimmed one by one either. Below this alpha they are switched off instead.
+local CONTENT_MIN_ALPHA = 0.5
+local FADE_KEYS = { "bar1", "bar2", "bar3", "bar4", "bar5", "barPet", "barShapeShift" }
+local NUM_FADE_BARS = 7
+local fadeHovered = {}
+local casting = false
+
+local function FadeBarFrame(index)
+	if index == 6 then return E.PetBar and E.PetBar.bar end
+	if index == 7 then return E.StanceBar and E.StanceBar.bar end
+	return M.bars and M.bars[index]
+end
+
+-- Real ElvUI's condition for lifting the global fade, without the focus target
+-- the 1.12 client does not have.
+local function IsPlayerEngaged()
+	if casting then return true end
+	if Compat.bool(UnitExists("target")) then return true end
+	if Compat.bool(UnitAffectingCombat("player")) then return true end
+	return UnitHealth("player") < UnitHealthMax("player")
+end
+
+local function FadeTarget(settings, hovered, engaged, globalFade)
+	local alpha = settings.alpha or 1
+	if settings.mouseover and not hovered then alpha = 0 end
+	if settings.inheritGlobalFade and not engaged then
+		alpha = alpha * (1 - globalFade)
+	end
+	return alpha
+end
+
+local function MoveAlpha(bar, target)
+	local okAlpha, current = pcall(bar.GetAlpha, bar)
+	if not okAlpha or math.abs(current - target) < 0.001 then return end
+	if current < target then
+		current = math.min(current + FADE_STEP, target)
+	else
+		current = math.max(current - FADE_STEP, target)
+	end
+	pcall(bar.SetAlpha, bar, current)
+end
+
+-- Runs every tick while the bar is faded, because native code shows a new
+-- cooldown and restores the checked state on its own events.
+local function HideBarContent(bar)
+	local cooldowns = bar.elvFadeCooldowns
+	if not cooldowns then
+		cooldowns = {}
+		local _, button
+		for _, button in pairs(bar.buttons) do
+			table.insert(cooldowns, _G[button:GetName().."Cooldown"])
+		end
+		bar.elvFadeCooldowns = cooldowns
+	end
+
+	local i
+	for i = 1, table.getn(cooldowns) do
+		local cooldown = cooldowns[i]
+		if Compat.bool(cooldown:IsShown()) then
+			cooldown.elvFadeHidden = true
+			cooldown:Hide()
+		end
+	end
+
+	local _, button
+	for _, button in pairs(bar.buttons) do
+		if Compat.bool(button:GetChecked()) then button:SetChecked(0) end
+	end
+end
+
+-- A hidden cooldown stops its own timer, so one that ran out meanwhile stays
+-- hidden. The checked state is read back from the game: `index` is the bar's
+-- place in FADE_KEYS.
+local function RestoreBarContent(bar, index)
+	local cooldowns = bar.elvFadeCooldowns
+	local now = GetTime()
+	local i
+	for i = 1, table.getn(cooldowns or {}) do
+		local cooldown = cooldowns[i]
+		if cooldown.elvFadeHidden then
+			cooldown.elvFadeHidden = nil
+			if cooldown.start and cooldown.duration and now < cooldown.start + cooldown.duration then
+				cooldown:Show()
+			end
+		end
+	end
+
+	if index == 6 then
+		E.PetBar:UpdateCheckedState()
+	elseif index == 7 then
+		E.StanceBar:UpdateCheckedState()
+	else
+		local caller = this
+		local _, button
+		for _, button in pairs(bar.buttons) do
+			this = button
+			pcall(ActionButton_UpdateState)
+		end
+		this = caller
+	end
+end
+
+-- Two passes: a hovered bar with `inheritGlobalFade` lifts the fade of every bar
+-- that inherits it, as real ElvUI's shared fade parent does.
+function M:UpdateBarFade()
+	local db = E.db.actionbar
+	local engaged = IsPlayerEngaged()
+	local i
+	for i = 1, NUM_FADE_BARS do
+		local settings, bar = db[FADE_KEYS[i]], FadeBarFrame(i)
+		fadeHovered[i] = false
+		if bar and settings and settings.enabled
+			and (settings.mouseover or settings.inheritGlobalFade) then
+			local ok, over = pcall(MouseIsOver, bar)
+			fadeHovered[i] = ok and Compat.bool(over)
+			if fadeHovered[i] and settings.inheritGlobalFade then engaged = true end
+		end
+	end
+	for i = 1, NUM_FADE_BARS do
+		local settings, bar = db[FADE_KEYS[i]], FadeBarFrame(i)
+		if bar and settings and settings.enabled
+			and (settings.mouseover or settings.inheritGlobalFade) then
+			MoveAlpha(bar, FadeTarget(settings, fadeHovered[i], engaged, db.globalFadeAlpha))
+		end
+	end
+
+	for i = 1, NUM_FADE_BARS do
+		local bar = FadeBarFrame(i)
+		if bar then
+			local okAlpha, alpha = pcall(bar.GetAlpha, bar)
+			local faded = okAlpha and alpha < CONTENT_MIN_ALPHA
+			if faded then
+				bar.elvContentFaded = true
+				pcall(HideBarContent, bar)
+			elseif bar.elvContentFaded then
+				bar.elvContentFaded = false
+				pcall(RestoreBarContent, bar, i)
+			end
+			if i == 6 then E.PetBar:UpdateAutoCastFade(faded) end
+		end
+	end
+end
+
+local function CastingStarted() casting = true end
+local function CastingEnded() casting = false end
+
 -- Sizes/lays out every bar's buttons. Each bar's own screen POSITION is
 -- independent now (mover-owned, see CreateBar()) -- this no longer
 -- chains bar N to bar N-1, so bars can be dragged apart via /moveui
@@ -835,6 +994,13 @@ function M:Initialize()
 	self:PositionBars()
 	InstallActionButtonGetPagedID()
 	E:ScheduleRepeatingTimer(function() self:UpdateRangeColors() end, RANGE_UPDATE_DELAY)
+	E:ScheduleRepeatingTimer(function() self:UpdateBarFade() end, FADE_INTERVAL)
+	self:RegisterEvent("SPELLCAST_START", CastingStarted)
+	self:RegisterEvent("SPELLCAST_CHANNEL_START", CastingStarted)
+	self:RegisterEvent("SPELLCAST_STOP", CastingEnded)
+	self:RegisterEvent("SPELLCAST_FAILED", CastingEnded)
+	self:RegisterEvent("SPELLCAST_INTERRUPTED", CastingEnded)
+	self:RegisterEvent("SPELLCAST_CHANNEL_STOP", CastingEnded)
 	self:InitTargetAura()
 
 	-- Explicit both ways (matches real ElvUI's own

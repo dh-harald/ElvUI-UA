@@ -123,7 +123,10 @@ function M:PositionBar()
 
 	bar:SetWidth(barWidth)
 	bar:SetHeight(barHeight)
-	pcall(bar.SetAlpha, bar, settings.alpha or 1)
+	-- A fading bar's alpha belongs to E.ActionBars:UpdateBarFade.
+	if not (settings.mouseover or settings.inheritGlobalFade) then
+		pcall(bar.SetAlpha, bar, settings.alpha or 1)
+	end
 	if not settings.backdrop then
 		pcall(bar.SetBackdropColor, bar, 0, 0, 0, 0)
 		pcall(bar.SetBackdropBorderColor, bar, 0, 0, 0, 0)
@@ -210,7 +213,7 @@ local function UpdateCheckedState()
 		local button = bar.buttons[i]
 		if button then
 			local okInfo, texture, _, isActive, isCastable = pcall(GetShapeshiftFormInfo, i)
-			pcall(button.SetChecked, button, okInfo and isActive and true or false)
+			pcall(button.SetChecked, button, okInfo and isActive and not bar.elvContentFaded and true or false)
 
 			local icon = _G[button:GetName().."Icon"]
 			if icon then
@@ -226,6 +229,10 @@ local function UpdateCheckedState()
 			end
 		end
 	end
+end
+
+function M:UpdateCheckedState()
+	UpdateCheckedState()
 end
 
 -- Same native-handler gap as UpdateCheckedState above. Event-driven only,

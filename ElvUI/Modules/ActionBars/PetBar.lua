@@ -189,7 +189,10 @@ function M:PositionBar()
 
 	bar:SetWidth(barWidth)
 	bar:SetHeight(barHeight)
-	pcall(bar.SetAlpha, bar, settings.alpha or 1)
+	-- A fading bar's alpha belongs to E.ActionBars:UpdateBarFade.
+	if not (settings.mouseover or settings.inheritGlobalFade) then
+		pcall(bar.SetAlpha, bar, settings.alpha or 1)
+	end
 	if not settings.backdrop then
 		pcall(bar.SetBackdropColor, bar, 0, 0, 0, 0)
 		pcall(bar.SetBackdropBorderColor, bar, 0, 0, 0, 0)
@@ -313,9 +316,13 @@ local function UpdateCheckedState()
 		local button = bar.buttons[i]
 		if button then
 			local ok, _, _, _, _, isActive = pcall(GetPetActionInfo, i)
-			pcall(button.SetChecked, button, ok and Compat.bool(isActive))
+			pcall(button.SetChecked, button, ok and Compat.bool(isActive) and not bar.elvContentFaded)
 		end
 	end
+end
+
+function M:UpdateCheckedState()
+	UpdateCheckedState()
 end
 
 function M:Initialize()
@@ -398,6 +405,33 @@ function M:Initialize()
 			StyleButton(self.bar.buttons[i])
 		end
 	end, 3, 10)
+end
+
+-- The autocast glow (`PetActionButton<n>AutoCast`) is a Model. On Unreal Azeroth
+-- a Model ignores both its parent's alpha and its own SetAlpha, so it stays lit
+-- on a faded bar; Hide is the one thing that works on it. The native update
+-- shows it again on every pet event, hence the repeat while `faded` holds. The
+-- way back reads the state from the pet API rather than from the model.
+local autoCastHidden = false
+function M:UpdateAutoCastFade(faded)
+	if not faded and not autoCastHidden then return end
+	local i
+	for i = 1, NUM_PET_ACTION_SLOTS do
+		local model = _G[PREFIX..i.."AutoCast"]
+		if model then
+			local enabled = false
+			if not faded then
+				local _, _, _, _, _, _, autoCastEnabled = GetPetActionInfo(i)
+				enabled = Compat.bool(autoCastEnabled)
+			end
+			if enabled then
+				pcall(model.Show, model)
+			else
+				pcall(model.Hide, model)
+			end
+		end
+	end
+	autoCastHidden = faded
 end
 
 -- Public so ElvUI_Config/Core.lua's `set` functions can re-apply

@@ -43,7 +43,8 @@ Two addons ship together:
   EH_Bag, AllBags, Bagnon, …) runs alongside ElvUI's bags, a popup asks which one to
   use and switches the other off
 - Layout (screen panels, minimap panels, mover system)
-- ActionBars, PetBar/StanceBar, Cooldown text
+- ActionBars, PetBar/StanceBar, Cooldown text, per-bar mouse-over and global
+  fade
 - Pet ability cooldowns on Unreal Azeroth, which reports none: started from
   the combat log when the pet uses the ability (autocast included), length
   read from the ability's tooltip
@@ -196,8 +197,6 @@ Two addons ship together:
   predicted, Chain Heal only on its first target, and another player's
   heal-over-time only by estimate until its first tick (the HealComm protocol
   carries no amount for it). Pets and NPCs get no prediction.
-- A few smaller ElvUI features (chat-anchored data panels) are researched
-  but not built yet
 
 ## Known issues
 

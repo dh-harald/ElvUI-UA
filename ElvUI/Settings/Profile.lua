@@ -229,6 +229,7 @@ P.actionbar = {
 	macrotext = false,
 	lockActionBars = true,
 	noRangeColor = {r = 0.8, g = 0.1, b = 0.1},
+	globalFadeAlpha = 0,
 	font = "Homespun",
 	fontSize = 10,
 	fontOutline = "MONOCHROMEOUTLINE",
@@ -246,6 +247,8 @@ P.actionbar = {
 -- addition -- real ElvUI hardcodes the pet bar's grid unconditionally on
 -- with no per-bar toggle at all; see scripts/config-exceptions.lua.)
 P.actionbar.bar1 = {
+	mouseover = false,
+	inheritGlobalFade = false,
 	enabled = true,
 	buttons = 12,
 	buttonsPerRow = 12,
@@ -258,6 +261,8 @@ P.actionbar.bar1 = {
 }
 
 P.actionbar.bar2 = {
+	mouseover = false,
+	inheritGlobalFade = false,
 	enabled = false,
 	buttons = 12,
 	buttonsPerRow = 12,
@@ -270,6 +275,8 @@ P.actionbar.bar2 = {
 }
 
 P.actionbar.bar3 = {
+	mouseover = false,
+	inheritGlobalFade = false,
 	enabled = true,
 	buttons = 6,
 	buttonsPerRow = 6,
@@ -282,6 +289,8 @@ P.actionbar.bar3 = {
 }
 
 P.actionbar.bar4 = {
+	mouseover = false,
+	inheritGlobalFade = false,
 	enabled = true,
 	buttons = 12,
 	buttonsPerRow = 1,
@@ -294,6 +303,8 @@ P.actionbar.bar4 = {
 }
 
 P.actionbar.bar5 = {
+	mouseover = false,
+	inheritGlobalFade = false,
 	enabled = true,
 	buttons = 6,
 	buttonsPerRow = 6,
@@ -306,10 +317,10 @@ P.actionbar.bar5 = {
 }
 
 -- `buttonsPerRow = 1` (a single vertical column) is real ElvUI's own
--- default here. Real ElvUI's `mouseover`/`point`/`widthMult`/`heightMult`/
--- `inheritGlobalFade` are deliberately not declared: Util.MergeTable copies
--- whatever keys a saved profile carries regardless, so omitting an
--- unimplemented field costs nothing for import fidelity. `backdropSpacing`
+-- default here. Real ElvUI's `point`/`widthMult`/`heightMult` are deliberately
+-- not declared: Util.MergeTable copies whatever keys a saved profile carries
+-- regardless, so omitting an unimplemented field costs nothing for import
+-- fidelity. `backdropSpacing`
 -- IS declared now -- `ElvUI.Util.BarPadding` was already reading it, so it
 -- was an implemented field with no default and no control.
 -- `showGrid` (project addition, see the bar1 comment above and
@@ -317,6 +328,8 @@ P.actionbar.bar5 = {
 -- empty slots with no way to turn it off; this project makes it a live
 -- toggle, matching bar1-5's own UX instead of a silent exception to it.
 P.actionbar.barPet = {
+	mouseover = false,
+	inheritGlobalFade = false,
 	enabled = true,
 	buttons = _G.NUM_PET_ACTION_SLOTS or 10,
 	buttonsPerRow = 1,
@@ -331,6 +344,8 @@ P.actionbar.barPet = {
 -- `style` drives the active-stance highlight (the entire point of this
 -- bar); the omitted fields are the same set as barPet's.
 P.actionbar.barShapeShift = {
+	mouseover = false,
+	inheritGlobalFade = false,
 	enabled = true,
 	style = "darkenInactive",
 	buttons = _G.NUM_SHAPESHIFT_SLOTS or 10,
