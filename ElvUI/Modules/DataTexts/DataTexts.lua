@@ -171,6 +171,10 @@ function DT:RegisterPanel(panel, numPoints, anchor, xOff, yOff)
 	DT:UpdateAllDimensions()
 end
 
+local function InCombat()
+	return ElvUI.Compat.bool(UnitAffectingCombat("player"))
+end
+
 function DT:AssignPanelToDataText(panel, data)
 	panel.name = data.name or ""
 
@@ -212,12 +216,14 @@ function DT:AssignPanelToDataText(panel, data)
 
 	if data.onClick then
 		panel:SetScript("OnClick", function()
+			if E.db.datatexts.noCombatClick and InCombat() then return end
 			data.onClick(this)
 		end)
 	end
 
 	if data.onEnter then
 		panel:SetScript("OnEnter", function()
+			if E.db.datatexts.noCombatHover and InCombat() then return end
 			data.onEnter(this)
 		end)
 	end

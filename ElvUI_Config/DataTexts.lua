@@ -93,8 +93,8 @@ end
 -- minimapTopLeft/etc. (real ElvUI has 8 possible minimap-adjacent
 -- panel slots -- this project only builds LeftMiniPanel/
 -- RightMiniPanel, matching real ElvUI's own DEFAULT two-panel
--- layout) and battleground/noCombatClick/noCombatHover are left out
--- rather than stubbed. `panelTransparency`/`panelBackdrop` ARE wired --
+-- layout) and battleground is left out rather than stubbed.
+-- `panelTransparency`/`panelBackdrop` ARE wired --
 -- the Layout module's SetDataPanelStyle is their consumer -- and so are
 -- `leftChatPanel`/`rightChatPanel`, since Modules/Chat/Chat.lua creates
 -- LeftChatDataPanel/RightChatDataPanel. `font` follows the same
@@ -137,9 +137,10 @@ E.Options.args.datatexts = {
 				--
 				-- Real ElvUI wraps this in a `generalGroup`; orders 1-5 there
 				-- are battleground/panelTransparency/panelBackdrop/
-				-- noCombatClick/noCombatHover. Orders 1, 4 and 5 stay free
-				-- (not implemented); 2 and 3 are wired to the Layout
-				-- module's SetDataPanelStyle.
+				-- noCombatClick/noCombatHover. Order 1 stays free (not
+				-- implemented); 2 and 3 are wired to the Layout module's
+				-- SetDataPanelStyle, 4 and 5 are read by the panels' own
+				-- OnClick/OnEnter at the moment of the event.
 				generalGroup = {
 					type = "group",
 					name = L["General"],
@@ -167,6 +168,22 @@ E.Options.args.datatexts = {
 							E.db.datatexts.panelBackdrop = value
 							E:GetModule("Layout"):SetDataPanelStyle()
 						end,
+					},
+					noCombatClick = {
+						type = "toggle",
+						name = L["Block Combat Click"],
+						desc = L["Blocks all click events while in combat."],
+						order = 4,
+						get = function() return E.db.datatexts.noCombatClick end,
+						set = function(_, value) E.db.datatexts.noCombatClick = value end,
+					},
+					noCombatHover = {
+						type = "toggle",
+						name = L["Block Combat Hover"],
+						desc = L["Blocks datatext tooltip from showing in combat."],
+						order = 5,
+						get = function() return E.db.datatexts.noCombatHover end,
+						set = function(_, value) E.db.datatexts.noCombatHover = value end,
 					},
 					goldFormat = {
 						type = "select",
