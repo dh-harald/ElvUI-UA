@@ -540,6 +540,7 @@ L["Petition Frame"] = true
 L["Tabard Frame"] = true
 L["Help Frame"] = true
 L["Tutorial Frame"] = true
+L["Battlefield Frame"] = true
 L["Inspect"] = true
 L["Stable"] = true
 L["Dressing Room"] = true

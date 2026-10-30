@@ -17,6 +17,7 @@
 	<Script file="Tabard.lua"/>
 	<Script file="Help.lua"/>
 	<Script file="Tutorial.lua"/>
+	<Script file="Battlefield.lua"/>
 	<Script file="Mail.lua"/>
 	<Script file="Merchant.lua"/>
 	<Script file="Trade.lua"/>

@@ -139,6 +139,7 @@ V.skins = {
 		tabard = true,
 		help = true,
 		tutorial = true,
+		battlefield = true,
 		greeting = true,
 		mail = true,
 		merchant = true,

@@ -119,6 +119,7 @@ E.Options.args.skins = {
 				tabard = { type = "toggle", name = L["Tabard Frame"], desc = SKIN_DESC },
 				help = { type = "toggle", name = L["Help Frame"], desc = SKIN_DESC },
 				tutorial = { type = "toggle", name = L["Tutorial Frame"], desc = SKIN_DESC },
+				battlefield = { type = "toggle", name = L["Battlefield Frame"], desc = SKIN_DESC },
 				mail = {
 					type = "toggle",
 					name = L["Mail"],
