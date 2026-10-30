@@ -873,3 +873,6 @@ L["Border"] = "Граница"
 L["Name Color"] = "Цвет имени"
 L["Flash"] = "Мерцание"
 L["Speed"] = "Скорость"
+
+--UnitFrames auras
+L["Count Font Size"] = "Размер шрифта стаков"

@@ -225,7 +225,7 @@ local function AuraFilterGroup(getTable, order, dbKey, key)
 end
 
 local function AuraArgs(getTable, order, dbKey, key)
-	return {
+	local args = {
 		enable = {
 			type = "toggle",
 			name = L["Enable"],
@@ -346,8 +346,28 @@ local function AuraArgs(getTable, order, dbKey, key)
 			get = function() return getTable().yOffset end,
 			set = function(_, value) getTable().yOffset = value end,
 		},
+		fontSize = {
+			type = "range",
+			name = L["Font Size"],
+			order = order + 5,
+			min = 6, max = 22, step = 1,
+			get = function() return getTable().fontSize end,
+			set = function(_, value) getTable().fontSize = value end,
+		},
 		filters = AuraFilterGroup(getTable, order + 21, dbKey, key),
 	}
+	-- Real ElvUI offers this on group frames only.
+	if dbKey == "party" then
+		args.countFontSize = {
+			type = "range",
+			name = L["Count Font Size"],
+			order = order + 6,
+			min = 6, max = 22, step = 1,
+			get = function() return getTable().countFontSize end,
+			set = function(_, value) getTable().countFontSize = value end,
+		}
+	end
+	return args
 end
 
 -- Information Panel tab -- real ElvUI field/default verbatim

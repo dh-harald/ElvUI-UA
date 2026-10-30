@@ -873,3 +873,6 @@ L["Border"] = "边框"
 L["Name Color"] = "姓名颜色"
 L["Flash"] = "闪光"
 L["Speed"] = "速度"
+
+--UnitFrames auras
+L["Count Font Size"] = "计数字体尺寸"

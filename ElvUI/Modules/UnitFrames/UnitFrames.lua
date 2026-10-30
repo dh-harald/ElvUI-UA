@@ -260,21 +260,33 @@ local function UnitFrameFont(name)
 end
 
 -- Every string styled here is remembered, so UF:Update_FontStrings can apply a
--- changed general font live (real ElvUI's function of the same name).
+-- changed general font live (real ElvUI's function of the same name). A string
+-- with a size of its own keeps it; the rest follow `unitframe.fontSize`.
 local fontStrings = {}
 
-local function ApplyFont(fontString)
+local function ApplyFont(fontString, size)
 	local db = E.db.unitframe
-	fontStrings[fontString] = true
-	pcall(fontString.SetFont, fontString, UnitFrameFont(), db.fontSize, ResolveOutline(db.fontOutline))
+	fontStrings[fontString] = size or true
+	pcall(fontString.SetFont, fontString, UnitFrameFont(), size or db.fontSize, ResolveOutline(db.fontOutline))
 end
 
 function UF:Update_FontStrings()
-	local fontString
-	for fontString in pairs(fontStrings) do
-		ApplyFont(fontString)
+	local fontString, size
+	for fontString, size in pairs(fontStrings) do
+		ApplyFont(fontString, size ~= true and size or nil)
 	end
 	self:UpdateAll()
+end
+
+-- Real ElvUI's per-unit aura text sizes: `fontSize` for the time, and
+-- `countFontSize` (party only) or else `fontSize` for the stacks. Icons are
+-- pooled per unit, so this runs again only when a size changes.
+local function ApplyAuraFonts(icon, db)
+	local countSize = db.countFontSize or db.fontSize
+	if icon.fontSize == db.fontSize and icon.countFontSize == countSize then return end
+	icon.fontSize, icon.countFontSize = db.fontSize, countSize
+	ApplyFont(icon.cooldown, db.fontSize)
+	ApplyFont(icon.count, countSize)
 end
 
 -- frame.Health -- a Util.CreateStatusBar bar, inset from the panel's own
@@ -1770,6 +1782,7 @@ function UF:UpdateAuras(frame, auraType)
 		if shown < maxIcons then
 			shown = shown + 1
 			local icon = self:GetOrCreateAuraIcon(container, shown, "inside")
+			ApplyAuraFonts(icon, auraSettings)
 			icon:SetWidth(size)
 			icon:SetHeight(size)
 			pcall(icon.texture.SetTexture, icon.texture, texture)

@@ -896,3 +896,6 @@ L["Border"] = true
 L["Name Color"] = true
 L["Flash"] = true
 L["Speed"] = true
+
+--UnitFrames auras
+L["Count Font Size"] = true

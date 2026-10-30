@@ -873,3 +873,6 @@ L["Border"] = "Borde"
 L["Name Color"] = "Color del nombre"
 L["Flash"] = "Destello"
 L["Speed"] = "Velocidad"
+
+--UnitFrames auras
+L["Count Font Size"] = "Tamaño de Fuente del Contador"

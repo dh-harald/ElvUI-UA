@@ -357,9 +357,8 @@ P.actionbar.barShapeShift = {
 --                     included) -- every aura here is the player's own
 --   sortMethod/sortDir  implemented (INDEX/TIME)
 --
--- font/fontSize/fontOutline are STORED ONLY (`SetFont` is a no-op on UA)
--- and deliberately absent from the config UI, where they would read as
--- broken controls.
+-- font/fontSize/fontOutline are STORED ONLY: nothing reads them yet, so they
+-- are absent from the config UI.
 --
 -- There is deliberately NO aura-text color setting: real ElvUI-vanilla has
 -- none either -- its `E.TimeColors` is a hardcoded table, and this project
@@ -1127,6 +1126,7 @@ P.unitframe.units.player = {
 		enable = false,
 		perrow = 8,
 		sizeOverride = 20,
+		fontSize = 10,
 		sortMethod = "TIME_REMAINING",
 		sortDirection = "DESCENDING",
 		xOffset = 0,
@@ -1142,6 +1142,7 @@ P.unitframe.units.player = {
 		enable = true,
 		perrow = 8,
 		sizeOverride = 20,
+		fontSize = 10,
 		sortMethod = "TIME_REMAINING",
 		sortDirection = "DESCENDING",
 		xOffset = 0,
@@ -1263,6 +1264,7 @@ P.unitframe.units.target = {
 		enable = true,
 		perrow = 8,
 		sizeOverride = 20,
+		fontSize = 10,
 		sortMethod = "TIME_REMAINING",
 		sortDirection = "DESCENDING",
 		xOffset = 0,
@@ -1278,6 +1280,7 @@ P.unitframe.units.target = {
 		enable = true,
 		perrow = 8,
 		sizeOverride = 20,
+		fontSize = 10,
 		sortMethod = "TIME_REMAINING",
 		sortDirection = "DESCENDING",
 		xOffset = 0,
@@ -1402,6 +1405,7 @@ P.unitframe.units.targettarget = {
 		enable = true,
 		perrow = 5,
 		sizeOverride = 16,
+		fontSize = 10,
 		sortMethod = "TIME_REMAINING",
 		sortDirection = "DESCENDING",
 		xOffset = 0,
@@ -1424,6 +1428,7 @@ P.unitframe.units.targettarget = {
 		perrow = 7,
 		numrows = 1,
 		sizeOverride = 20,
+		fontSize = 10,
 		sortMethod = "TIME_REMAINING",
 		sortDirection = "DESCENDING",
 		attachTo = "FRAME",
@@ -1488,6 +1493,7 @@ P.unitframe.units.pet = {
 		enable = false,
 		perrow = 7,
 		sizeOverride = 16,
+		fontSize = 10,
 		sortMethod = "TIME_REMAINING",
 		sortDirection = "DESCENDING",
 		xOffset = 0,
@@ -1503,6 +1509,7 @@ P.unitframe.units.pet = {
 		enable = false,
 		perrow = 5,
 		sizeOverride = 16,
+		fontSize = 10,
 		sortMethod = "TIME_REMAINING",
 		sortDirection = "DESCENDING",
 		xOffset = 0,
@@ -1578,6 +1585,7 @@ P.unitframe.units.pettarget = {
 		perrow = 7,
 		numrows = 1,
 		sizeOverride = 20,
+		fontSize = 10,
 		sortMethod = "TIME_REMAINING",
 		sortDirection = "DESCENDING",
 		attachTo = "FRAME",
@@ -1593,6 +1601,7 @@ P.unitframe.units.pettarget = {
 		perrow = 5,
 		numrows = 1,
 		sizeOverride = 20,
+		fontSize = 10,
 		sortMethod = "TIME_REMAINING",
 		sortDirection = "DESCENDING",
 		attachTo = "FRAME",
@@ -1672,6 +1681,8 @@ P.unitframe.units.party = {
 		perrow = 3,
 		numrows = 1,
 		sizeOverride = 20,
+		fontSize = 10,
+		countFontSize = 10,
 		sortMethod = "TIME_REMAINING",
 		sortDirection = "DESCENDING",
 		attachTo = "FRAME",
@@ -1687,6 +1698,8 @@ P.unitframe.units.party = {
 		perrow = 3,
 		numrows = 1,
 		sizeOverride = 52,
+		fontSize = 10,
+		countFontSize = 10,
 		sortMethod = "TIME_REMAINING",
 		sortDirection = "DESCENDING",
 		attachTo = "FRAME",

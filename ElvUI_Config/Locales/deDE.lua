@@ -873,3 +873,6 @@ L["Border"] = "Rand"
 L["Name Color"] = "Namen Farbe"
 L["Flash"] = "Blinken"
 L["Speed"] = "Geschwindigkeit"
+
+--UnitFrames auras
+L["Count Font Size"] = "Schriftart Größe der Anzahl"

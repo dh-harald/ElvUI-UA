@@ -873,3 +873,6 @@ L["Border"] = "Bordure"
 L["Name Color"] = "Couleur du nom"
 L["Flash"] = "Clignotement"
 L["Speed"] = "Vitesse"
+
+--UnitFrames auras
+L["Count Font Size"] = "Taille du texte du décompte"
