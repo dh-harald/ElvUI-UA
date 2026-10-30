@@ -346,6 +346,11 @@ end
 -- matching real ElvUI's own visual result exactly.
 local NUM_FACTIONS_DISPLAYED = _G.NUM_FACTIONS_DISPLAYED or 15
 local SKILLS_TO_DISPLAY = _G.SKILLS_TO_DISPLAY or 12
+-- `CharacterNameText` and the `ReputationHeader<n>NormalText` labels are 12 tall
+-- in the XML, which fits the stock font at size 12. The legacy client draws
+-- "..." instead of a text whose line does not fit its FontString, and the line
+-- of the ElvUI font at the same size is taller than that.
+local FIXED_LABEL_HEIGHT = 14
 -- Collapse-glyph recipe (native icon killed, own bordered 16x16 glyph in
 -- its place) lives in Skins.lua: the Quest Log's header rows and its "All"
 -- button need the identical treatment, down to the same 16x16-at-LEFT+3
@@ -1193,6 +1198,8 @@ local function StyleReputationBars()
 	local i
 	for i = 1, NUM_FACTIONS_DISPLAYED do
 		StyleReputationBar(i)
+		local label = _G["ReputationHeader"..i.."NormalText"]
+		if label then pcall(label.SetHeight, label, FIXED_LABEL_HEIGHT) end
 	end
 end
 
@@ -1525,6 +1532,9 @@ local function ApplyChrome(frame)
 	-- ARTWORK is also the conventional layer for item-slot icons, and
 	-- disabling it there would hide those too.
 	pcall(frame.DisableDrawLayer, frame, "ARTWORK")
+
+	local nameText = _G.CharacterNameText
+	if nameText then pcall(nameText.SetHeight, nameText, FIXED_LABEL_HEIGHT) end
 
 	-- Background -- a SEPARATE, INSET child frame, not SetBackdrop
 	-- directly on CharacterFrame itself: CharacterFrame's own FULL bounds

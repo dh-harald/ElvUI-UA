@@ -630,13 +630,10 @@ S.TAB_INSET_BOTTOM = 3
 -- of `PanelTemplates_SetDisabledTabState`).
 --
 -- The FontString is coloured directly, and again after every native state
--- change: on the legacy 1.12.1 client an addon-set FontString colour is what
--- renders and it survives Enable()/Disable(), so a colour set once on OnShow
--- would stick through tab switches; UA re-applies the state font instead.
--- Button-level `SetDisabledTextColor` does not get through on legacy.
--- On UA the same recolouring fights that state font, so there it is limited
--- to the old gold/grey on OnShow and the client supplies the white
--- (`Compat.isUA` below and in `InstallTabStateHooks`).
+-- change: on both clients an addon-set FontString colour is what renders and
+-- it survives Enable()/Disable(), so a colour set once on OnShow would stick
+-- through tab switches. Button-level `SetDisabledTextColor` does not get
+-- through on legacy.
 --
 -- "Selected" and "unusable" share the widget's disabled bit
 -- (`PanelTemplates_SelectTab` calls `Disable()` on the selected tab,
@@ -662,11 +659,7 @@ local function ColorTab(tab)
 	local color = S.ACCENT_COLOR
 	if tab.elvForceDisabled or tab.isDisabled then
 		color = S.ACCENT_COLOR_DISABLED
-	elseif not Compat.isUA then
-		-- UA only ever gets gold or grey here: its own state font draws the
-		-- selected tab white, and an addon-set white on UA sticks to that tab
-		-- after it is deselected (measured: the tab selected when the window
-		-- opened stayed white through every later tab switch).
+	else
 		local okEnabled, enabled = pcall(tab.IsEnabled, tab)
 		if okEnabled and not Compat.bool(enabled) then
 			color = S.TAB_SELECTED_COLOR
@@ -699,11 +692,6 @@ local tabStateHooksInstalled = false
 local function InstallTabStateHooks()
 	if tabStateHooksInstalled then return end
 	tabStateHooksInstalled = true
-	-- Not on UA: the client re-applies the state font itself, and recolouring
-	-- after its state changes makes the two fight (measured: tabs left white
-	-- after deselection, then every tab stuck gold). With the hooks off, UA's
-	-- own colours follow tab switches correctly.
-	if Compat.isUA then return end
 	local i
 	for i = 1, table.getn(TAB_STATE_FUNCTIONS) do
 		local functionName = TAB_STATE_FUNCTIONS[i]
