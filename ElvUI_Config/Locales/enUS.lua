@@ -903,3 +903,6 @@ L["Count Font Size"] = true
 
 --NamePlates aura fonts
 L["Stack Counter"] = true
+
+--Bags
+L["Item Count Font"] = true

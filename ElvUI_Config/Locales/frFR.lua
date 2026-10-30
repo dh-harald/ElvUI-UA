@@ -880,3 +880,6 @@ L["Count Font Size"] = "Taille du texte du décompte"
 
 --NamePlates aura fonts
 L["Stack Counter"] = "Compteur de pile"
+
+--Bags
+L["Item Count Font"] = "Police d'équipement du compteur"

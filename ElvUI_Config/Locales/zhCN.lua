@@ -880,3 +880,6 @@ L["Count Font Size"] = "计数字体尺寸"
 
 --NamePlates aura fonts
 L["Stack Counter"] = "层数计数"
+
+--Bags
+L["Item Count Font"] = "物品数目字体"

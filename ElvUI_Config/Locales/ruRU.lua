@@ -880,3 +880,6 @@ L["Count Font Size"] = "Размер шрифта стаков"
 
 --NamePlates aura fonts
 L["Stack Counter"] = "Количество стаков"
+
+--Bags
+L["Item Count Font"] = "Шрифт кол-ва предметов"

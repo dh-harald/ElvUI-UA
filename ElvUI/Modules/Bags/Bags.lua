@@ -51,6 +51,7 @@ local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
 local B = E:NewModule("Bags", "AceEvent-3.0", "AceTimer-3.0")
 local Util = ElvUI.Util
+local LSM = LibStub("LibSharedMedia-3.0", true)
 
 E.Bags = B
 
@@ -530,6 +531,7 @@ function B:BorrowSlots(f, bagID, numSlots, host)
 			-- state travels with the button until it is undone here.
 			button:SetAlpha(1)
 			button:Show()
+			self:StyleSlotCount(button)
 			parent.slots[j] = button
 		end
 	end
@@ -544,6 +546,32 @@ function B:BorrowSlots(f, bagID, numSlots, host)
 	end
 
 	return parent
+end
+
+-- Real ElvUI's `countFont*` and `countFontColor` on a slot's stack text.
+function B:StyleSlotCount(button)
+	local count = _G[button:GetName().."Count"]
+	if not count then return end
+	local db = E.db.bags
+	E:FontTemplate(count, LSM and LSM:Fetch("font", db.countFont), db.countFontSize, db.countFontOutline)
+	local c = db.countFontColor
+	pcall(count.SetTextColor, count, c.r, c.g, c.b)
+end
+
+-- Real ElvUI's B:UpdateCountDisplay: the config calls this after a change.
+function B:UpdateCountDisplay()
+	local windows = { self.BagFrame or false, self.BankFrame or false }
+	local i
+	for i = 1, 2 do
+		local bags = windows[i] and windows[i].Bags
+		for _, parent in pairs(bags or {}) do
+			local j = 1
+			while parent.slots[j] do
+				self:StyleSlotCount(parent.slots[j])
+				j = j + 1
+			end
+		end
+	end
 end
 
 -- SetParent moves a frame in the hierarchy but does NOT make it re-inherit

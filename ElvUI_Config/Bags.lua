@@ -102,6 +102,57 @@ E.Options.args.bags = {
 						if E.Bags then E.Bags:ToggleSortButtonState(true) end
 					end,
 				},
+				countGroup = {
+					order = 9,
+					type = "group",
+					name = L["Item Count Font"],
+					guiInline = true,
+					get = function(info) return E.db.bags[ info[getn(info)] ] end,
+					set = function(info, value)
+						E.db.bags[ info[getn(info)] ] = value
+						if E.Bags then E.Bags:UpdateCountDisplay() end
+					end,
+					args = {
+						countFont = {
+							order = 1,
+							type = "select",
+							dialogControl = "LSM30_Font",
+							name = L["Font"],
+							values = E.ConfigShared.MediaValues("font"),
+						},
+						countFontSize = {
+							order = 2,
+							type = "range",
+							name = L["Font Size"],
+							min = 4, max = 22, step = 1,
+						},
+						countFontOutline = {
+							order = 3,
+							type = "select",
+							name = L["Font Outline"],
+							values = {
+								["NONE"] = L["None"],
+								["OUTLINE"] = L["Outline"],
+								["MONOCHROMEOUTLINE"] = L["Monochrome Outline"],
+								["THICKOUTLINE"] = L["Thick Outline"],
+							},
+						},
+						countFontColor = {
+							order = 4,
+							type = "color",
+							name = L["Color"],
+							get = function()
+								local t = E.db.bags.countFontColor
+								return t.r, t.g, t.b
+							end,
+							set = function(_, r, g, b)
+								local t = E.db.bags.countFontColor
+								t.r, t.g, t.b = r, g, b
+								if E.Bags then E.Bags:UpdateCountDisplay() end
+							end,
+						},
+					},
+				},
 			},
 		},
 		sizeGroup = {

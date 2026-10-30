@@ -880,3 +880,6 @@ L["Count Font Size"] = "Tamaño de Fuente del Contador"
 
 --NamePlates aura fonts
 L["Stack Counter"] = "Contador de acumulaciones"
+
+--Bags
+L["Item Count Font"] = "Fuente del contador de objetos"

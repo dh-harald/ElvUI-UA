@@ -880,3 +880,6 @@ L["Count Font Size"] = "Schriftart Größe der Anzahl"
 
 --NamePlates aura fonts
 L["Stack Counter"] = "Stapel-Zähler"
+
+--Bags
+L["Item Count Font"] = "Gegenstandszähler Schriftart"
