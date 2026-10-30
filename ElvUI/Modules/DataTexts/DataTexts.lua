@@ -103,10 +103,23 @@ function DT:GetDataPanelPoint(panel, i, numPoints)
 	end
 end
 
+-- The bars are sized by their anchors, and on the 1.12.1 client such a
+-- frame's GetWidth() returns its width multiplied by the UI scale (285.6 for
+-- a 386-wide bar at scale 0.74), which packed the side widgets toward the
+-- middle. The edges are real on both clients; GetWidth() is only the fallback
+-- for a bar not laid out yet.
+local function PanelWidth(panel)
+	local left, right = panel:GetLeft(), panel:GetRight()
+	if left and right and right > left then
+		return right - left
+	end
+	return panel:GetWidth()
+end
+
 function DT:UpdateAllDimensions()
 	local panelName, panel
 	for panelName, panel in pairs(DT.RegisteredPanels) do
-		local width = (panel:GetWidth() / panel.numPoints) - 4
+		local width = (PanelWidth(panel) / panel.numPoints) - 4
 		local height = panel:GetHeight() - 4
 		local i
 		for i = 1, panel.numPoints do
@@ -391,6 +404,9 @@ end
 
 function DT:PLAYER_ENTERING_WORLD()
 	DT.hasEnteredWorld = true
+	-- Panels registered at load may not be laid out yet (no edges, so
+	-- PanelWidth falls back to GetWidth); by now they are.
+	DT:UpdateAllDimensions()
 	DT:LoadDataTexts()
 end
 
