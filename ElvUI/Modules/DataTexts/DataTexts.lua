@@ -38,6 +38,7 @@ local DT = E:NewModule("DataTexts", "AceEvent-3.0")
 E.DataTexts = DT
 
 local LDB = LibStub("LibDataBroker-1.1", true)
+local LSM = LibStub("LibSharedMedia-3.0", true)
 
 -- Settings: `P.datatexts` (Settings/Profile.lua). Its `panels` table
 -- registers this project's actual panels -- LeftMiniPanel/RightMiniPanel
@@ -53,41 +54,6 @@ DT.PointLocation = {
 	[2] = "left",
 	[3] = "right",
 }
-
--- Optical vertical nudge for the panel label, in screen pixels, downward.
---
--- Geometric centring is already exact: the label is anchored CENTER-to-CENTER
--- on its data panel, which is itself centred in the bar. What is left over is
--- the FONT's own box -- a FontString's box spans full ascent to full descent,
--- and these short strings do not fill the descent, so a box-centred label
--- still reads as sitting high.
---
--- MEASURED off three live screenshots of `LeftChatDataPanel`, all at
--- `PANEL_HEIGHT` 22 rendering 62 image px tall (2.818 image px per screen px),
--- comparing the cap-top..baseline band's centre against the panel's centre:
---
---   anchoring                            label sits HIGH by
---   `SetAllPoints()` + JustifyV MIDDLE   4.97 screen px
---   `LEFT`+`RIGHT`, no width             4.97 screen px
---   `CENTER` + explicit width            2.48 screen px
---
--- The first two agreeing to the pixel is the finding: the `LEFT`+`RIGHT` shape
--- has no vertical box to justify inside at all, so an identical result from
--- `SetAllPoints` + `SetJustifyV("MIDDLE")` means the justify call does
--- NOTHING here and the text is simply top-aligned in the taller box. (4.97 is
--- also what top-alignment predicts: an 18px-tall data panel with ~7px of ink
--- puts the ink centre 5.5px above the box centre.) That is why this project
--- anchors by a single CENTER point instead of copying upstream's shape, which
--- is `SetAllPoints` + `JustifyH`/`JustifyV` + `E:FontTemplate`
--- (`ElvUI-vanilla/.../DataTexts.lua`'s own `RegisterPanel`).
---
--- 2.48 is the remaining font-box asymmetry, and the value below rounds it to
--- a whole pixel to keep glyphs off half-pixel positions.
---
--- Tune live on one widget before changing this, no rebuild needed:
---   /run T=LeftChatDataPanelDataText1.text
---   /run T:SetPoint("CENTER",T:GetParent(),"CENTER",0,-3)
-DT.TEXT_Y_NUDGE = -2
 
 function DT:GetDataPanelPoint(panel, i, numPoints)
 	if numPoints == 1 then
@@ -184,14 +150,14 @@ function DT:RegisterPanel(panel, numPoints, anchor, xOff, yOff)
 			-- One CENTER point makes the vertical centre exact without
 			-- `SetJustifyV` (the box is only as tall as the text), and the
 			-- explicit width gives `SetJustifyH("CENTER")` the panel-third
-			-- to centre within. `DT.TEXT_Y_NUDGE` then corrects the font
-			-- box's own asymmetry -- see its note above.
-			text:SetPoint("CENTER", dataPanel, "CENTER", 0, DT.TEXT_Y_NUDGE)
+			-- to centre within.
+			text:SetPoint("CENTER", dataPanel, "CENTER")
 			text:SetJustifyH("CENTER")
 			-- The label half of every widget is uncoloured text, so it takes
 			-- the FontString's own colour; real ElvUI's is white. The
-			-- `GameFontNormal` template (kept for its font) is gold on the
-			-- legacy client and white on UA, so the colour is set here.
+			-- `GameFontNormal` template, which only supplies a font until
+			-- `LoadDataTexts` applies the configured one, is gold on the legacy
+			-- client and white on UA, so the colour is set here.
 			text:SetTextColor(1, 1, 1)
 			dataPanel.text = text
 			panel.dataPanels[pointIndex] = dataPanel
@@ -285,12 +251,7 @@ function DT:LoadDataTexts()
 			dataPanel:SetScript("OnLeave", nil)
 			dataPanel:SetScript("OnClick", nil)
 			dataPanel:SetScript("OnEvent", nil)
-			-- "NONE" is this project's stored sentinel for "no outline"
-			-- (matches ActionBars.lua's ApplyFont convention) -- SetFont
-			-- itself expects "" for that, not the literal string "NONE".
-			local outline = self.db.fontOutline
-			if outline == "NONE" then outline = "" end
-			pcall(dataPanel.text.SetFont, dataPanel.text, nil, self.db.fontSize, outline)
+			E:FontTemplate(dataPanel.text, LSM and LSM:Fetch("font", self.db.font), self.db.fontSize, self.db.fontOutline)
 			dataPanel.text:SetText(nil)
 			dataPanel.pointIndex = pointIndex
 

@@ -4,6 +4,12 @@ local getn = ElvUI.Compat.getn
 -- Lua chunk, so a file-local cannot be seen from another file.
 local Shared = E.ConfigShared
 
+local function LoadDataTexts()
+	if E.DataTexts and E.DataTexts.LoadDataTexts then
+		E.DataTexts:LoadDataTexts()
+	end
+end
+
 -- DataTexts panel-assignment select -- lists whatever's actually in
 -- `E.DataTexts.RegisteredDataTexts` (populated by DataTexts/*.lua's own
 -- `DT:RegisterDatatext` calls at file-load time) rather than a hardcoded
@@ -33,9 +39,7 @@ local function PanelDataTextArgs(panelKey, order, label)
 		get = function() return E.db.datatexts.panels[panelKey] end,
 		set = function(_, value)
 			E.db.datatexts.panels[panelKey] = value
-			if E.DataTexts and E.DataTexts.LoadDataTexts then
-				E.DataTexts:LoadDataTexts()
-			end
+			LoadDataTexts()
 		end,
 	}
 end
@@ -64,9 +68,7 @@ local function ChatPanelDataTextArgs(panelKey, order, label)
 			get = function() return E.db.datatexts.panels[panelKey][pointKey] end,
 			set = function(_, value)
 				E.db.datatexts.panels[panelKey][pointKey] = value
-				if E.DataTexts and E.DataTexts.LoadDataTexts then
-					E.DataTexts:LoadDataTexts()
-				end
+				LoadDataTexts()
 			end,
 		}
 	end
@@ -208,7 +210,10 @@ E.Options.args.datatexts = {
 								return list
 							end,
 							get = function() return E.db.datatexts.font end,
-							set = function(_, value) E.db.datatexts.font = value end,
+							set = function(_, value)
+								E.db.datatexts.font = value
+								LoadDataTexts()
+							end,
 						},
 						fontSize = {
 							type = "range",
@@ -218,7 +223,10 @@ E.Options.args.datatexts = {
 							max = 22,
 							step = 1,
 							get = function() return E.db.datatexts.fontSize end,
-							set = function(_, value) E.db.datatexts.fontSize = value end,
+							set = function(_, value)
+								E.db.datatexts.fontSize = value
+								LoadDataTexts()
+							end,
 						},
 						fontOutline = {
 							type = "select",
@@ -231,7 +239,10 @@ E.Options.args.datatexts = {
 								["THICKOUTLINE"] = L["Thick Outline"],
 							},
 							get = function() return E.db.datatexts.fontOutline end,
-							set = function(_, value) E.db.datatexts.fontOutline = value end,
+							set = function(_, value)
+								E.db.datatexts.fontOutline = value
+								LoadDataTexts()
+							end,
 						},
 					},
 				},
