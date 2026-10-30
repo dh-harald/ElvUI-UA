@@ -32,7 +32,7 @@ local KEY_PREFIX = "ELVUI_"
 -- modal, which is a far worse failure than an untranslated label. Falling back to
 -- literals costs nothing and removes that whole class of outcome.
 -- Parked on the engine table as well: ElvUI_Config registers its own popup
--- entries (RESET_ALL_MOVERS, the profile confirmations, RESET_UF_UNIT) and
+-- entries (RESET_ALL_MOVERS, APPLY_FONT_WARNING, RESET_UF_UNIT) and
 -- needs the same guarantee.
 local BTN_ACCEPT = ACCEPT or L["Accept"]
 local BTN_CANCEL = CANCEL or L["Cancel"]

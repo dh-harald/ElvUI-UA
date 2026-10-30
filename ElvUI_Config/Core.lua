@@ -458,60 +458,6 @@ local function AllProfileValues()
 	return E:GetProfileList()
 end
 
--- Scratch state for the two "pick a target, then confirm" controls. Neither can
--- act on selection alone: Copy replaces this character's whole profile and
--- Delete destroys another one, so both go through a confirm popup, and the popup
--- needs to know what was picked. Not persisted -- LibConfig re-renders the group
--- on every visit.
-local copySource, deleteTarget
-
--- Confirmations use the static-popup system (ElvUI/Core/StaticPopups.lua), NOT
--- an option-table `confirm`/`confirmText` field: LibConfig-1.0 carries `confirm`
--- in its inherited-member list but does not render a confirmation dialog for it,
--- so relying on it would silently fire the action with no prompt at all.
-E.PopupDialogs["PROFILE_COPY"] = {
-	text = L["Replace this character's entire profile with an independent copy of the selected one?"],
-	button1 = E.PopupAccept,
-	button2 = E.PopupCancel,
-	OnAccept = function()
-		if copySource then
-			E:CopyProfile(copySource)
-			E:RequestReload()
-		end
-	end,
-	timeout = 0,
-	whileDead = 1,
-	hideOnEscape = true,
-}
-
-E.PopupDialogs["PROFILE_RESET"] = {
-	text = L["Reset this character's profile back to its default values? Every setting you have changed on this profile will be lost."],
-	button1 = E.PopupAccept,
-	button2 = E.PopupCancel,
-	OnAccept = function()
-		E:ResetProfile()
-		E:RequestReload()
-	end,
-	timeout = 0,
-	whileDead = 1,
-	hideOnEscape = true,
-}
-
-E.PopupDialogs["PROFILE_DELETE"] = {
-	text = L["Are you sure you want to delete the selected profile?"],
-	button1 = E.PopupAccept,
-	button2 = E.PopupCancel,
-	OnAccept = function()
-		if deleteTarget then
-			E:DeleteProfile(deleteTarget)
-			deleteTarget = nil
-		end
-	end,
-	timeout = 0,
-	whileDead = 1,
-	hideOnEscape = true,
-}
-
 E.Options.args.profiles = {
 	type = "group",
 	name = L["Profiles"],
@@ -546,7 +492,12 @@ E.Options.args.profiles = {
 			name = L["Reset Profile"],
 			desc = L["Reset the current profile to the default"],
 			order = 10,
-			func = function() E:StaticPopup_Show("PROFILE_RESET") end,
+			confirm = true,
+			confirmText = L["Reset this character's profile back to its default values? Every setting you have changed on this profile will be lost."],
+			func = function()
+				E:ResetProfile()
+				E:RequestReload()
+			end,
 		},
 		current = {
 			type = "description",
@@ -599,10 +550,14 @@ E.Options.args.profiles = {
 			desc = L["Copy the settings from one existing profile into the currently active profile."],
 			order = 60,
 			values = ProfileValues,
-			get = function() return copySource end,
+			-- An action, not a setting: the box stays empty, and the pick is
+			-- carried out only once the confirmation is accepted.
+			get = function() return nil end,
+			confirm = true,
+			confirmText = L["Replace this character's entire profile with an independent copy of the selected one?"],
 			set = function(_, value)
-				copySource = value
-				E:StaticPopup_Show("PROFILE_COPY")
+				E:CopyProfile(value)
+				E:RequestReload()
 			end,
 			-- Nothing to copy from when this character's profile is the only one.
 			disabled = function() return not next(ProfileValues()) end,
@@ -618,11 +573,10 @@ E.Options.args.profiles = {
 			desc = L["Deletes a profile from the database."],
 			order = 80,
 			values = ProfileValues,
-			get = function() return deleteTarget end,
-			set = function(_, value)
-				deleteTarget = value
-				E:StaticPopup_Show("PROFILE_DELETE")
-			end,
+			get = function() return nil end,
+			confirm = true,
+			confirmText = L["Are you sure you want to delete the selected profile?"],
+			set = function(_, value) E:DeleteProfile(value) end,
 			disabled = function() return not next(ProfileValues()) end,
 		},
 		exportHeader = {

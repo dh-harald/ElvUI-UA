@@ -126,6 +126,7 @@ local function FilterGroup()
 				type = "execute",
 				name = L["Remove Spell"],
 				disabled = function() return not RemovableSpell() end,
+				confirm = function() return string.format(L["Remove Spell - %s"], selectedSpell or "") end,
 				func = function()
 					if not RemovableSpell() then return end
 					SelectedList().spells[selectedSpell] = nil
@@ -178,6 +179,7 @@ E.Options.args.filters = {
 			type = "execute",
 			name = L["Delete Filter"],
 			disabled = function() return not RemovableFilter() end,
+			confirm = function() return string.format(L["Delete Filter - %s"], selectedFilter or "") end,
 			func = function()
 				if not RemovableFilter() then return end
 				Lists()[selectedFilter] = nil
