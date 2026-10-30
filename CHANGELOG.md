@@ -1,3 +1,38 @@
+# [0.15.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.14.1...v0.15.0) (2026-10-30)
+
+
+### Bug Fixes
+
+* **actionbars:** more font configurations ([1fff9e9](https://github.com/dh-harald/ElvUI-UA/commit/1fff9e9075789d9fcadd7218f07883640dd61981))
+* **auras:** more font configurations ([c7aee27](https://github.com/dh-harald/ElvUI-UA/commit/c7aee275bdd2955285ba541a75eea9a7e1dda836))
+* **bags:** more font configurations ([31df8e4](https://github.com/dh-harald/ElvUI-UA/commit/31df8e4f06c2bf5ad060b43dcebe9a2de6c642f3))
+* **chat:** use class color for cached names ([d239624](https://github.com/dh-harald/ElvUI-UA/commit/d239624bfc9c3ec3bc2e1b19fb959ecd88febc6b))
+* **config:** add support for config option ([3c37997](https://github.com/dh-harald/ElvUI-UA/commit/3c379973ca517900d58c8e3ed1551d9e9ae4fa13))
+* **datatext:** proper positioning ([5e9cfae](https://github.com/dh-harald/ElvUI-UA/commit/5e9cfaece437f8599557fa63e68b00c8770d359c))
+* **datatexts:** add no click/hover on combat settings ([a708623](https://github.com/dh-harald/ElvUI-UA/commit/a70862360b5a349b549bb95f123a27495b688d23))
+* **datatexts:** more font configurations ([4ab11c2](https://github.com/dh-harald/ElvUI-UA/commit/4ab11c26ee6e5d56c3562a38321c3bcce754c9ad))
+* **general:** settings for default fonts ([3ba6bf1](https://github.com/dh-harald/ElvUI-UA/commit/3ba6bf1cf6805067c849de2ab0cb229c30f75bfc))
+* **minimap:** make location text configurable (font/size/etc) ([75e3905](https://github.com/dh-harald/ElvUI-UA/commit/75e3905c42caf8fc2c51ffc4b55b1907c7a7bbe3))
+* **minimap:** remove +/- buttons, mouse wheel works fine ([43ff428](https://github.com/dh-harald/ElvUI-UA/commit/43ff428a6cf9d6bd4c7e956ca52975c1756de336))
+* **nameplates:** more font configurations ([51e19d4](https://github.com/dh-harald/ElvUI-UA/commit/51e19d4377520bdf28d0ddb449169266b30b4fff))
+* **skins:** fix tab highlight and header in reputation window ([ad0181e](https://github.com/dh-harald/ElvUI-UA/commit/ad0181e33f096031307192856341e69a2f941a6a))
+* **unitframes:** more font configurations ([28fbb45](https://github.com/dh-harald/ElvUI-UA/commit/28fbb45596670e4a6ef4b4935ed34a9ace9bcffa))
+
+
+### Features
+
+* **actionbars:** add mouseover fade ([113d058](https://github.com/dh-harald/ElvUI-UA/commit/113d058b38ab280bf5f5a2262140d8eb2376fc1b))
+* **aura:** Aura Filters: initial commit ([e6c5f10](https://github.com/dh-harald/ElvUI-UA/commit/e6c5f1022ed9cadb912f0c2abc4ab6a87706db4e))
+* **databars:** ThreatBar: initial commit ([85a2b6f](https://github.com/dh-harald/ElvUI-UA/commit/85a2b6f247cd84e94976e225bd538e7f0daffefd))
+* **nameplates:** initial commit ([3b2233a](https://github.com/dh-harald/ElvUI-UA/commit/3b2233aea66ea16d31cba6e867df5dc645ae5690))
+* **nameplates:** StyleFilter: initial commit ([c70e3d8](https://github.com/dh-harald/ElvUI-UA/commit/c70e3d85c4c68d2ab408bf7acb7eb654fd59bcf1))
+* **skin:** add GuildRegistrar, GuildPetition, Tabard planner ([fcdd289](https://github.com/dh-harald/ElvUI-UA/commit/fcdd289077cac7d9507f28cbec677bf2fd316972))
+* **skins:** add ChatMenu skin ([a448fde](https://github.com/dh-harald/ElvUI-UA/commit/a448fde485f8a868b895536674537b585fef129d))
+* **skins:** add Help and Tutorial skins ([fc120ac](https://github.com/dh-harald/ElvUI-UA/commit/fc120acee29c1bcaf867244b90b4e1f33c3691ff))
+* **skins:** Battlefield (battlemaster) ([dc4b140](https://github.com/dh-harald/ElvUI-UA/commit/dc4b140935338cfab61a3d705a64741f07e58feb))
+* **totembar:** click to recast ([98d537f](https://github.com/dh-harald/ElvUI-UA/commit/98d537f014f009c8da22a5881c659d05e37abec9))
+* **who:** initial commit ([1507b50](https://github.com/dh-harald/ElvUI-UA/commit/1507b503c9b78ca343b8a2e4fb574556173f504a))
+
 ## [0.14.1](https://github.com/dh-harald/ElvUI-UA/compare/v0.14.0...v0.14.1) (2026-10-18)
 
 
