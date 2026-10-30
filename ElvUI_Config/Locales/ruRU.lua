@@ -383,6 +383,11 @@ L["Panel Texture (Right)"] = "Текстура правой панели"
 L["Tab Font"] = "Шрифт вкладок"
 L["Tab Font Size"] = "Размер шрифта вкладок"
 L["Tab Font Outline"] = "Граница шрифта вкладок"
+L["Class Color Mentions"] = "Упоминания цветом класса"
+L["Use class color for the names of players when they are mentioned.\nDepends on Class Caching module!"] = "Окрашивать имена упомянутых игроков в цвет их класса.\nТребуется модуль кэша классов!"
+L["Exclude Name"] = "Исключить имя"
+L["Excluded names will not be class colored."] = "Исключенные имена не окрашиваются в цвет класса"
+L["Excluded Names"] = "Исключенные имена"
 
 --DataTexts
 L["DataTexts"] = "Инфо-тексты"

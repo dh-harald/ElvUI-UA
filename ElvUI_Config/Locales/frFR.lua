@@ -383,6 +383,11 @@ L["Panel Texture (Right)"] = "Texture de la fenêtre de discussion (Droite)"
 L["Tab Font"] = "Police des onglets"
 L["Tab Font Size"] = "Taille de la police des onglets"
 L["Tab Font Outline"] = "Contour de la police extérieure des onglets"
+L["Class Color Mentions"] = "Mentions en couleur de classe"
+L["Use class color for the names of players when they are mentioned.\nDepends on Class Caching module!"] = "Utilise la couleur de classe pour les noms des joueurs mentionnés.\nDépend du module de cache des classes !"
+L["Exclude Name"] = "Exclure le nom"
+L["Excluded names will not be class colored."] = "Exclure les noms sans couleur de classe"
+L["Excluded Names"] = "Exclure les noms"
 
 --DataTexts
 L["DataTexts"] = "Textes d'informations"

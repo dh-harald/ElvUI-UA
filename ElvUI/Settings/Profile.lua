@@ -532,6 +532,7 @@ P.chat = {
 	chatHistory = true,
 	timeStampFormat = "NONE",
 	keywords = "%MYNAME%, ElvUI",
+	classColorMentionsChat = true,
 	separateSizes = false,
 	panelWidth = 412,
 	panelHeight = 180,

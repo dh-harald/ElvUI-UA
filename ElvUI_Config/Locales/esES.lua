@@ -383,6 +383,11 @@ L["Panel Texture (Right)"] = "Textura del Panel Derecho"
 L["Tab Font"] = "Fuente de la Pestaña"
 L["Tab Font Size"] = "Tamaño de Fuente de la Pestaña"
 L["Tab Font Outline"] = "Contorno de Fuente de la Pestaña"
+L["Class Color Mentions"] = "Menciones con color de clase"
+L["Use class color for the names of players when they are mentioned.\nDepends on Class Caching module!"] = "Usa el color de clase para los nombres de los jugadores mencionados.\n¡Depende del módulo de caché de clases!"
+L["Exclude Name"] = "Excluir nombre"
+L["Excluded names will not be class colored."] = "Los nombres excluidos no se colorearán con el color de clase."
+L["Excluded Names"] = "Nombres excluidos"
 
 --DataTexts
 L["DataTexts"] = "Textos de Datos"

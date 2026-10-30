@@ -383,6 +383,11 @@ L["Panel Texture (Right)"] = "聊天框贴图 (右)"
 L["Tab Font"] = "标题栏字体"
 L["Tab Font Size"] = "标题栏字体尺寸"
 L["Tab Font Outline"] = "标题栏字体描边"
+L["Class Color Mentions"] = "职业颜色提示"
+L["Use class color for the names of players when they are mentioned.\nDepends on Class Caching module!"] = "被提及的玩家名字使用职业颜色.\n依赖职业缓存模块!"
+L["Exclude Name"] = "排除名字"
+L["Excluded names will not be class colored."] = "排除的名字将不会使用职业颜色"
+L["Excluded Names"] = "排除的名字"
 
 --DataTexts
 L["DataTexts"] = "信息文字"

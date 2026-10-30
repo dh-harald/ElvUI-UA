@@ -847,12 +847,12 @@ end
 -- Ported closely from ElvUI-vanilla/ElvUI/Modules/Chat/Chat.lua
 -- (matching structure, not simplifying, since the goal is vanilla-parity)
 -- with these deviations:
---   - `CH:GetColoredName` (class-colors a linked player name) depended on
---     a `ClassCache` module (`CC:GetClassByName`) this project has never
---     built -- `E.private.general` doesn't even exist as a table here.
---     Not ported; `coloredName` is just `arg2` unchanged. Same reasoning
---     drops `CheckKeyword`'s own classColorMentionsChat word-by-word
---     coloring step -- only the KEYWORD-highlight half is ported.
+--   - `CH:GetPlayerLink` (real `CH:GetColoredName`, colour placed outside
+--     the link -- see there) and `CheckKeyword`'s class-coloured mentions
+--     read `Core/ClassCache.lua`, which knows only players met in game
+--     (target, mouseover, group, friends, guild, battleground board):
+--     the /who lookups real ElvUI can add are not ported, so an unknown
+--     name stays uncoloured.
 --   - `E.media.hexvaluecolor` is read through this file's own `AccentHex()`
 --     accessor (it only exists from `OnInitialize` onwards, so it cannot be
 --     captured in a load-time local).
@@ -892,6 +892,13 @@ end
 -- ===========================================================================
 
 local Compat = ElvUI.Compat
+local CC = E:GetModule("ClassCache")
+
+-- "|cffRRGGBB" for a class file name, or nil when the class has no colour.
+local function ClassHex(class)
+	local color = (CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class]) or RAID_CLASS_COLORS[class]
+	return color and E:RGBToHex(color.r, color.g, color.b)
+end
 
 local GlobalStrings = {
 	AFK = CHAT_MSG_AFK,
@@ -1054,8 +1061,10 @@ function CH:UpdateChatKeywords()
 	end
 end
 
--- Keyword-highlight half only, see this section's header comment for why
--- the class-color-mentions half isn't ported.
+-- Keywords in the accent colour (with the keyword sound), then player names
+-- the class cache knows in their class colour (`classColorMentionsChat`,
+-- minus G.chat.classColorMentionExcludedNames). A name matches as written,
+-- case included, the way the cache stores it.
 function CH:CheckKeyword(message)
 	local itemLink
 	for itemLink in Compat.gmatch(message, "|%x+|Hitem:.-|h.-|h|r") do
@@ -1080,6 +1089,8 @@ function CH:CheckKeyword(message)
 
 	local tempWord, lowerCaseWord, rebuiltString
 	local isFirstWord = true
+	local mentions = E.db.chat.classColorMentionsChat and E.private.general.classCache
+	local excluded = E.global.chat and E.global.chat.classColorMentionExcludedNames or {}
 	local word
 	for word in Compat.gmatch(message, "%s-[^%s]+%s*") do
 		tempWord = string.gsub(word, "[%s%p]", "")
@@ -1098,6 +1109,16 @@ function CH:CheckKeyword(message)
 			end
 		end
 
+		if mentions then
+			-- The word without surrounding punctuation; an inner hyphen stays.
+			local name = string.gsub(word, "^[%s%p]-([^%s%p]+)([%-]?[^%s%p]-)[%s%p]*$", "%1%2")
+			local class = CC:GetClassByName(name)
+			local hex = class and not excluded[lowerCaseWord] and ClassHex(class)
+			if hex then
+				word = string.gsub(word, string.gsub(name, "%-", "%%-"), hex..name.."|r")
+			end
+		end
+
 		if isFirstWord then
 			rebuiltString = word
 			isFirstWord = false
@@ -1113,6 +1134,20 @@ function CH:CheckKeyword(message)
 	end
 
 	return rebuiltString
+end
+
+-- The sender's "[name]" player link, in the class colour when the class
+-- cache knows the name (gated by `E.private.general.classCache` inside
+-- CC:GetClassByName); 1.12 names carry no realm. Real ElvUI's
+-- CH:GetColoredName puts the colour inside the link text,
+-- "|Hplayer:X|h[|cff..X|r]|h"; Unreal Azeroth draws a colour code there as
+-- plain text, so the colour wraps the whole link instead (the brackets take
+-- it too), the form item links use.
+function CH:GetPlayerLink(name)
+	local link = "|Hplayer:"..name.."|h["..name.."]|h"
+	local hex = ClassHex(CC:GetClassByName(name))
+	if not hex then return link end
+	return hex..link.."|r"
 end
 
 function CH:DisableChatThrottle()
@@ -1462,7 +1497,7 @@ function CH:ChatFrame_OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, arg6, a
 			end
 		end
 
-		local coloredName = arg2
+		local playerLink = arg2 and CH:GetPlayerLink(arg2)
 
 		local channelLength = arg4 and string.len(arg4)
 		if (string.sub(msgType, 1, 7) == "CHANNEL") and (msgType ~= "CHANNEL_LIST") and ((arg1 ~= "INVITE") or (msgType ~= "CHANNEL_NOTICE_USER")) then
@@ -1554,13 +1589,13 @@ function CH:ChatFrame_OnEvent(self, event, arg1, arg2, arg3, arg4, arg5, arg6, a
 			if arg3 and string.len(arg3) > 0 and arg3 ~= "Universal" and arg3 ~= GetDefaultLanguage() then
 				local languageHeader = "["..arg3.."] "
 				if showLink and arg2 and string.len(arg2) > 0 then
-					body = string.format(_G["CHAT_"..msgType.."_GET"]..languageHeader..arg1, pflag.."|Hplayer:"..arg2.."|h".."["..coloredName.."]".."|h")
+					body = string.format(_G["CHAT_"..msgType.."_GET"]..languageHeader..arg1, pflag..playerLink)
 				else
 					body = string.format(_G["CHAT_"..msgType.."_GET"]..languageHeader..arg1, pflag..(arg2 or ""))
 				end
 			else
 				if showLink and arg2 and string.len(arg2) > 0 then
-					body = string.format(_G["CHAT_"..msgType.."_GET"]..arg1, pflag.."|Hplayer:"..arg2.."|h".."["..coloredName.."]".."|h")
+					body = string.format(_G["CHAT_"..msgType.."_GET"]..arg1, pflag..playerLink)
 				else
 					arg1 = string.gsub(arg1, "%%s %%s", "%%s")
 					body = string.format(_G["CHAT_"..msgType.."_GET"]..arg1, pflag..(arg2 or ""))

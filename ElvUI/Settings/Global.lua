@@ -14,6 +14,12 @@ local E, L, V, P, G = unpack(ElvUI)
 -- Core/ClassCache.lua: realm -> player name -> class file name.
 G.classCache = {}
 
+-- Names Modules/Chat/Chat.lua never class-colours when they are mentioned in
+-- a message, keyed by the lower-cased name.
+G.chat = {
+	classColorMentionExcludedNames = {},
+}
+
 -- Aura lists named in a `filters.priority` string (Modules/UnitFrames/
 -- AuraFilter.lua). Retail ElvUI's Classic lists (Game/Classic/Filters),
 -- keyed by aura NAME instead of spell ID: neither client reports spell IDs,

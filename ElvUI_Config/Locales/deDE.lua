@@ -383,6 +383,11 @@ L["Panel Texture (Right)"] = "Fenstertextur (Rechts)"
 L["Tab Font"] = "Tab Schriftart"
 L["Tab Font Size"] = "Tab Schriftgröße"
 L["Tab Font Outline"] = "Tab Schriftkontur"
+L["Class Color Mentions"] = "Erwähnung in Klassenfarbe"
+L["Use class color for the names of players when they are mentioned.\nDepends on Class Caching module!"] = "Verwendet die Klassenfarbe für die Namen erwähnter Spieler.\nBenötigt das Klassen-Cache-Modul!"
+L["Exclude Name"] = "Ausgeschlossener Name"
+L["Excluded names will not be class colored."] = "Ausgeschlossene Namen werden nicht in Klassenfarbe erscheinen."
+L["Excluded Names"] = "Ausgeschlossene Namen"
 
 --DataTexts
 L["DataTexts"] = "Infotexte"

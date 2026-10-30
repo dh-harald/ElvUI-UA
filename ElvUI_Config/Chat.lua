@@ -460,5 +460,37 @@ E.Options.args.chat = {
 				},
 			},
 		},
+		-- Real ElvUI's group, without `classColorMentionsSpeech`: the chat
+		-- bubble half is not ported (Modules/Misc/ChatBubbles.lua).
+		classColorMentionGroup = {
+			type = "group",
+			name = L["Class Color Mentions"],
+			order = 7,
+			get = function(info) return E.db.chat[ info[getn(info)] ] end,
+			set = function(info, value) E.db.chat[ info[getn(info)] ] = value end,
+			args = {
+				header = { type = "header", name = L["Class Color Mentions"], order = 1 },
+				classColorMentionsChat = {
+					type = "toggle", name = L["Chat"], order = 2,
+					desc = L["Use class color for the names of players when they are mentioned.\nDepends on Class Caching module!"],
+					disabled = function() return not (E.private.chat.enable and E.private.general.classCache) end,
+				},
+				classColorMentionExcludeName = {
+					type = "input", name = L["Exclude Name"], order = 4,
+					desc = L["Excluded names will not be class colored."],
+					get = function() return "" end,
+					set = function(_, value)
+						if not value or string.gsub(value, "%s+", "") == "" then return end
+						E.global.chat.classColorMentionExcludedNames[string.lower(value)] = value
+					end,
+				},
+				classColorMentionExcludedNames = {
+					type = "multiselect", name = L["Excluded Names"], order = 5,
+					values = function() return E.global.chat.classColorMentionExcludedNames end,
+					get = function(_, key) return E.global.chat.classColorMentionExcludedNames[key] end,
+					set = function(_, key) E.global.chat.classColorMentionExcludedNames[key] = nil end,
+				},
+			},
+		},
 	},
 }

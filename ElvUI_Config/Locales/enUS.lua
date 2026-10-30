@@ -406,6 +406,11 @@ L["Panel Texture (Right)"] = true
 L["Tab Font"] = true
 L["Tab Font Size"] = true
 L["Tab Font Outline"] = true
+L["Class Color Mentions"] = true
+L["Use class color for the names of players when they are mentioned.\nDepends on Class Caching module!"] = true
+L["Exclude Name"] = true
+L["Excluded names will not be class colored."] = true
+L["Excluded Names"] = true
 
 --DataTexts
 L["DataTexts"] = true
