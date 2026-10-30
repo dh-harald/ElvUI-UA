@@ -189,8 +189,8 @@ Two addons ship together:
 - Tooltip item level, inspect info and spell IDs; the item lines are not yet
   shown on action buttons (the client offers no way to read the item of an
   action slot)
-- A handful of native windows not yet reskinned (Tabard and a few more
-  niche ones)
+- A handful of native windows not yet reskinned (Help, Tutorial and the
+  battleground windows)
 - NamePlates: the click settings
 - Heal prediction: channelled heals (Tranquility, Mend Pet, bandages) are not
   predicted, Chain Heal only on its first target, and another player's

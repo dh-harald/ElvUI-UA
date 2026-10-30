@@ -114,6 +114,9 @@ E.Options.args.skins = {
 				quest = { type = "toggle", name = L["Quest Frames"], desc = SKIN_DESC },
 				gossip = { type = "toggle", name = L["Gossip Frame"], desc = SKIN_DESC },
 				greeting = { type = "toggle", name = L["Greeting Frame"], desc = SKIN_DESC },
+				guildregistrar = { type = "toggle", name = L["Guild Registrar"], desc = SKIN_DESC },
+				petition = { type = "toggle", name = L["Petition Frame"], desc = SKIN_DESC },
+				tabard = { type = "toggle", name = L["Tabard Frame"], desc = SKIN_DESC },
 				mail = {
 					type = "toggle",
 					name = L["Mail"],
