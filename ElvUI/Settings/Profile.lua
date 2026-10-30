@@ -118,6 +118,9 @@ P.general = {
 	minimap = {
 		size = 176,
 		locationText = "MOUSEOVER",
+		locationFont = "PT Sans Narrow",
+		locationFontSize = 12,
+		locationFontOutline = "OUTLINE",
 		resetZoom = { enable = false, time = 3 },
 		icons = {
 			calendar = { position = "TOPRIGHT", scale = 1, xOffset = 0, yOffset = 0 },

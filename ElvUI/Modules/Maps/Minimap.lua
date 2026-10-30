@@ -10,15 +10,11 @@
 --
 -- Settings coverage, against real ElvUI's actual config table
 -- (ElvUI-vanilla/ElvUI_Config/Maps.lua's `minimap` group):
---   - size, locationText (SHOW/HIDE/MOUSEOVER), resetZoom (enable+time),
---     icons (calendar/mail/battlefield position/scale/offset + calendar's
---     private hideCalendar toggle) -> IMPLEMENTED below, all live (no
---     /reload needed) via M:UpdateSettings(), matching real ElvUI's own
---     MM:UpdateSettings().
---   - locationFont/locationFontSize/locationFontOutline (LSM font picker
---     + size + outline) -> NOT implemented. Font family/size are a
---     confirmed no-op via SetFont on UA regardless, so wiring a picker for
---     a value that can't visibly change isn't worth it.
+--   - size, locationText (SHOW/HIDE/MOUSEOVER), locationFont/locationFontSize/
+--     locationFontOutline, resetZoom (enable+time), icons (calendar/mail/
+--     battlefield position/scale/offset + calendar's private hideCalendar
+--     toggle) -> IMPLEMENTED below, all live (no /reload needed) via
+--     M:UpdateSettings(), matching real ElvUI's own MM:UpdateSettings().
 --   - `enable` itself stays reload-required (private, one-shot Initialize
 --     check) -- matches real ElvUI's own design (the PRIVATE_RL/
 --     StaticPopup call in its `set`), not a limitation introduced here.
@@ -52,6 +48,7 @@ local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
 local M = E:NewModule("Minimap", "AceEvent-3.0")
 E.Minimap = M
+local LSM = LibStub("LibSharedMedia-3.0", true)
 
 -- Settings: `V.general.minimap` / `P.general.minimap`
 -- (Settings/Private.lua, Settings/Profile.lua).
@@ -365,11 +362,13 @@ function M:UpdateIcons()
 	end
 end
 
--- Location Text visibility (SHOW/HIDE/MOUSEOVER) -- purely a Show()/Hide()
--- decision, no font involved, so unlike locationFont/Size/Outline this is
--- fully implementable regardless of UA's font limitations.
+-- Location Text visibility (SHOW/HIDE/MOUSEOVER) and font; the font part is
+-- real ElvUI's MM:Update_ZoneText.
 function M:ApplyLocationText()
 	if not self.zoneText then return end
+
+	local db = E.db.general.minimap
+	E:FontTemplate(self.zoneText, LSM and LSM:Fetch("font", db.locationFont), db.locationFontSize, db.locationFontOutline)
 
 	local mode = E.db.general.minimap.locationText or "MOUSEOVER"
 	if mode == "HIDE" then
@@ -495,9 +494,6 @@ function M:Initialize()
 	-- Zone text -- header strip ABOVE the map, not overlaid on it (see the
 	-- UA note at the top of this file for why).
 	local zoneText = holder:CreateFontString("ElvUIMinimapZoneText", "OVERLAY", "GameFontNormal")
-	-- Real ElvUI's minimap location text: the UI font at its default size,
-	-- outlined.
-	E:FontTemplate(zoneText, nil, nil, "OUTLINE")
 	zoneText:SetPoint("TOP", holder, "TOP", 0, -4)
 	zoneText:SetWidth(size)
 	zoneText:SetJustifyH("CENTER")

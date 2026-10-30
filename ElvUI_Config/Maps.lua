@@ -2,6 +2,7 @@ local E, L, V, P, G = unpack(ElvUI)
 -- Cross-file helpers, created in Core.lua: each option file is its own
 -- Lua chunk, so a file-local cannot be seen from another file.
 local Shared = E.ConfigShared
+local getn = ElvUI.Compat.getn
 
 -- Shared position/scale/xOffset/yOffset args for one icons.<key> entry
 -- (E.db.general.minimap.icons[key]) -- calendar/mail/battlefield in real
@@ -286,6 +287,12 @@ E.Options.args.maps = {
 					type = "group",
 					name = L["Location Text"],
 					order = 2,
+					get = function(info) return E.db.general.minimap[ info[getn(info)] ] end,
+					set = function(info, value)
+						E.db.general.minimap[ info[getn(info)] ] = value
+						Shared.UpdateMinimapSettings()
+					end,
+					disabled = function() return not E.private.general.minimap.enable end,
 					args = {
 						header = {
 							type = "header",
@@ -302,12 +309,35 @@ E.Options.args.maps = {
 								SHOW = L["Always Display"],
 								HIDE = L["Hide"],
 							},
-							get = function() return E.db.general.minimap.locationText end,
-							set = function(_, value)
-								E.db.general.minimap.locationText = value
-								Shared.UpdateMinimapSettings()
-							end,
-							disabled = function() return not E.private.general.minimap.enable end,
+						},
+						spacer = {
+							type = "description",
+							name = "",
+							order = 2,
+						},
+						locationFont = {
+							type = "select",
+							dialogControl = "LSM30_Font",
+							name = L["Font"],
+							order = 3,
+							values = Shared.MediaValues("font"),
+						},
+						locationFontSize = {
+							type = "range",
+							name = L["Font Size"],
+							order = 4,
+							min = 6, max = 36, step = 1,
+						},
+						locationFontOutline = {
+							type = "select",
+							name = L["Font Outline"],
+							order = 5,
+							values = {
+								NONE = L["None"],
+								OUTLINE = L["Outline"],
+								MONOCHROMEOUTLINE = L["Monochrome Outline"],
+								THICKOUTLINE = L["Thick Outline"],
+							},
 						},
 					},
 				},
