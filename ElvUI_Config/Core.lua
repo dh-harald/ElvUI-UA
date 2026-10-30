@@ -67,6 +67,27 @@ function Shared.UpdateMinimapSettings()
 	end
 end
 
+function Shared.Trim(text)
+	local _, _, inner = string.find(text or "", "^%s*(.-)%s*$")
+	return inner or ""
+end
+
+-- A `values` function listing the LibSharedMedia entries of `mediaType`.
+function Shared.MediaValues(mediaType)
+	return function()
+		local LSM = LibStub("LibSharedMedia-3.0", true)
+		local list = {}
+		if LSM then
+			local names = LSM:List(mediaType)
+			local i
+			for i = 1, getn(names) do
+				list[names[i]] = names[i]
+			end
+		end
+		return list
+	end
+end
+
 -- The entries of an aura filter `priority` string (comma-separated, read by
 -- ElvUI's Modules/UnitFrames/AuraFilter.lua), in order.
 function Shared.SplitPriority(priority)

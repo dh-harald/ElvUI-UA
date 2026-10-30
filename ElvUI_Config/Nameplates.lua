@@ -1,33 +1,20 @@
 local E, L, V, P, G = unpack(ElvUI)
 local getn = ElvUI.Compat.getn
+local MediaValues = E.ConfigShared.MediaValues
 
 -- NamePlates, real ElvUI's tree (ElvUI-vanilla ElvUI_Config/Nameplates.lua):
 -- `enable` on the root, a `generalGroup` with tabs, and one group per unit
 -- type with health, cast bar, debuff, level and name tabs. Only controls for
--- settings the module reads are present; buffs, style filters, motion type
--- and click settings come with their features. The shortcut buttons are left
--- out: LibConfig-1.0 has no way to select a group from a button.
+-- settings the module reads are present; motion type and click settings come
+-- with their features, and StyleFilters.lua adds the Style Filter page. The
+-- shortcut buttons are left out: LibConfig-1.0 has no way to select a group
+-- from a button.
 --
 -- Settings apply live through NP:ConfigureAll(), which re-lays every plate
 -- on its next update.
 
 local function ConfigureAll()
 	if E.NamePlates then E.NamePlates:ConfigureAll() end
-end
-
-local function MediaValues(mediaType)
-	return function()
-		local LSM = LibStub("LibSharedMedia-3.0", true)
-		local list = {}
-		if LSM then
-			local names = LSM:List(mediaType)
-			local i
-			for i = 1, getn(names) do
-				list[names[i]] = names[i]
-			end
-		end
-		return list
-	end
 end
 
 local function NotRunning()

@@ -63,8 +63,11 @@ local NP = E:NewModule("NamePlates", "AceEvent-3.0")
 -- Class colours: from the class cache (Core/ClassCache.lua) by name; a
 -- hostile plate whose name the cache knows is an enemy player.
 --
--- Not ported yet: style filters, motion type, click-through and clickable
--- size, the elite icon, and the size animation.
+-- Style filters: StyleFilter.lua merges the actions of the passing filters
+-- into `frame.style`, which the elements below read while they lay out.
+--
+-- Not ported yet: motion type, click-through and clickable size, the elite
+-- icon, and the size animation.
 
 local LSM = LibStub("LibSharedMedia-3.0", true)
 local LVD = LibStub("LibVanillaDurations-1.0", true)
@@ -108,6 +111,8 @@ local ARROW_COORDS = {
 -- The client's dimmed non-target plate alpha is 0.498; anything this close to
 -- 1 counts as undimmed.
 local LIT_ALPHA = 0.99
+-- Style filters are re-evaluated at this interval between layout changes.
+local STYLE_INTERVAL = 0.1
 
 -- The UnitFrames module, owner of the combat-log cast tracker; set at
 -- Initialize.
@@ -117,6 +122,7 @@ local plates = {}
 local numChildren = 0
 local plateID = 0
 local uiScale
+local styleNext = 0
 
 local function Fetch(mediaType, name)
 	return LSM and name and LSM:Fetch(mediaType, name)
@@ -202,6 +208,16 @@ local function NativeHealth(frame)
 	if not okValue or type(value) ~= "number" then value = 0 end
 	if not okRange or type(high) ~= "number" or high <= 0 then high = 1 end
 	return value, high
+end
+
+function NP:ReadHealth(frame)
+	return NativeHealth(frame)
+end
+
+-- The plate's level as a number; -1 for a boss or an unknown level.
+function NP:ReadLevel(frame)
+	if IsShown(frame.BossIcon) then return -1 end
+	return tonumber(NativeText(frame.oldLevel)) or -1
 end
 
 -- Real ElvUI's GetUnitInfo: reaction and unit type from the native bar's
@@ -315,6 +331,12 @@ local function ConstructHealthBar(frame)
 	highlight:SetVertexColor(1, 1, 1, 0.25 * 0.75)
 	highlight:Hide()
 	bar.highlight = highlight
+
+	-- The style filter flash: follows the fill.
+	local flash = NewTexture(bar, "OVERLAY")
+	flash:SetAllPoints(bar.barFillTexture)
+	flash:Hide()
+	bar.flash = flash
 
 	local holder = CreateFrame("Frame", nil, bar)
 	holder:SetAllPoints(bar)
@@ -653,24 +675,42 @@ local CLASS_ROLE = {
 	DRUID = { "Caster", "Melee", "Caster" },
 }
 
+-- The talent trees that make a class a healer; ElvUI-vanilla's
+-- E:GetPlayerRole reads an E.HealingClasses it never defines.
+local HEALING_TREES = {
+	PALADIN = { [1] = true },
+	PRIEST = { [1] = true, [2] = true },
+	SHAMAN = { [3] = true },
+	DRUID = { [3] = true },
+}
+
+-- `self.role` is real ElvUI's E.Role, `self.playerRole` its E:GetPlayerRole.
 function NP:CheckRole()
-	local roles = CLASS_ROLE[E.myclass]
-	if type(roles) == "string" then
-		self.role = roles
-		return
-	end
 	local tree, most = nil, 0
 	local t
 	for t = 1, 3 do
 		local ok, _, _, spent = pcall(GetTalentTabInfo, t)
 		if ok and type(spent) == "number" and spent > most then tree, most = t, spent end
 	end
-	local role = roles and tree and roles[tree] or "Melee"
-	if E.myclass == "DRUID" and tree == 2 then
-		local ok, _, _, _, _, rank = pcall(GetTalentInfo, 2, 22)
-		if ok and type(rank) == "number" and rank > 0 then role = "Tank" end
+	local roles = CLASS_ROLE[E.myclass]
+	local role = roles
+	if type(roles) ~= "string" then
+		role = roles and tree and roles[tree] or "Melee"
+		if E.myclass == "DRUID" and tree == 2 then
+			local ok, _, _, _, _, rank = pcall(GetTalentInfo, 2, 22)
+			if ok and type(rank) == "number" and rank > 0 then role = "Tank" end
+		end
 	end
 	self.role = role
+
+	local healing = HEALING_TREES[E.myclass]
+	if healing and tree and healing[tree] then
+		self.playerRole = "HEALER"
+	elseif role == "Tank" then
+		self.playerRole = "TANK"
+	else
+		self.playerRole = "DAMAGER"
+	end
 end
 
 -- Real ElvUI's GetThreatSituationColor / GetThreatSituationScale: a tank
@@ -708,21 +748,24 @@ local function IsPlayerType(frame)
 	return frame.UnitType == "FRIENDLY_PLAYER" or frame.UnitType == "ENEMY_PLAYER"
 end
 
--- Real ElvUI's UpdateElement_HealthColor: class colour for players (when
--- the class is known), the tapped colour, then threat colours when threat
--- coloring is on and the plate has a threat state, else the reaction.
+-- Real ElvUI's UpdateElement_HealthColor: a style filter's colour, class
+-- colour for players (when the class is known), the tapped colour, then
+-- threat colours when threat coloring is on and the plate has a threat
+-- state, else the reaction.
 function NP:UpdateHealthColor(frame)
-	local c
-	if IsPlayerType(frame) and UnitDB(frame).healthbar.useClassColor then c = ClassColor(frame) end
+	local c = frame.style and frame.style.healthColor
+	if not c and IsPlayerType(frame) and UnitDB(frame).healthbar.useClassColor then c = ClassColor(frame) end
 	if not c and frame.UnitReaction ~= 1 and frame.threatStatus and self.db.threat.useThreatColor then
 		c = self:ThreatColor(frame.threatStatus)
 	end
 	if not c then c = ReactionColor(frame) end
-	Util.SetStatusBarColor(frame.HealthBar, c.r, c.g, c.b, 1)
+	Util.SetStatusBarColor(frame.HealthBar, c.r, c.g, c.b, c.a or 1)
 end
 
 -- Real ElvUI's UpdateElement_Name. A player whose class the class cache
--- does not know takes the friendly player colour, as in real ElvUI.
+-- does not know takes the friendly player colour, as in real ElvUI. A style
+-- filter's name colour wins, and its name-only state colours like a plate
+-- without a health bar.
 function NP:UpdateName(frame)
 	local db = UnitDB(frame)
 	local name = frame.Name
@@ -734,11 +777,15 @@ function NP:UpdateName(frame)
 	name.NameOnlyGlow:SetWidth(name:GetWidth() + 40)
 	name.NameOnlyGlow:SetHeight(name:GetHeight() + 16)
 
+	local style = frame.style
 	local r, g, b = 1, 1, 1
-	if IsPlayerType(frame) and db.name and db.name.useClassColor then
+	if style and style.nameColor then
+		local c = style.nameColor
+		r, g, b = c.r, c.g, c.b
+	elseif IsPlayerType(frame) and db.name and db.name.useClassColor then
 		local c = ClassColor(frame) or self.db.reactions.friendlyPlayer
 		r, g, b = c.r, c.g, c.b
-	elseif not db.healthbar.enable and not frame.isTarget then
+	elseif (not db.healthbar.enable and not frame.isTarget) or (style and style.nameOnly) then
 		local c = ReactionColor(frame)
 		r, g, b = c.r, c.g, c.b
 	end
@@ -1042,6 +1089,7 @@ local function CollectDebuffs(frame, unit, now)
 			local _, _, mine = LVD:GetStamp(unitName, name)
 			if name and UF:AuraPasses(filters, name, mine, friendly, duration, E:IsDispellableByMe(dispelType)) then
 				table.insert(cache, {
+					name = name,
 					texture = texture,
 					count = tonumber(count) or 0,
 					expiration = left and (now + left) or nil,
@@ -1064,6 +1112,7 @@ local function CollectBuffs(frame, unit, now)
 		if name and UF.GetOwnAuraTimeLeft then left, duration = UF:GetOwnAuraTimeLeft(unitName, name) end
 		if name and UF:AuraPasses(filters, name, left ~= nil, friendly, duration) then
 			table.insert(cache, {
+				name = name,
 				texture = texture,
 				count = tonumber(count) or 0,
 				expiration = left and (now + left) or nil,
@@ -1218,14 +1267,30 @@ function NP:UpdateComboPoints(frame)
 	holder:Show()
 end
 
--- Real ElvUI's non-target transparency. On the 1.12.1 client the dimmed
--- plate's own alpha multiplies with it, as in ElvUI-vanilla.
+-- Real ElvUI's non-target transparency, unless a style filter sets the alpha.
+-- On the 1.12.1 client the dimmed plate's own alpha multiplies with it, as in
+-- ElvUI-vanilla.
 function NP:UpdateAlpha(frame)
-	if self.hasTarget and not frame.isTarget then
+	local alpha = frame.style and frame.style.alpha
+	if alpha then
+		frame:SetAlpha(alpha)
+	elseif self.hasTarget and not frame.isTarget then
 		frame:SetAlpha(self.db.nonTargetTransparency)
 	else
 		frame:SetAlpha(1)
 	end
+end
+
+-- The style filter flash fades in and out once per 0.2 * `speed` seconds
+-- (real ElvUI's E:Flash, a fade of 0.1 * `speed` each way). A triangle wave:
+-- math.sin takes degrees or radians depending on the client.
+local function UpdateFlash(frame, now)
+	local flash = frame.style and frame.style.flash
+	if not flash or not frame.healthShown then return end
+	local period = flash.speed * 0.2
+	local phase = Compat.mod(now, period) / period * 2
+	if phase > 1 then phase = 2 - phase end
+	frame.HealthBar.flash:SetAlpha((flash.color.a or 1) * phase)
 end
 
 -- ---------------------------------------------------------------------
@@ -1240,20 +1305,33 @@ local function ConfigureHealthBar(frame)
 		return
 	end
 
-	-- Real ElvUI: the target scale on the target, the threat scale on the rest.
+	-- Real ElvUI: the target scale on the target, the threat scale on the
+	-- rest, times a style filter's scale.
+	local style = frame.style or {}
 	local scale = ThreatScale(frame)
 	if frame.isTarget and db.useTargetScale then scale = db.targetScale end
+	if style.scale then scale = scale * style.scale end
 	bar:ClearAllPoints()
 	bar:SetPoint("TOP", frame, "CENTER", 0, UnitDB(frame).castbar.height + 3)
 	bar:SetWidth(unitDB.width * scale)
 	bar:SetHeight(unitDB.height * scale)
-	Util.SetStatusBarTexture(bar, Fetch("statusbar", db.statusbar))
+	local texture = Fetch("statusbar", style.texture or db.statusbar)
+	Util.SetStatusBarTexture(bar, texture)
 
 	local general = E.db.general
 	Util.SetStatusBarBackgroundColor(bar, general.backdropfadecolor.r, general.backdropfadecolor.g, general.backdropfadecolor.b, general.backdropfadecolor.a)
 	local i
 	for i = 1, 4 do
-		SetColor(bar.borderLines[i], general.bordercolor)
+		SetColor(bar.borderLines[i], style.borderColor or general.bordercolor)
+	end
+
+	if style.flash then
+		local c = style.flash.color
+		bar.flash:SetTexture(texture)
+		bar.flash:SetVertexColor(c.r, c.g, c.b)
+		bar.flash:Show()
+	else
+		bar.flash:Hide()
 	end
 
 	E:FontTemplate(bar.text, Fetch("font", db.font), db.fontSize, db.fontOutline)
@@ -1396,6 +1474,8 @@ end
 local function ConfigureRaidIcon(frame)
 	local icon = frame.RaidIcon
 	if not icon then return end
+	-- Native, so a style filter's hide does not reach it through the frame.
+	pcall(icon.SetAlpha, icon, (frame.style and frame.style.hide) and 0 or 1)
 	pcall(icon.ClearAllPoints, icon)
 	if frame.healthShown then
 		pcall(icon.SetPoint, icon, "RIGHT", frame.HealthBar, "LEFT", -6, 0)
@@ -1463,7 +1543,9 @@ end
 
 function NP:ConfigurePlate(frame)
 	local unitDB = UnitDB(frame)
-	frame.healthShown = unitDB.healthbar.enable or (frame.isTarget and self.db.alwaysShowTargetHealth)
+	local style = frame.style
+	frame.healthShown = (unitDB.healthbar.enable or (frame.isTarget and self.db.alwaysShowTargetHealth))
+		and not (style and style.nameOnly)
 	frame.uiScale = uiScale
 	frame:SetScale(ScaleFactor(frame.plate))
 	-- `false`, not nil: UpdateGlow's key for "no glow" is nil, and the
@@ -1493,6 +1575,7 @@ function NP:ConfigurePlate(frame)
 	self:UpdateComboPoints(frame)
 	self:UpdateGlow(frame)
 	self:UpdateAlpha(frame)
+	if style and style.hide then frame:Hide() else frame:Show() end
 end
 
 -- ---------------------------------------------------------------------
@@ -1535,8 +1618,10 @@ function NP:RefreshPlate(frame)
 		self:UpdateAlpha(frame)
 	end
 	self:UpdateCast(frame)
-	self:UpdateAuras(frame, GetTime())
+	local now = GetTime()
+	self:UpdateAuras(frame, now)
 	self:UpdateComboPoints(frame)
+	UpdateFlash(frame, now)
 	KeepMuted(frame)
 end
 
@@ -1578,8 +1663,17 @@ function NP:UpdatePlate(frame)
 		frame.isTarget = isTarget
 		frame.isMouseover = IsShown(frame.oldHighlight)
 		frame.hasTarget = self.hasTarget
+		self:UpdateStyle(frame)
 		frame:Show()
 		self:ConfigurePlate(frame)
+		return
+	end
+	if self.styleTick and self:UpdateStyle(frame) then
+		self:ConfigurePlate(frame)
+		return
+	end
+	if frame.style and frame.style.hide then
+		KeepMuted(frame)
 		return
 	end
 	self:RefreshPlate(frame)
@@ -1593,7 +1687,10 @@ local function OnUpdate()
 	NP.hasTarget = Compat.bool(UnitExists("target"))
 	NP.comboPoints = NP.hasTarget and ReadComboPoints() or 0
 	uiScale = ReadUIScale()
-	ScanThreat(GetTime())
+	local now = GetTime()
+	ScanThreat(now)
+	NP.styleTick = now >= styleNext
+	if NP.styleTick then styleNext = now + STYLE_INTERVAL end
 	local i
 	for i = 1, getn(plates) do
 		local ok, err = pcall(NP.UpdatePlate, NP, plates[i])
@@ -1610,9 +1707,12 @@ end
 function NP:ConfigureAll()
 	self.db = E.db.nameplates
 	if not self.Frame then return end
+	self:StyleFilterConfigure()
 	local i
 	for i = 1, getn(plates) do
 		plates[i].dirty = true
+		plates[i].styleKey = nil
+		plates[i].style = nil
 	end
 end
 
@@ -1668,12 +1768,14 @@ function NP:Initialize()
 	-- whichever of the two asks first.
 	UF = E.UnitFrames
 	if UF and UF.InitializeCastTracker then UF:InitializeCastTracker() end
+	self:StyleFilterConfigure()
 	self.Frame = CreateFrame("Frame")
 	self.Frame:SetScript("OnUpdate", OnUpdate)
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("PLAYER_REGEN_DISABLED")
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 	self:RegisterEvent("CHARACTER_POINTS_CHANGED")
+	self:RegisterEvent("SPELLS_CHANGED")
 	self:PLAYER_ENTERING_WORLD()
 	E.NamePlates = self
 end

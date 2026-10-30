@@ -146,8 +146,11 @@ Two addons ship together:
   transition colours),
   player class colours from a class cache (General → Class Cache: target,
   mouseover, group, friends, guild, battleground score), combat show/hide
-  toggles; sized by the UI scale; enemy nameplates switched on
-  at login; per-unit-type settings for friendly/enemy players and NPCs
+  toggles; style filters (NamePlates → Style Filter: rules that recolour,
+  resize, flash, fade or hide a plate by its name, cast, health, level, unit
+  type, auras, combat state, your role, instance or cooldowns); sized by the
+  UI scale; enemy nameplates switched on at login; per-unit-type settings for
+  friendly/enemy players and NPCs
 - Fonts: the General → Media default font and size, combat text and name
   fonts, and "Apply Font To All" — applied to the native Blizzard text,
   ElvUI's own text and the tooltip text
@@ -187,9 +190,7 @@ Two addons ship together:
   action slot)
 - A handful of native windows not yet reskinned (Tabard and a few more
   niche ones)
-- NamePlates: style filters, the click settings, and an editor for the
-  per-element aura filter priority (the aura lists themselves are editable
-  under Filters)
+- NamePlates: the click settings
 - Heal prediction: channelled heals (Tranquility, Mend Pet, bandages) are not
   predicted, Chain Heal only on its first target, and another player's
   heal-over-time only by estimate until its first tick (the HealComm protocol

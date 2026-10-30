@@ -1,5 +1,6 @@
 local E, L, V, P, G = unpack(ElvUI)
 local getn = ElvUI.Compat.getn
+local Trim = E.ConfigShared.Trim
 
 -- Editor for the aura lists named in `filters.priority` strings
 -- (E.global.unitframe.aurafilters, read by ElvUI's
@@ -33,11 +34,6 @@ local function RemovableSpell()
 	if not (list and selectedSpell and list.spells[selectedSpell]) then return false end
 	local default = DefaultList(selectedFilter)
 	return not (default and default.spells and default.spells[selectedSpell])
-end
-
-local function Trim(text)
-	local _, _, inner = string.find(text or "", "^%s*(.-)%s*$")
-	return inner or ""
 end
 
 local function Changed()

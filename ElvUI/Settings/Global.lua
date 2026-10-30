@@ -355,6 +355,126 @@ G.mail = {
 	autoComplete = true,
 }
 
+-- Nameplate style filters (Modules/NamePlates/StyleFilter.lua), real ElvUI's
+-- values (ElvUI-vanilla Settings/Filters/NamePlate.lua). The switch of a
+-- filter is per profile, in `P.nameplates.filters`.
+G.nameplates = {
+	filters = {
+		Boss = {
+			triggers = {
+				level = true,
+				curlevel = -1,
+				nameplateType = {
+					enable = true,
+					enemyNPC = true,
+				},
+			},
+			actions = {
+				scale = 1.15,
+			},
+		},
+	},
+}
+
+-- What a filter leaves out takes these values. Real ElvUI's keys;
+-- `instanceDifficulty` and `casting.interruptible` are not read, neither
+-- exists on these clients.
+E.StyleFilterDefaults = {
+	triggers = {
+		priority = 1,
+		isTarget = false,
+		notTarget = false,
+		level = false,
+		casting = {
+			interruptible = false,
+			spells = {},
+		},
+		role = {
+			tank = false,
+			healer = false,
+			damager = false,
+		},
+		curlevel = 0,
+		maxlevel = 0,
+		minlevel = 0,
+		healthThreshold = false,
+		healthUsePlayer = false,
+		underHealthThreshold = 0,
+		overHealthThreshold = 0,
+		powerThreshold = false,
+		underPowerThreshold = 0,
+		overPowerThreshold = 0,
+		names = {},
+		nameplateType = {
+			enable = false,
+			friendlyPlayer = false,
+			friendlyNPC = false,
+			enemyPlayer = false,
+			enemyNPC = false,
+		},
+		reactionType = {
+			enable = false,
+			hostile = false,
+			neutral = false,
+			friendly = false,
+		},
+		instanceType = {
+			none = false,
+			party = false,
+			raid = false,
+			arena = false,
+			pvp = false,
+		},
+		instanceDifficulty = {
+			dungeon = { normal = false, heroic = false },
+			raid = { normal = false, heroic = false },
+		},
+		cooldowns = {
+			names = {},
+			mustHaveAll = false,
+		},
+		buffs = {
+			mustHaveAll = false,
+			missing = false,
+			names = {},
+			minTimeLeft = 0,
+			maxTimeLeft = 0,
+		},
+		debuffs = {
+			mustHaveAll = false,
+			missing = false,
+			names = {},
+			minTimeLeft = 0,
+			maxTimeLeft = 0,
+		},
+		inCombat = false,
+		outOfCombat = false,
+	},
+	actions = {
+		color = {
+			health = false,
+			border = false,
+			name = false,
+			healthColor = {r = 1, g = 1, b = 1, a = 1},
+			borderColor = {r = 1, g = 1, b = 1, a = 1},
+			nameColor = {r = 1, g = 1, b = 1, a = 1},
+		},
+		texture = {
+			enable = false,
+			texture = "ElvUI Norm",
+		},
+		flash = {
+			enable = false,
+			color = {r = 1, g = 1, b = 1, a = 1},
+			speed = 4,
+		},
+		hide = false,
+		nameOnly = false,
+		scale = 1.0,
+		alpha = -1,
+	},
+}
+
 -- Saved position of the `/moveui` control panel. Project-only UI state,
 -- filled at runtime by Core/Movers.lua.
 G.moverPanel = {}

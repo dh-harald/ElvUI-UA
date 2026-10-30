@@ -699,6 +699,15 @@ P.nameplates = {
 		neutral = {r = 218/255, g = 197/255, b = 92/255},
 		bad = {r = 0.78, g = 0.25, b = 0.25},
 	},
+	-- The per-profile switch of each style filter; the filters themselves are
+	-- account-wide (G.nameplates.filters).
+	filters = {
+		Boss = {
+			triggers = {
+				enable = false,
+			},
+		},
+	},
 	units = {
 		-- Retail ElvUI's target indicator settings: the style (ElvUI-vanilla's
 		-- `nameplates.targetGlow`, moved here by E:MigrateProfileData) and the
