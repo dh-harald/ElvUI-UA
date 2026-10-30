@@ -63,6 +63,7 @@ local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
 local A = E:NewModule("Auras", "AceEvent-3.0")
 local UF = E.UnitFrames
+local LSM = LibStub("LibSharedMedia-3.0", true)
 
 local ICON_SPACING = 2
 -- Extra vertical gap for the countdown text now rendering BELOW each
@@ -217,10 +218,6 @@ end
 -- Cached per icon and only re-pointed when a value actually changed --
 -- this runs for every visible icon on a 0.1s tick, and a needless
 -- ClearAllPoints/SetPoint pair 10x/second per icon causes a visible cost.
---
--- The sibling real fields `font`/`fontSize`/`fontOutline` are NOT applied:
--- `SetFont` is a no-op on UA. They stay in the defaults for profile
--- round-tripping only.
 local function ApplyTextOffsets(icon)
 	local db = E.db.auras
 	local timeX = db.timeXOffset or 0
@@ -238,6 +235,24 @@ local function ApplyTextOffsets(icon)
 		pcall(icon.count.ClearAllPoints, icon.count)
 		pcall(icon.count.SetPoint, icon.count, "BOTTOMRIGHT", icon, "BOTTOMRIGHT", 1 + countX, countY)
 	end
+end
+
+-- Real ElvUI's `font`/`fontSize`/`fontOutline`, on the time and the stacks
+-- alike. Icons come from UF:GetOrCreateAuraIcon with the unit frame font, so
+-- they are taken out of its tracking first. Cached like the offsets above.
+local function ApplyTextFonts(icon)
+	local db = E.db.auras
+	if icon.auraFont == db.font and icon.auraFontSize == db.fontSize and icon.auraFontOutline == db.fontOutline then
+		return
+	end
+	if not icon.auraFont then
+		UF:UntrackFontString(icon.cooldown)
+		UF:UntrackFontString(icon.count)
+	end
+	icon.auraFont, icon.auraFontSize, icon.auraFontOutline = db.font, db.fontSize, db.fontOutline
+	local path = LSM and LSM:Fetch("font", db.font)
+	E:FontTemplate(icon.cooldown, path, db.fontSize, db.fontOutline)
+	E:FontTemplate(icon.count, path, db.fontSize, db.fontOutline)
 end
 
 -- Same technique as every other HideNative* function in this project
@@ -444,6 +459,7 @@ function A:UpdateHeader(header, auraType)
 		SetEnchantBorder(icon, aura.qualitySlot)
 
 		ApplyTextOffsets(icon)
+		ApplyTextFonts(icon)
 
 		local row = math.floor((shown - 1) / perRow)
 		local col = (shown - 1) - row * perRow

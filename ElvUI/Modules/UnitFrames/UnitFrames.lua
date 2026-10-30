@@ -278,6 +278,12 @@ function UF:Update_FontStrings()
 	self:UpdateAll()
 end
 
+-- For a module that styles an aura icon's strings itself (the Auras module):
+-- a later general font change no longer overwrites them.
+function UF:UntrackFontString(fontString)
+	fontStrings[fontString] = nil
+end
+
 -- Real ElvUI's per-unit aura text sizes: `fontSize` for the time, and
 -- `countFontSize` (party only) or else `fontSize` for the stacks. Icons are
 -- pooled per unit, so this runs again only when a size changes.

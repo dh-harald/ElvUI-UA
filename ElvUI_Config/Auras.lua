@@ -159,12 +159,39 @@ E.Options.args.auras = {
 				-- Duration FORMAT (30m vs 30:00) is configured
 				-- under General > Cooldown Text and applies to both
 				-- displays.
+				font = {
+					type = "select",
+					dialogControl = "LSM30_Font",
+					name = L["Font"],
+					order = 4,
+					values = E.ConfigShared.MediaValues("font"),
+					get = function() return E.db.auras.font end,
+					set = function(_, value) E.db.auras.font = value end,
+				},
+				fontSize = {
+					type = "range",
+					name = L["Font Size"],
+					order = 5,
+					min = 6, max = 33, step = 1,
+					get = function() return E.db.auras.fontSize end,
+					set = function(_, value) E.db.auras.fontSize = value end,
+				},
+				fontOutline = {
+					type = "select",
+					name = L["Font Outline"],
+					desc = L["Set the font outline."],
+					order = 6,
+					values = {
+						["NONE"] = L["None"],
+						["OUTLINE"] = L["Outline"],
+						["MONOCHROMEOUTLINE"] = L["Monochrome Outline"],
+						["THICKOUTLINE"] = L["Thick Outline"],
+					},
+					get = function() return E.db.auras.fontOutline end,
+					set = function(_, value) E.db.auras.fontOutline = value end,
+				},
 				-- Real ElvUI field names verbatim (P["auras"],
-				-- Settings/Profile.lua:509-512). Its sibling
-				-- font/fontSize/fontOutline fields are stored in the
-				-- DB for profile round-tripping but deliberately NOT
-				-- exposed here: SetFont is a confirmed no-op on UA,
-				-- so they would be dead controls.
+				-- Settings/Profile.lua:509-512).
 				timeXOffset = {
 					type = "range",
 					name = L["Time X Offset"],

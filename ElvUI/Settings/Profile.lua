@@ -357,9 +357,6 @@ P.actionbar.barShapeShift = {
 --                     included) -- every aura here is the player's own
 --   sortMethod/sortDir  implemented (INDEX/TIME)
 --
--- font/fontSize/fontOutline are STORED ONLY: nothing reads them yet, so they
--- are absent from the config UI.
---
 -- There is deliberately NO aura-text color setting: real ElvUI-vanilla has
 -- none either -- its `E.TimeColors` is a hardcoded table, and this project
 -- carries the same one (Core/Util.lua), read by `FormatRemain`.
