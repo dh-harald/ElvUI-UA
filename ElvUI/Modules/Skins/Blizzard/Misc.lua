@@ -26,6 +26,15 @@
 -- `FrameXML/HelpFrame.xml`: a native `<Backdrop>` and no art regions. The
 -- ticket icon lives on the `TicketStatusButton` child and stays, it is the
 -- button that opens the ticket popup.
+--
+-- ChatMenu and its EmoteMenu, LanguageMenu and VoiceMacroMenu submenus, per
+-- `FrameXML/FloatingChatFrame.xml` and `UIMenu.xml`: `UIMenuTemplate` frames with
+-- a native `<Backdrop>` and no art regions, which only pick up our panel. The
+-- menus size themselves in `UIMenu_AddButton`, so the panel covers the whole
+-- frame. Their buttons have no highlight texture, only a font change. ChatMenu
+-- is anchored to `ChatFrameMenuButton`, which the Chat module kills, so it moves
+-- above the chat frame (real ElvUI's spot); the submenus are anchored to their
+-- parent's button by `UIMenuButton_OnEnter`.
 
 local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
@@ -34,6 +43,10 @@ local S = E:GetModule("Skins")
 -- Real ElvUI's inner box (`StackSplitFrame.bg1`) against the 172x96 frame.
 local BOX_LEFT, BOX_TOP, BOX_RIGHT, BOX_BOTTOM = 10, -15, -10, 55
 local ARROW_INSET = 4
+
+local CHAT_MENUS = { "ChatMenu", "EmoteMenu", "LanguageMenu", "VoiceMacroMenu" }
+-- Clears the chat tabs above ChatFrame1. Real ElvUI's number.
+local CHAT_MENU_OFFSET = 35
 
 local function StyleStackSplitBox(frame)
 	if frame.elvSplitBox or not frame.elvBackground then return end
@@ -101,9 +114,28 @@ local function ApplyTicketStatusSkin()
 	if not ok then S:ReportSkinProblem() end
 end
 
+local function ApplyChatMenuSkin()
+	local i
+	for i = 1, table.getn(CHAT_MENUS) do
+		local menu = _G[CHAT_MENUS[i]]
+		if menu then
+			S:StripTextures(menu, false)
+			S:CreatePanel(menu)
+		end
+	end
+
+	local menu, chat = _G.ChatMenu, _G.ChatFrame1
+	if menu and chat then
+		pcall(menu.ClearAllPoints, menu)
+		pcall(menu.SetPoint, menu, "BOTTOMLEFT", chat, "TOPLEFT", 0, CHAT_MENU_OFFSET)
+		pcall(menu.SetClampedToScreen, menu, true)
+	end
+end
+
 local function LoadSkin()
 	ApplyStackSplitSkin()
 	ApplyTicketStatusSkin()
+	ApplyChatMenuSkin()
 end
 
 S:AddBlizzardSkin("misc", LoadSkin)
