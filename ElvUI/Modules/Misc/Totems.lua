@@ -31,6 +31,8 @@
 --     the air button counts down the rest of the 10 seconds after the
 --     Windfury cast (TotemTimers' model of the Windfury buff window), so
 --     the next Windfury drop can be timed.
+--   * clickToRecast: a click on a button casts its totem again, at the rank
+--     the tracker holds for it. A button only exists while its totem is up.
 --
 -- Where it differs from real ElvUI: the time left is text, not a cooldown
 -- spiral, formatted and coloured like the cooldown text (E.db.cooldown);
@@ -105,7 +107,7 @@ local TOTEMS = {
 
 local active = {}        -- slot -> { key, name, icon, rank, rankExact, start, duration }
 local queue = {}         -- key, rank, time
-local spellsByKey = {}   -- icon key -> { name, icon, rank = highest known }
+local spellsByKey = {}   -- icon key -> { name, icon, rank = highest known, ids = rank or 0 -> spellbook index }
 local keysByName = {}    -- spell name -> icon key
 local lastScan = 0
 local twistEnd           -- GetTime() at which the Windfury window closes
@@ -165,10 +167,12 @@ local function ScanSpellbook()
 			local rank = RankNumber(rankText)
 			local known = spellsByKey[key]
 			if not known then
-				spellsByKey[key] = { name = name, icon = icon, rank = rank }
+				known = { name = name, icon = icon, rank = rank, ids = {} }
+				spellsByKey[key] = known
 			elseif rank and (not known.rank or rank > known.rank) then
 				known.rank = rank
 			end
+			known.ids[rank or 0] = i
 			keysByName[name] = key
 		end
 		i = i + 1
@@ -431,6 +435,18 @@ local function ShowTooltip(button)
 	GameTooltip:Show()
 end
 
+-- Casts by spellbook index: the rank in CastSpellByName's "Name(Rank N)" is
+-- localized text. Both this and CastSpellByName work from an addon's OnClick on
+-- Unreal Azeroth, although its documentation lists them as protected. The call
+-- goes through the cast wrappers, so the tracker sees the new cast.
+local function Recast(button)
+	if not E.db.general.totems.clickToRecast then return end
+	local totem = active[button.slot]
+	local spell = totem and spellsByKey[totem.key]
+	local id = spell and spell.ids[totem.rank or 0]
+	if id then CastSpell(id, "spell") end
+end
+
 local function CreateButton(index)
 	local button = CreateFrame("Button", "ElvUI_TotemTrackerTotem" .. index, bar)
 	button.slot = BUTTON_SLOTS[index]
@@ -451,6 +467,8 @@ local function CreateButton(index)
 	button:EnableMouse(true)
 	button:SetScript("OnEnter", function() ShowTooltip(button) end)
 	button:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	button:RegisterForClicks("LeftButtonUp")
+	button:SetScript("OnClick", function() Recast(button) end)
 	return button
 end
 

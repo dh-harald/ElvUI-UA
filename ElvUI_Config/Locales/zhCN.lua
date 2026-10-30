@@ -732,6 +732,8 @@ L["The size of the Totem buttons."] = "图腾按钮的大小."
 L["The width of the totem buttons."] = "图腾按钮的宽度."
 L["Pulse Timer"] = "脉冲计时"
 L["Show the time until the totem's next pulse, for totems that act at an interval (Tremor, Earthbind, Magma, Windfury, ...)."] = "显示图腾下一次脉冲前的时间,适用于间隔生效的图腾(战栗,地缚,熔岩,风怒,...)."
+L["Click to Recast"] = "点击重新放置"
+L["Click a totem button to drop the same totem again."] = "点击图腾按钮以再次放置同一个图腾."
 L["Windfury Twist Timer"] = "风怒图腾轮换计时"
 L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."] = "风怒图腾被其他空气图腾替换后,在空气按钮上倒数其10秒窗口的剩余时间,以便掌握下一次放置风怒图腾的时机."
 

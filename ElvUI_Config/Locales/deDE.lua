@@ -732,6 +732,8 @@ L["The size of the Totem buttons."] = "Die Größe der Totemtasten."
 L["The width of the totem buttons."] = "Die Breite der Totemtasten."
 L["Pulse Timer"] = "Impuls-Timer"
 L["Show the time until the totem's next pulse, for totems that act at an interval (Tremor, Earthbind, Magma, Windfury, ...)."] = "Zeigt die Zeit bis zum nächsten Impuls des Totems, für Totems, die in Abständen wirken (Erdstoß, Erdbindung, Magma, Windzorn, ...)."
+L["Click to Recast"] = "Klicken zum Neusetzen"
+L["Click a totem button to drop the same totem again."] = "Klicke auf eine Totem-Schaltfläche, um dasselbe Totem erneut zu setzen."
 L["Windfury Twist Timer"] = "Windzorn-Twist-Timer"
 L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."] = "Wird das Totem des Windzorns durch ein anderes Lufttotem ersetzt, zählt die Lufttaste den Rest seines 10-Sekunden-Fensters herunter, um das nächste Windzorn-Totem zeitlich abzupassen."
 

@@ -563,6 +563,12 @@ E.Options.args.general = {
 					name = L["Windfury Twist Timer"],
 					desc = L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."],
 				},
+				clickToRecast = {
+					order = 10,
+					type = "toggle",
+					name = L["Click to Recast"],
+					desc = L["Click a totem button to drop the same totem again."],
+				},
 			},
 		},
 		-- Real ElvUI's chat bubble group: entry names and orders are its own,

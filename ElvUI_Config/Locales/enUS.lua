@@ -755,6 +755,8 @@ L["The size of the Totem buttons."] = true
 L["The width of the totem buttons."] = true
 L["Pulse Timer"] = true
 L["Show the time until the totem's next pulse, for totems that act at an interval (Tremor, Earthbind, Magma, Windfury, ...)."] = true
+L["Click to Recast"] = true
+L["Click a totem button to drop the same totem again."] = true
 L["Windfury Twist Timer"] = true
 L["After Windfury Totem is replaced by another air totem, count down the rest of its 10 second window on the air button, to time the next Windfury."] = true
 

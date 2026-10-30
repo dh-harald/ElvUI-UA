@@ -129,7 +129,8 @@ P.general = {
 		},
 	},
 	-- Totem tracker (Modules/Misc/Totems.lua). Real ElvUI's keys and
-	-- defaults; `tickTimer` and `twistTimer` are this project's additions.
+	-- defaults; `tickTimer`, `twistTimer` and `clickToRecast` are this project's
+	-- additions.
 	totems = {
 		growthDirection = "VERTICAL",
 		sortDirection = "ASCENDING",
@@ -139,6 +140,7 @@ P.general = {
 		keepSizeRatio = true,
 		tickTimer = true,
 		twistTimer = true,
+		clickToRecast = true,
 	},
 }
 

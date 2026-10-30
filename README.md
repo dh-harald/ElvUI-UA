@@ -108,8 +108,9 @@ Two addons ship together:
   cursor; legacy client)
 - Totem tracker (shaman): one button per element with the active totem and
   its time left, cleared when the totem is destroyed; optional pulse timer
-  (Tremor, Earthbind, Magma, ...) and Windfury twist timer. The client has
-  no totem API, so the state comes from your own casts and combat log
+  (Tremor, Earthbind, Magma, ...) and Windfury twist timer, and a click on a
+  button drops the same totem again. The client has no totem API, so the
+  state comes from your own casts and combat log
 - Leave Druid form: when a spell, item, mount, taxi or NPC talk fails
   because you are shapeshifted, leaves the form at once or shows a big
   button for it (General → General → Leave Shapeshift Form: None / Manual /
