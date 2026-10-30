@@ -402,7 +402,6 @@ L["Use the transparent backdrop for the datatext panels instead of the solid one
 L["Draw a backdrop behind the chat datatext panels. Turning this off leaves them functional but invisible."] = "在聊天信息文字面板后绘制背景。关闭后面板仍可用但不可见。"
 L["Gold Format"] = "金币格式"
 L["The display format of the money text shown in the gold datatext and its tooltip."] = "金币信息文字及其提示中金额的显示格式。"
-L["Currently a no-op on UA (SetFont doesn't apply size there) -- kept for real 1.12.1 and in case UA fixes this."] = "目前在 UA 上无效(SetFont 在此无法应用字号)——保留以兼容真实 1.12.1,并防 UA 日后修复。"
 L["Datatext Panel (Left)"] = "信息面板(左)"
 L["Display a data panel below the left chat frame, used for datatexts."] = "在左侧聊天框架下方显示信息面板,用于放置信息文字。"
 L["Datatext Panel (Right)"] = "信息面板(右)"

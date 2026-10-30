@@ -98,9 +98,7 @@ end
 -- LeftChatDataPanel/RightChatDataPanel. `font` follows the same
 -- plain-LSM-select pattern as ActionBars'/DataBars' own font
 -- fields (no LSM30_Font AceGUI widget, see those fields' own
--- comments) -- font size/outline are confirmed UA no-ops but wired
--- anyway, same as every other font field in this project (e.g.
--- ActionBars' Fonts group). Panel widget-assignment selects list `E.DataTexts
+-- comments). Panel widget-assignment selects list `E.DataTexts
 -- .RegisteredDataTexts` dynamically (Gold/Time/System/Durability/
 -- Armor/Attack Power/Avoidance/Guild/Friends -- whatever's actually
 -- registered, so this list never drifts out of sync with the
@@ -215,7 +213,6 @@ E.Options.args.datatexts = {
 						fontSize = {
 							type = "range",
 							name = L["Font Size"],
-							desc = L["Currently a no-op on UA (SetFont doesn't apply size there) -- kept for real 1.12.1 and in case UA fixes this."],
 							order = 2,
 							min = 4,
 							max = 22,

@@ -53,13 +53,9 @@
 --      `ReassertObjectiveColors` records what else was tried, why it does
 --      not work, and what the real fix would be.
 --
--- Fonts themselves are left completely alone, on purpose. `SetFont` is a
--- confirmed no-op on this client and the `SetFontObject` route makes text
--- vanish outright (`UnrealUI` measured the same independently and
--- also ships with the inherited native font as
--- its default). `SetTextColor` is a different call and does work, so
--- colour is the entire lever available here. Nothing in this file depends
--- on font family or size, which keeps a later font pass separable.
+-- Fonts themselves are left completely alone, on purpose: colour is the only
+-- thing this file changes on the text, and nothing here depends on font
+-- family or size.
 --
 -- **Two-pane layout** (real ElvUI's): the native window stacks the quest list
 -- (6 rows) above the detail pane, both 300 wide. Here the two columns sit side

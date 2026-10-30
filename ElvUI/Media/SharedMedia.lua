@@ -15,9 +15,6 @@
 -- "ElvUI Norm" -- so an imported real profile's font/texture choices work, and
 -- our own defaults have no reason to deviate on availability grounds.
 --
--- `SetFont` is a no-op on UA, so a font CHANGE is inert on that client
--- regardless of what is registered here. Custom TEXTURES do render.
---
 -- Sounds are registered in the standard "Interface\AddOns\..." form, which
 -- both clients play; Chat.lua plays PlaySoundFile(LSM:Fetch(...)). UA does
 -- not play .mp3.

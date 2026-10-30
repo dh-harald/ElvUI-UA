@@ -360,8 +360,6 @@ function M:UpdateReputationDimensions()
 	pcall(bar.SetHeight, bar, settings.height)
 	pcall(bar.statusBar.SetOrientation, bar.statusBar, settings.orientation)
 
-	-- Font family/size are a confirmed no-op via SetFont on UA -- wired
-	-- up anyway, same as every other font field in this project.
 	local LSM = LibStub("LibSharedMedia-3.0", true)
 	local path = LSM and LSM:Fetch("font", settings.font)
 	if path then

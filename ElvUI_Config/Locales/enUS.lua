@@ -425,7 +425,6 @@ L["Use the transparent backdrop for the datatext panels instead of the solid one
 L["Draw a backdrop behind the chat datatext panels. Turning this off leaves them functional but invisible."] = true
 L["Gold Format"] = true
 L["The display format of the money text shown in the gold datatext and its tooltip."] = true
-L["Currently a no-op on UA (SetFont doesn't apply size there) -- kept for real 1.12.1 and in case UA fixes this."] = true
 L["Datatext Panel (Left)"] = true
 L["Display a data panel below the left chat frame, used for datatexts."] = true
 L["Datatext Panel (Right)"] = true

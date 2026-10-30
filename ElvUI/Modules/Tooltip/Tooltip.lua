@@ -428,7 +428,6 @@ end
 -- not from the bar: on UA the bar's own GetValue/GetMinMaxValues report a
 -- fixed 0-100 range (UnrealUI/modules/tooltip.lua). It is anchored by a
 -- single CENTER point, because FontString:SetJustifyV does nothing on UA.
--- SetFont is a no-op on UA and applies on the legacy client.
 function TT:SetupHealthBar()
 	local bar = GameTooltipStatusBar
 	if not bar then return end

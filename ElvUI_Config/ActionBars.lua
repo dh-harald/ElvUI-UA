@@ -293,10 +293,7 @@ E.Options.args.actionbar = {
 				-- lower-value nicety, not settings data.
 				-- Ported from real ElvUI's own "Fonts" group
 				-- (ElvUI-vanilla/ElvUI_Config/
-				-- ActionBars.lua:158-185), even though font size is
-				-- already a confirmed no-op via SetFont on UA --
-				-- wired up anyway since it costs nothing and may
-				-- start working if UA's font handling improves.
+				-- ActionBars.lua:158-185).
 				-- `font` is a plain "select" reading
 				-- LibSharedMedia-3.0's registered font names
 				-- (Media/SharedMedia.lua) -- NOT the LSM30_Font

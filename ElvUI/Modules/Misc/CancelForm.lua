@@ -77,8 +77,6 @@ local function CreateButton()
 	pcall(button.SetFrameStrata, button, "HIGH")
 	E:SetTemplate(button, "Default")
 
-	-- A font template is required: SetFont is a no-op on UA, so a
-	-- FontString without one has no font and draws nothing.
 	local text = button:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 	text:SetPoint("CENTER", button, "CENTER", 0, 0)
 	E:FontTemplate(text, nil, 16, "OUTLINE")

@@ -402,7 +402,6 @@ L["Use the transparent backdrop for the datatext panels instead of the solid one
 L["Draw a backdrop behind the chat datatext panels. Turning this off leaves them functional but invisible."] = "Dessine un fond derrière les panneaux de datatext du chat. Le désactiver les laisse fonctionnels mais invisibles."
 L["Gold Format"] = "Format monétaire"
 L["The display format of the money text shown in the gold datatext and its tooltip."] = "Le format d'affichage du texte monétaire du datatext d'or et de son infobulle."
-L["Currently a no-op on UA (SetFont doesn't apply size there) -- kept for real 1.12.1 and in case UA fixes this."] = "Actuellement sans effet sur UA (SetFont n'y applique pas la taille) -- conservé pour le vrai 1.12.1 et au cas où UA corrige ce point."
 L["Datatext Panel (Left)"] = "Panneaux d'informations (Gauche)"
 L["Display a data panel below the left chat frame, used for datatexts."] = "Affiche un panneau de données sous la fenêtre de chat gauche, utilisé pour les datatexts."
 L["Datatext Panel (Right)"] = "Panneaux d'informations (Droite)"
