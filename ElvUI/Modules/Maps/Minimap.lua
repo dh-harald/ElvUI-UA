@@ -4,10 +4,9 @@
 -- holder with a border, hides the default chrome (border textures, zoom
 -- buttons, toggle button), adds a PvP-colored zone text header above the
 -- map, repositions the calendar/mail/battlefield-queue icons, persists/
--- restores zoom level, and switches to mouse-wheel zoom (+/- buttons as a
--- fallback). Ported from real ElvUI's Modules/Maps/Minimap.lua
--- (ElvUI-vanilla), scoped down -- deliberately NOT included: the
--- right-click menu, Farm Mode.
+-- restores zoom level, and switches to mouse-wheel zoom. Ported from real
+-- ElvUI's Modules/Maps/Minimap.lua (ElvUI-vanilla), scoped down --
+-- deliberately NOT included: the right-click menu, Farm Mode.
 --
 -- Settings coverage, against real ElvUI's actual config table
 -- (ElvUI-vanilla/ElvUI_Config/Maps.lua's `minimap` group):
@@ -47,9 +46,7 @@
 -- left as-is intentionally, don't try to fix. The wheel catcher below is a
 -- `CreateFrame("ScrollFrame", ...)`, not a plain Frame: OnMouseWheel only
 -- fires on a ScrollFrame on this client, matching LibConfig-1.0's own
--- dropdown-menu workaround for the same limitation. Explicit +/- buttons
--- are kept alongside the wheel catcher rather than relying on the wheel, same
--- as LibConfig-1.0's own scrollable widgets.
+-- dropdown-menu workaround for the same limitation.
 
 local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
@@ -162,7 +159,7 @@ local lastZoomTime = 0
 -- Reset Zoom + zoom persistence: ported from real ElvUI's actual logic
 -- (ElvUI-vanilla/ElvUI/Modules/Maps/Minimap.lua:93-114), not just
 -- the config option -- a `hooksecurefunc` on Minimap:SetZoom catches
--- EVERY zoom change, not only ours (wheel/buttons below), but also
+-- EVERY zoom change, not only ours (the wheel below), but also
 -- Blizzard's own native auto-zoom (e.g. entering an instance auto-zooms
 -- the minimap in). Exact real-ElvUI semantics, not a debounce: the FIRST
 -- zoom change while idle starts a single `time`-second countdown back to
@@ -288,30 +285,6 @@ local function OnMouseWheel(a1, a2)
 	if delta ~= 0 then
 		StepZoom(delta > 0 and 1 or -1)
 	end
-end
-
-local function CreateZoomButton(parent, label, anchorPoint, xOff, step)
-	local size = HEADER_HEIGHT - 4
-
-	local btn = CreateFrame("Button", nil, parent)
-	btn:SetWidth(size)
-	btn:SetHeight(size)
-	btn:SetPoint(anchorPoint, parent, anchorPoint, xOff, -2)
-	pcall(btn.SetBackdrop, btn, {
-		bgFile = "Interface\\Buttons\\WHITE8x8",
-		edgeFile = "Interface\\Buttons\\WHITE8x8",
-		edgeSize = 1,
-	})
-	pcall(btn.SetBackdropColor, btn, 0.15, 0.15, 0.15, 1)
-	pcall(btn.SetBackdropBorderColor, btn, 0, 0, 0, 1)
-
-	local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	text:SetPoint("CENTER", btn, "CENTER", 0, 0)
-	text:SetText(label)
-
-	btn:SetScript("OnClick", function() StepZoom(step) end)
-
-	return btn
 end
 
 -- "Minimap Buttons": calendar/mail/battlefield are pre-existing native
@@ -446,7 +419,7 @@ function M:UpdateSettings()
 	pcall(Minimap.SetWidth, Minimap, size)
 	pcall(Minimap.SetHeight, Minimap, size)
 	if self.zoneText then
-		self.zoneText:SetWidth(size - 32)
+		self.zoneText:SetWidth(size)
 	end
 
 	self:ApplyLocationText()
@@ -526,7 +499,7 @@ function M:Initialize()
 	-- outlined.
 	E:FontTemplate(zoneText, nil, nil, "OUTLINE")
 	zoneText:SetPoint("TOP", holder, "TOP", 0, -4)
-	zoneText:SetWidth(size - 32)
+	zoneText:SetWidth(size)
 	zoneText:SetJustifyH("CENTER")
 	self.zoneText = zoneText
 
@@ -572,16 +545,12 @@ function M:Initialize()
 	M:RegisterEvent("PLAYER_ENTERING_WORLD", UpdateZoneText)
 
 	-- Zoom: wheel via a ScrollFrame-type catcher (see the UA test results
-	-- note at the top of this file for why ScrollFrame specifically), plus
-	-- small +/- buttons in the header strip as a guaranteed fallback.
+	-- note at the top of this file for why ScrollFrame specifically).
 	local wheelCatcher = CreateFrame("ScrollFrame", "ElvUIMinimapWheelCatcher", holder)
 	wheelCatcher:SetAllPoints(Minimap)
 	pcall(wheelCatcher.SetFrameLevel, wheelCatcher, (Minimap:GetFrameLevel() or 0) + 5)
 	pcall(wheelCatcher.EnableMouseWheel, wheelCatcher, true)
 	wheelCatcher:SetScript("OnMouseWheel", OnMouseWheel)
-
-	CreateZoomButton(holder, "-", "TOPLEFT", 2, -1)
-	CreateZoomButton(holder, "+", "TOPRIGHT", -2, 1)
 
 	-- Polling replaces the confirmed-broken hooksecurefunc(Minimap,
 	-- "SetZoom", ...) -- see PollMinimapZoom's own header comment for the
