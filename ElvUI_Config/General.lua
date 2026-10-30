@@ -839,8 +839,7 @@ E.Options.args.general = {
 				E:UpdateFontTemplates()
 			end,
 			args = {
-				-- Real ElvUI's own entry names and orders. `fontStyle` (order 4)
-				-- is not exposed: nothing reads it.
+				-- Real ElvUI's own entry names and orders.
 				fontHeader = {
 					order = 1,
 					type = "header",
@@ -862,6 +861,17 @@ E.Options.args.general = {
 					min = 4,
 					max = 33,
 					step = 1,
+				},
+				fontStyle = {
+					order = 4,
+					type = "select",
+					name = L["Font Outline"],
+					values = {
+						["NONE"] = L["None"],
+						["OUTLINE"] = L["Outline"],
+						["MONOCHROMEOUTLINE"] = L["Monochrome Outline"],
+						["THICKOUTLINE"] = L["Thick Outline"],
+					},
 				},
 				applyFontToAll = {
 					order = 5,

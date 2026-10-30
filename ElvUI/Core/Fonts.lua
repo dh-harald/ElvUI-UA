@@ -66,8 +66,10 @@ end
 -- Real ElvUI's `E:FontTemplate` (Core/toolkit.lua): gives one of the addon's
 -- own FontStrings the UI font and remembers the arguments, so
 -- `E:UpdateFontTemplates` can re-apply them when the General -> Media font
--- settings change. A nil `font`/`fontSize` means "the Media setting" and
--- follows a later change; an explicit value stays fixed. Homespun is a pixel
+-- settings change. A nil `font`/`fontSize`/`fontStyle` means "the Media
+-- setting" and follows a later change (a nil `fontStyle` as in current real
+-- ElvUI; ElvUI-vanilla never reads that setting); an explicit value stays
+-- fixed. Homespun is a pixel
 -- font: an OUTLINE string at the default size is drawn MONOCHROMEOUTLINE at 10,
 -- as real ElvUI does.
 --
@@ -92,7 +94,7 @@ function E:FontTemplate(fs, font, fontSize, fontStyle)
 		size = 10
 	end
 
-	local flags = fontStyle
+	local flags = fontStyle or (general and general.fontStyle)
 	if not flags or flags == "NONE" then flags = "" end
 	pcall(fs.SetFont, fs, path, size, flags)
 

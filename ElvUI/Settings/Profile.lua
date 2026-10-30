@@ -92,8 +92,8 @@ P.general = {
 
 	-- The UI font, real ElvUI's own keys and defaults. `font`/`fontSize` are
 	-- applied to the client's shared Font objects by `E:UpdateBlizzardFonts`
-	-- (Core/Fonts.lua). `fontStyle` is stored for profile compatibility only;
-	-- nothing reads it.
+	-- (Core/Fonts.lua). `fontStyle` is the outline of every `E:FontTemplate`
+	-- string that names none of its own.
 	font = "PT Sans Narrow",
 	fontSize = 12,
 	fontStyle = "NONE",
