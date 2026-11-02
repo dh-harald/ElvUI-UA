@@ -2,4 +2,5 @@
 	<Script file="Bagzen.lua"/>
 	<Script file="LibConfig.lua"/>
 	<Script file="PunyAuras.lua"/>
+	<Script file="UnderCut.lua"/>
 </Ui>

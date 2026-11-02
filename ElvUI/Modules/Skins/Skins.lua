@@ -352,6 +352,30 @@ function S:CreateField(frame, l, t, r, b, keepDefaultLevel)
 	return S:CreateSurface(frame, S.WIDGET_COLOR, l, t, r, b, keepDefaultLevel)
 end
 
+-- Column background of a multi-column window (the auction tabs). A separate
+-- host frame per column, because `S:CreateSurface` keeps ONE surface per
+-- frame -- the same split real ElvUI's own `bg1`/`bg2` uses. The host sits at
+-- its parent's OWN frame level, which puts it behind every child frame of that
+-- parent (the rows, the buttons, the scroll bars) while still covering the
+-- window panel underneath. Text on the parent itself needs the OVERLAY layer
+-- to stay above it. Field tone, one step lighter than the window panel, so
+-- each column reads as a framed well instead of disappearing into the window.
+-- Stored on `host[key]`; a second call returns the existing pane.
+function S:CreatePane(host, key, tlRef, tlPoint, tlX, tlY, brRef, brPoint, brX, brY)
+	if not host or not tlRef or not brRef then return nil end
+	if host[key] then return host[key] end
+
+	local okPane, pane = pcall(CreateFrame, "Frame", nil, host)
+	if not okPane or not pane then return nil end
+	local okLevel, level = pcall(host.GetFrameLevel, host)
+	pcall(pane.SetFrameLevel, pane, (okLevel and tonumber(level)) or 0)
+	pcall(pane.SetPoint, pane, "TOPLEFT", tlRef, tlPoint, tlX, tlY)
+	pcall(pane.SetPoint, pane, "BOTTOMRIGHT", brRef, brPoint, brX, brY)
+	S:CreateSurface(pane, S.WIDGET_COLOR)
+	host[key] = pane
+	return pane
+end
+
 -- Item slot in the QuestItemTemplate shape (quest log rewards, trade skill and
 -- craft reagents), styled like the merchant window's item slots
 -- (Blizzard/Merchant.lua): a 37x37 icon with a 1px border, the name beside
@@ -799,7 +823,9 @@ end
 --    HighlightTexture slot, which replaces the native blue tab glow. On UA
 --    a HIGHLIGHT-layer texture is drawn permanently on a button created by
 --    an addon, but on these XML-born native headers it is shown only on
---    hover, as on legacy; do not reuse this on an addon-created button.
+--    hover, as on legacy. `noHover` is for an addon-created header: it gets
+--    no hover texture, and the template's own highlight is removed. Such a
+--    header must not take the mouse, or it would have no hover feedback.
 --  * the auction headers carry their SORT ARROW in the button's
 --    NormalTexture (`$parentArrow`, ARTWORK). `GetRegions()` returns that
 --    texture too, so a region strip (`S:StripTextures`) hides the arrow;
@@ -811,7 +837,7 @@ end
 local COLUMN_HEADER_ART = { "Left", "Middle", "Right" }
 local COLUMN_HEADER_HOVER_ALPHA = 0.3
 
-function S:StyleColumnHeader(header)
+function S:StyleColumnHeader(header, noHover)
 	if not header then return end
 	local okName, name = pcall(header.GetName, header)
 	if okName and name then
@@ -826,7 +852,10 @@ function S:StyleColumnHeader(header)
 	-- arrow is on ARTWORK, not on this layer.
 	pcall(header.DisableDrawLayer, header, "BACKGROUND")
 
-	if not header.elvHover then
+	if noHover then
+		local okHighlight, highlight = pcall(header.GetHighlightTexture, header)
+		if okHighlight and highlight then S:Kill(highlight) end
+	elseif not header.elvHover then
 		local okHover, hover = pcall(header.CreateTexture, header, nil, "HIGHLIGHT")
 		if okHover and hover then
 			pcall(hover.SetTexture, hover, "Interface\\Buttons\\WHITE8x8")

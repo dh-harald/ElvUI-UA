@@ -13,7 +13,8 @@
 --     DropDownList, so the spill stays inside the tooltip family, which is
 --     skinned the same way anyway. The legacy client applies it per frame.
 --     Side effect on UA: a GameTooltipTemplate tooltip of another addon, not
---     in TOOLTIPS, loses its fill as well.
+--     in TOOLTIPS, loses its fill as well. An addon skin puts its tooltip on
+--     the list with `S:AddSkinnedTooltip`.
 --
 -- Both native backdrop colours get alpha 0. The visible body is a child frame
 -- placed one frame level BELOW the tooltip: the lines are the tooltip's own
@@ -45,10 +46,16 @@ local TOOLTIPS = { "GameTooltip", "ItemRefTooltip", "ShoppingTooltip1", "Shoppin
 
 local BACKDROP_INSET = 4
 
+-- The insets and tile size are spelled out because on UA SetBackdrop leaves a
+-- number the table omits at its previous value. A frame that already had the
+-- native tooltip backdrop keeps insets of 5, a gap between border and fill, and
+-- a tile size of 16, which draws the same fill colour visibly lighter.
 local FLAT_BACKDROP = {
 	bgFile = "Interface\\Buttons\\WHITE8x8",
 	edgeFile = "Interface\\Buttons\\WHITE8x8",
 	edgeSize = 1,
+	tileSize = 0,
+	insets = { left = 0, right = 0, top = 0, bottom = 0 },
 }
 
 local function BorderColor()
@@ -89,11 +96,18 @@ local function ApplyColors(tt)
 	PlaceBackdrop(tt)
 end
 
-local function CreateBackdrop(tt)
+-- `backdrop` is an optional frame of the tooltip's owner to draw the body on,
+-- instead of a new one.
+local function CreateBackdrop(tt, backdrop)
 	if tt.elvTooltipBackdrop then return end
 
-	local ok, backdrop = pcall(CreateFrame, "Frame", nil, tt)
-	if not ok or not backdrop then return end
+	if backdrop then
+		pcall(backdrop.ClearAllPoints, backdrop)
+	else
+		local ok, frame = pcall(CreateFrame, "Frame", nil, tt)
+		if not ok or not frame then return end
+		backdrop = frame
+	end
 
 	pcall(backdrop.SetPoint, backdrop, "TOPLEFT", tt, "TOPLEFT", BACKDROP_INSET, -BACKDROP_INSET)
 	pcall(backdrop.SetPoint, backdrop, "BOTTOMRIGHT", tt, "BOTTOMRIGHT", -BACKDROP_INSET, BACKDROP_INSET)
@@ -132,8 +146,8 @@ local function ScheduleReapply()
 	reapplyFrame:Show()
 end
 
-local function SkinTooltip(tt)
-	CreateBackdrop(tt)
+local function SkinTooltip(tt, backdrop)
+	CreateBackdrop(tt, backdrop)
 	ApplyColors(tt)
 
 	local okShow = S:TryHookScript(tt, "OnShow", function() ApplyColors(tt) end)
@@ -184,7 +198,10 @@ local function SkinItemRefCloseButton()
 	pcall(button.SetPoint, button, "TOPRIGHT", tooltip, "TOPRIGHT", -6, -6)
 end
 
+local skinLoaded = false
+
 local function LoadSkin()
+	skinLoaded = true
 	local i
 	for i = 1, table.getn(TOOLTIPS) do
 		local tt = _G[TOOLTIPS[i]]
@@ -195,6 +212,20 @@ local function LoadSkin()
 
 	SkinStatusBar()
 	SkinItemRefCloseButton()
+end
+
+-- Gives another addon's GameTooltip-type frame the look of the native ones and
+-- keeps it in the colour passes above. `backdrop` is optional, see
+-- `CreateBackdrop`: a Lua-created tooltip on UA does not take a child with it
+-- when it hides, so an owner that already shows and hides a child in step with
+-- the tooltip hands that frame over. Returns false, changing nothing, while
+-- the tooltip skin is off.
+function S:AddSkinnedTooltip(name, backdrop)
+	local tt = _G[name]
+	if not skinLoaded or not tt then return false end
+	table.insert(TOOLTIPS, name)
+	SkinTooltip(tt, backdrop)
+	return true
 end
 
 S:AddBlizzardSkin("tooltip", LoadSkin)

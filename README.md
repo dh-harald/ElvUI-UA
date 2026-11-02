@@ -182,7 +182,8 @@ Two addons ship together:
 - Skins for other addons: Bagzen's bag and bank windows, every
   LibConfig-1.0 options window (ElvUI's own config included) and the
   PunyAuras options window take ElvUI's border, backdrop and value colours
-  and the UI font; each can be switched off under Skins (Ace3, AddOns)
+  and the UI font, and UnderCut's auction tabs and price tooltip match the
+  skinned Auction House; each can be switched off under Skins (Ace3, AddOns)
 - Mailbox: open several mails at once (all of them, or the ones ticked with
   a checkbox), send the ticked ones back to their senders, stop a run in
   progress, Shift-click or Ctrl-click a row to take or return that one mail,

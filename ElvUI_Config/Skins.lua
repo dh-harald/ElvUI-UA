@@ -10,6 +10,7 @@ local SKIN_DESC = L["Requires /reload to take effect."]
 local ADDON_FOLDERS = {
 	bagzen = "Bagzen",
 	punyauras = "PunyAuras",
+	undercut = "UnderCut",
 }
 
 E.Options.args.skins = {
@@ -192,6 +193,7 @@ E.Options.args.skins = {
 			args = {
 				bagzen = { type = "toggle", name = "Bagzen", desc = SKIN_DESC },
 				punyauras = { type = "toggle", name = "PunyAuras", desc = SKIN_DESC },
+				undercut = { type = "toggle", name = "UnderCut", desc = SKIN_DESC },
 			},
 		},
 	},

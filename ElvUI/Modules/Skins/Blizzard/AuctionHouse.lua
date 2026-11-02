@@ -254,30 +254,6 @@ local function PromotePanelText()
 	end
 end
 
--- Column background. A separate host frame per column, because
--- `S:CreateSurface` keeps ONE surface per frame -- the same split real
--- ElvUI's own `bg1`/`bg2` uses, and the same shape `TradeSkillFrame`'s two
--- panes already have. The host sits at its parent's OWN frame level, which
--- puts it behind every child frame of that parent (the rows, the buttons,
--- the scroll bars) while still covering the window panel underneath.
-local function EnsurePane(host, key, tlRef, tlPoint, tlX, tlY, brRef, brPoint, brX, brY)
-	if not host or not tlRef or not brRef then return nil end
-	if host[key] then return host[key] end
-
-	local okPane, pane = pcall(CreateFrame, "Frame", nil, host)
-	if not okPane or not pane then return nil end
-	local okLevel, level = pcall(host.GetFrameLevel, host)
-	pcall(pane.SetFrameLevel, pane, (okLevel and tonumber(level)) or 0)
-	pcall(pane.SetPoint, pane, "TOPLEFT", tlRef, tlPoint, tlX, tlY)
-	pcall(pane.SetPoint, pane, "BOTTOMRIGHT", brRef, brPoint, brX, brY)
-	-- Field tone, one step lighter than the window panel, so each column
-	-- reads as a framed well (the merchant item fields' tone) instead of
-	-- disappearing into the window behind it.
-	S:CreateSurface(pane, S.WIDGET_COLOR)
-	host[key] = pane
-	return pane
-end
-
 -- Icon that lives in a button's own NormalTexture (the sell slot): cropped
 -- and pulled 1px inside the button so the edge strips stay visible.
 local function CropNormalTextureIcon(button)
@@ -442,10 +418,10 @@ local function ApplyBrowseChrome()
 	local host = _G.AuctionFrameBrowse
 	if not host then return end
 
-	local filterPane = EnsurePane(host, "elvFilterPane",
+	local filterPane = S:CreatePane(host, "elvFilterPane",
 		host, "TOPLEFT", 20, -103, host, "BOTTOMRIGHT", -575, 40)
 	if filterPane then
-		EnsurePane(host, "elvListPane",
+		S:CreatePane(host, "elvListPane",
 			filterPane, "TOPRIGHT", 4, 0, _G.AuctionFrame, "BOTTOMRIGHT", -8, 40)
 	end
 
@@ -486,7 +462,7 @@ end
 local function ApplyBidChrome()
 	local host = _G.AuctionFrameBid
 	if not host then return end
-	EnsurePane(host, "elvListPane",
+	S:CreatePane(host, "elvListPane",
 		host, "TOPLEFT", 20, -72, _G.AuctionFrame, "BOTTOMRIGHT", -8, 40)
 	StyleListRows(LISTS[2])
 end
@@ -497,10 +473,10 @@ local function ApplyAuctionsChrome()
 	local host = _G.AuctionFrameAuctions
 	if not host then return end
 
-	local formPane = EnsurePane(host, "elvFormPane",
+	local formPane = S:CreatePane(host, "elvFormPane",
 		host, "TOPLEFT", 15, -72, host, "BOTTOMRIGHT", -545, 40)
 	if formPane then
-		EnsurePane(host, "elvListPane",
+		S:CreatePane(host, "elvListPane",
 			formPane, "TOPRIGHT", 3, 0, _G.AuctionFrame, "BOTTOMRIGHT", -8, 40)
 	end
 

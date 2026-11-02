@@ -118,6 +118,7 @@ V.skins = {
 	addons = {
 		bagzen = true,
 		punyauras = true,
+		undercut = true,
 	},
 	blizzard = {
 		enable = true,
