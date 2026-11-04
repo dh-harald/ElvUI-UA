@@ -18,28 +18,24 @@
 -- this addon and falls back to plain UIParent (see ParsePositionString
 -- below) rather than erroring.
 --
--- The actual drag MECHANICS (handle type, the StartMoving/
--- StopMovingOrSizing throwaway pair, GetPoint's UA-specific quirks) are
--- modeled on UnrealUI's proven mover code instead of real ElvUI's own
--- (which assumes real-vanilla-correct GetPoint/StartMoving behavior) --
--- see the "Anchor capture" and "Dragging" sections below for exactly
--- which UA-specific findings this reuses.
+-- The drag itself and the alignment grid come from LibSnapGrid-1.0 (see the
+-- "Dragging" and "Alignment grid" sections below): the frame snaps to the
+-- grid lines, the screen edges and the screen's centre lines, which real
+-- ElvUI approximates with LibSimpleSticky-1.0.
 --
 -- Pixel-precise nudging (arrow keys + a live coordinate readout while
 -- dragging) is the IDEA from real ElvUI's own mover system (there: mouse
--- wheel + a "nudge window", backed by LibSimpleSticky-1.0) ported to a
--- mechanism actually reliable on UA -- mouse wheel input is unreliable
--- on UA, and LibSimpleSticky-1.0 isn't vendored here.
+-- wheel + a "nudge window") ported to a mechanism actually reliable on
+-- UA -- mouse wheel input is unreliable on UA.
 --
--- Feature set: drag handle, save/restore position (real-ElvUI-format),
--- arrow-key nudge, live coordinate readout while dragging,
--- quadrant-relative anchoring (see CalculateMoverPoint below -- ported
--- from real ElvUI's own CalculateMoverPoints), an edit-mode overlay panel
--- with two buttons (`CreateMoverPanel` -- and unlike either reference,
--- DRAGGABLE), and an alignment grid (`CreateGrid`, real ElvUI's own
--- `E.db.gridSize` divisor convention). Deliberately NOT ported: a
--- center-alignment-guide overlay, magnet/snap-to-other-movers,
--- LibSimpleSticky sticky-edge snapping.
+-- Feature set: drag handle with grid/edge/centre snapping, save/restore
+-- position (real-ElvUI-format), arrow-key nudge, live coordinate readout
+-- while dragging, quadrant-relative anchoring (see CalculateMoverPoint
+-- below -- ported from real ElvUI's own CalculateMoverPoints), an
+-- edit-mode overlay panel with two buttons (`CreateMoverPanel` -- and
+-- unlike either reference, DRAGGABLE), and an alignment grid (real
+-- ElvUI's own `E.db.gridSize` divisor convention). Deliberately NOT
+-- ported: magnet/snap-to-other-movers.
 
 local E, L, V, P, G = unpack(ElvUI)
 local _G = _G or getfenv()
@@ -237,25 +233,30 @@ end
 -- ===========================================================================
 -- Dragging
 --
--- Matches UnrealUI's proven recipe exactly (UnrealUI/core/
--- mover.lua:230-256, their own summary of what actually works on UA vs.
--- their first, failed attempt) -- deliberately NOT real ElvUI's own drag
--- handling, which assumes real-vanilla-correct StartMoving/GetPoint:
---   * the handle is a Button, not a plain Frame -- Buttons take mouse
---     input without EnableMouse, and Button is the only widget type
---     confirmed to deliver OnDragStart on this client.
---   * the handle is parented to the frame it moves and covers it via
---     SetAllPoints, not floating separately as a UIParent child.
---   * raised via SetFrameLevel, not a strata change.
---   * SetMovable is applied immediately before each drag, not only once
---     at registration.
---   * StartMoving is called once, thrown away with an immediate
---     StopMovingOrSizing (collapses a multi-point anchor down to the
---     single point the client will actually move), THEN called again for
---     the real drag.
---   * OnMouseDown starts the move immediately; a later OnDragStart is
---     treated as confirmation, not a restart -- StartDrag is idempotent.
+-- The drag is LibSnapGrid-1.0's (`AttachDrag` on the handle): the frame is
+-- re-anchored TOPLEFT to UIParent's BOTTOMLEFT from the cursor on every
+-- frame (never through StartMoving), its nearer edge snaps onto a grid line
+-- or screen edge and its centre onto the screen's centre lines (a red guide
+-- line shows while centred), Shift drags freely, and it is kept on screen.
+-- The library also owns the per-client start/stop detection: OnDragStart on
+-- 1.12.1, OnMouseDown plus a screen-wide hit rectangle on Unreal Azeroth.
+--
+-- On release the position is converted to this file's quadrant-relative
+-- anchor (CaptureMoverPosition), stored, and re-applied, so the live anchor
+-- is the stored one rather than the library's temporary TOPLEFT anchor.
+--
+-- The library is looked up on first use rather than at file load, so a copy
+-- registered by an addon that loads after this one is found as well.
 -- ===========================================================================
+local SnapGrid
+
+local function GetSnapGrid()
+	if not SnapGrid and LibStub then
+		SnapGrid = LibStub("LibSnapGrid-1.0", true)
+	end
+	return SnapGrid
+end
+
 local dragTimerHandle
 
 local function UpdateDragReadout()
@@ -268,17 +269,21 @@ local function UpdateDragReadout()
 	end
 end
 
-local function StartDrag(entry)
-	if entry.dragging then return true end
-	local frame = entry.frame
+-- The library places the frame in UIParent's units, which is only correct
+-- for a frame drawn at UIParent's scale. A disabled bar is shrunk to a
+-- near-zero scale instead of being hidden, and dragging it is refused.
+local function HasUIParentScale(frame)
+	local okFrame, frameScale = pcall(frame.GetEffectiveScale, frame)
+	local okParent, parentScale = pcall(UIParent.GetEffectiveScale, UIParent)
+	frameScale, parentScale = tonumber(frameScale), tonumber(parentScale)
+	if not okFrame or not okParent or not frameScale or not parentScale then return true end
+	return math.abs(frameScale - parentScale) < 0.001
+end
 
-	if not pcall(frame.SetMovable, frame, true) then return false end
-
-	if pcall(frame.StartMoving, frame) then
-		pcall(frame.StopMovingOrSizing, frame)
-	end
-	if not pcall(frame.StartMoving, frame) then return false end
-
+-- LibSnapGrid onStart: returning false refuses the drag.
+local function BeginDrag(entry)
+	if not HasUIParentScale(entry.frame) then return false end
+	E.activeMover = entry
 	entry.dragging = true
 	if not dragTimerHandle then
 		dragTimerHandle = E:ScheduleRepeatingTimer(UpdateDragReadout, 0.1)
@@ -286,15 +291,9 @@ local function StartDrag(entry)
 	return true
 end
 
-local function CapturePosition(entry)
-	local str = CaptureMoverPosition(entry.frame)
-	if not str then return false end
-	E.db.movers[entry.id] = str
-	return true
-end
-
-local function StopDrag(entry)
-	if not entry.dragging then return false end
+-- LibSnapGrid onStop. Idempotent: HideHandle may also call it.
+local function EndDrag(entry)
+	if not entry.dragging then return end
 	entry.dragging = false
 
 	if dragTimerHandle then
@@ -305,8 +304,10 @@ local function StopDrag(entry)
 		pcall(entry.handle.label.SetText, entry.handle.label, entry.label)
 	end
 
-	pcall(entry.frame.StopMovingOrSizing, entry.frame)
-	return CapturePosition(entry)
+	local str = CaptureMoverPosition(entry.frame)
+	if not str then return end
+	E.db.movers[entry.id] = str
+	ApplyPositionString(entry.frame, str)
 end
 
 -- Arrow-key nudging for pixel-precise placement. Real ElvUI's own
@@ -516,8 +517,8 @@ local function ApplyMoverPanelPosition()
 	end
 end
 
--- Same low-level drag recipe as this file's own StartDrag/StopDrag and as
--- Skins.lua's `S:MakeDraggable`: a throwaway StartMoving/StopMovingOrSizing
+-- Same low-level drag recipe as Skins.lua's `S:MakeDraggable` (the panel
+-- is not snapped to the grid): a throwaway StartMoving/StopMovingOrSizing
 -- pair before the real StartMoving, and OnMouseDown to begin rather than
 -- OnDragStart (`RegisterForDrag` only fires after 15px of cursor travel on
 -- UA and doesn't match the pressed button against the registered list).
@@ -665,120 +666,24 @@ local function CreateMoverPanel()
 end
 
 -- ===========================================================================
--- Alignment grid, shown during move mode. Both references have one, with
--- different conventions:
---   * real ElvUI (`E:Grid_Create`, Core/config.lua:100-150) divides the
---     screen into `E.db.gridSize` COLUMNS -- a divisor, not a pixel size --
---     default 64, with the two centre lines drawn red.
---   * `UnrealUI/core/mover.lua:505-536` uses a fixed 20 PIXEL step
---     with a distinct centre-axis colour.
--- Real ElvUI's convention wins here, because `gridSize` is a real
--- top-level profile field name and an imported profile will drive it --
--- which is the whole point (64 columns on a 2560-wide screen lands at
--- 40px cells).
---
--- Cells are kept SQUARE: real ElvUI gets this via a width/height ratio
--- trick on its horizontal step; computing `hStep = wStep` directly is the
--- same result with less indirection.
+-- Alignment grid, shown during move mode: LibSnapGrid-1.0's, which follows
+-- real ElvUI's `E:Grid_Create` convention -- the screen's width divided into
+-- `E.db.gridSize` COLUMNS (a divisor, not a pixel size; default 64, clamped
+-- to 4..256 by the library), square cells, drawn outwards from the centre
+-- with the two centre lines red. `gridSize` is a real profile field, so an
+-- imported profile drives it. The grid lines are also the snap lines of the
+-- drag, and the library rebuilds the grid when the column count or the
+-- screen size changed since it was built.
+-- ===========================================================================
 
-local grid
-
-local function CreateGridLine(parent, isVertical, offset, isCentre)
-	local ok, tex = pcall(parent.CreateTexture, parent, nil, "BACKGROUND")
-	if not ok or not tex then return end
-
-	if isCentre then
-		pcall(tex.SetTexture, tex, 1, 0, 0, 0.7)
-	else
-		pcall(tex.SetTexture, tex, 0, 0, 0, 0.5)
-	end
-
-	pcall(tex.ClearAllPoints, tex)
-	if isVertical then
-		pcall(tex.SetWidth, tex, 1)
-		pcall(tex.SetPoint, tex, "TOPLEFT", parent, "TOPLEFT", offset, 0)
-		pcall(tex.SetPoint, tex, "BOTTOMLEFT", parent, "BOTTOMLEFT", offset, 0)
-	else
-		pcall(tex.SetHeight, tex, 1)
-		pcall(tex.SetPoint, tex, "TOPLEFT", parent, "TOPLEFT", 0, -offset)
-		pcall(tex.SetPoint, tex, "TOPRIGHT", parent, "TOPRIGHT", 0, -offset)
-	end
-end
-
-local function CreateGrid()
-	local ok, frame = pcall(CreateFrame, "Frame", "ElvUIGrid", UIParent)
-	if not ok or not frame then return nil end
-	grid = frame
-
-	pcall(frame.SetAllPoints, frame, UIParent)
-	pcall(frame.SetFrameStrata, frame, "BACKGROUND")
-	-- Decoration only -- it must never eat a click meant for a mover handle.
-	-- (UnrealUI's own grid comment makes the same point.)
-	pcall(frame.EnableMouse, frame, false)
-
-	local okW, width = pcall(UIParent.GetWidth, UIParent)
-	local okH, height = pcall(UIParent.GetHeight, UIParent)
-	width = (okW and tonumber(width)) or 1024
-	height = (okH and tonumber(height)) or 768
-
-	-- Clamped at both ends. Below 4 the "grid" stops being one; above 256 a
-	-- 2560-wide screen would mean ~10px cells and 400+ Texture regions on a
-	-- single frame -- created once, but a large synchronous loop building
-	-- that many native objects risks a client crash, so it gets a ceiling
-	-- rather than trusting whatever a profile happens to carry.
-	local divisions = tonumber(E.db.gridSize) or 64
-	if divisions < 4 then divisions = 4 end
-	if divisions > 256 then divisions = 256 end
-
-	local step = width / divisions
-	if step < 4 then step = 4 end
-
-	local centreX = width / 2
-	local centreY = height / 2
-
-	-- Drawn outwards from the centre in both directions rather than from the
-	-- left edge, so the centre lines land EXACTLY on the middle regardless
-	-- of whether `divisions` divides evenly -- being able to trust the
-	-- centre line is most of the point of an alignment grid.
-	local offset = 0
-	while offset <= centreX do
-		local isCentre = (offset == 0)
-		CreateGridLine(frame, true, centreX + offset, isCentre)
-		if not isCentre then CreateGridLine(frame, true, centreX - offset, false) end
-		offset = offset + step
-	end
-
-	offset = 0
-	while offset <= centreY do
-		local isCentre = (offset == 0)
-		CreateGridLine(frame, false, centreY + offset, isCentre)
-		if not isCentre then CreateGridLine(frame, false, centreY - offset, false) end
-		offset = offset + step
-	end
-
-	frame.builtFor = divisions
-	frame:Hide()
-	return frame
-end
-
--- Rebuilt rather than reused when `gridSize` changed since it was built --
--- the lines are plain Textures with no cheap way to re-lay-out in place,
--- and this only ever runs on a /moveui toggle, never in a hot path.
 local function ShowGrid()
-	local divisions = tonumber(E.db.gridSize) or 64
-	if divisions < 4 then divisions = 4 end
-	if divisions > 256 then divisions = 256 end
-	if grid and grid.builtFor ~= divisions then
-		pcall(grid.Hide, grid)
-		pcall(grid.SetParent, grid, nil)
-		grid = nil
-	end
-	if not grid then grid = CreateGrid() end
-	if grid then pcall(grid.Show, grid) end
+	local lib = GetSnapGrid()
+	if lib then pcall(lib.ShowGrid, lib, tonumber(E.db.gridSize) or 64) end
 end
 
 local function HideGrid()
-	if grid then pcall(grid.Hide, grid) end
+	local lib = GetSnapGrid()
+	if lib then pcall(lib.HideGrid, lib) end
 end
 
 local HANDLE_LEVEL_OFFSET = 100
@@ -791,36 +696,15 @@ local function RaiseHandle(entry)
 	end
 end
 
--- Right-clicking a handle can shift the frame by ~1px, as if a drag had
--- started -- root cause: OnMouseDown/OnMouseUp fire for EVERY mouse
--- button on a Button widget, not just the one `RegisterForDrag
--- ("LeftButton")` was scoped to (that only governs OnDragStart/
--- OnDragStop). A right-click triggers the full StartDrag
--- throwaway-StartMoving/StopMovingOrSizing pair for nothing, and that
--- pair alone can nudge the frame slightly even with no real drag. Matches
--- UnrealUI's own `IsLeftMouseButton` guard (UnrealUI/core/
--- mover.lua), including its fallback reasoning: some scripts on this
--- client expose no direct arguments and no `arg1`, and since this handle
--- is only ever registered for left-button dragging, an unresolvable
--- button is safely treated as left rather than blocked.
-local function IsLeftMouseButton(a, b)
-	local button
-	if type(a) == "string" then
-		button = a
-	elseif type(b) == "string" then
-		button = b
-	else
-		button = _G.arg1
-	end
-	return button == nil or button == "LeftButton"
-end
-
+-- The handle is a Button parented to the frame it moves and covering it
+-- (SetAllPoints), raised by frame level rather than strata (UnrealUI's mover
+-- recipe). Its OnMouseDown, OnMouseUp, OnHide, OnDragStart and OnDragStop
+-- belong to LibSnapGrid-1.0; OnClick, OnEnter and OnLeave stay here.
 local function CreateHandle(entry)
 	local ok, handle = pcall(CreateFrame, "Button", "ElvUIMoverHandle"..entry.id, entry.frame)
 	if not ok or not handle then return nil end
 
 	pcall(handle.SetAllPoints, handle, entry.frame)
-	pcall(handle.RegisterForDrag, handle, "LeftButton")
 	pcall(handle.EnableMouse, handle, true)
 
 	pcall(handle.SetBackdrop, handle, {
@@ -841,22 +725,14 @@ local function CreateHandle(entry)
 		handle.label = label
 	end
 
-	handle:SetScript("OnMouseDown", function(a, b)
-		if not IsLeftMouseButton(a, b) then return end
-		E.activeMover = entry
-		StartDrag(entry)
-	end)
-	handle:SetScript("OnMouseUp", function(a, b)
-		if not IsLeftMouseButton(a, b) then return end
-		StopDrag(entry)
-	end)
-	handle:SetScript("OnDragStart", function()
-		E.activeMover = entry
-		StartDrag(entry)
-	end)
-	handle:SetScript("OnDragStop", function()
-		StopDrag(entry)
-	end)
+	local lib = GetSnapGrid()
+	if lib then
+		lib:AttachDrag(handle, {
+			frame = entry.frame,
+			onStart = function() return BeginDrag(entry) end,
+			onStop = function() EndDrag(entry) end,
+		})
+	end
 	handle:SetScript("OnClick", function()
 		E.activeMover = entry
 	end)
@@ -881,7 +757,11 @@ end
 
 local function HideHandle(entry)
 	if not entry.handle then return end
-	if entry.dragging then StopDrag(entry) end
+	if entry.dragging then
+		local lib = GetSnapGrid()
+		if lib then lib:StopDrag() end
+		EndDrag(entry)
+	end
 	pcall(entry.handle.Hide, entry.handle)
 end
 
@@ -889,8 +769,8 @@ end
 -- Public API
 -- ===========================================================================
 
--- frame  the frame the user drags (needs SetMovable/StartMoving, i.e. a
---        Frame/Button -- not a Texture/FontString)
+-- frame  the frame the user drags (a Frame/Button -- not a Texture/
+--        FontString -- drawn at UIParent's scale, see HasUIParentScale)
 -- name   stable string key, ALSO the E.db.movers[name] key -- matches real
 --        ElvUI's own naming exactly where a real-profile-compatible name
 --        is known (e.g. ActionBars uses "ElvAB_"..id, see
