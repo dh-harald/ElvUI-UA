@@ -670,6 +670,72 @@ local function GetUnitSettings(unit, name)
 	}
 end
 
+-- Real ElvUI's NPC-only questIcon group (retail ElvUI_Options Nameplates.lua):
+-- the element's side of the plate is a plain position, the count's anchor
+-- any point of the icon.
+local function AddQuestIconGroup(group, unit)
+	local positions = E.ConfigShared.POSITION_VALUES
+	group.args.questIcon = {
+		order = 8,
+		type = "group",
+		name = L["Quest Icon"],
+		get = function(info) return E.db.nameplates.units[unit].questIcon[ info[getn(info)] ] end,
+		set = function(info, value)
+			E.db.nameplates.units[unit].questIcon[ info[getn(info)] ] = value
+			ConfigureAll()
+		end,
+		args = {
+			header = { order = 0, type = "header", name = L["Quest Icon"] },
+			desc = { order = 0.5, type = "description", name = L["QUEST_ICON_DESC"] },
+			enable = { order = 1, type = "toggle", name = L["Enable"] },
+			hideIcon = { order = 2, type = "toggle", name = L["Hide Icon"] },
+			position = {
+				order = 3,
+				type = "select",
+				name = L["Position"],
+				values = {
+					LEFT = positions.LEFT,
+					RIGHT = positions.RIGHT,
+					TOP = positions.TOP,
+					BOTTOM = positions.BOTTOM,
+					CENTER = positions.CENTER,
+				},
+			},
+			size = { order = 6, type = "range", name = L["Size"], min = 12, max = 64, step = 1 },
+			spacing = { order = 7, type = "range", name = L["Spacing"], min = -20, max = 20, step = 1 },
+			xOffset = { order = 8, type = "range", name = L["X-Offset"], min = -80, max = 80, step = 1 },
+			yOffset = { order = 9, type = "range", name = L["Y-Offset"], min = -80, max = 80, step = 1 },
+			fontGroup = {
+				order = 20,
+				type = "group",
+				name = L["Font"],
+				guiInline = true,
+				args = {
+					font = {
+						order = 1,
+						type = "select",
+						dialogControl = "LSM30_Font",
+						name = L["Font"],
+						values = MediaValues("font"),
+					},
+					fontSize = { order = 2, type = "range", name = L["Font Size"], min = 4, max = 34, step = 1 },
+					fontOutline = {
+						order = 3,
+						type = "select",
+						name = L["Font Outline"],
+						desc = L["Set the font outline."],
+						values = OUTLINE_VALUES,
+					},
+					textPosition = { order = 6, type = "select", name = L["Text Position"], values = positions },
+					textXOffset = { order = 7, type = "range", name = L["X-Offset"], min = -20, max = 20, step = 1 },
+					textYOffset = { order = 8, type = "range", name = L["Y-Offset"], min = -20, max = 20, step = 1 },
+				},
+			},
+		},
+	}
+	return group
+end
+
 local function NoClassCache()
 	return not E.private.general.classCache
 end
@@ -743,7 +809,7 @@ E.Options.args.nameplate = {
 		},
 		friendlyPlayerGroup = AddClassColorToggles(GetUnitSettings("FRIENDLY_PLAYER", L["Friendly Player Frames"]), "FRIENDLY_PLAYER"),
 		enemyPlayerGroup = AddClassColorToggles(GetUnitSettings("ENEMY_PLAYER", L["Enemy Player Frames"]), "ENEMY_PLAYER"),
-		friendlyNPCGroup = GetUnitSettings("FRIENDLY_NPC", L["Friendly NPC Frames"]),
-		enemyNPCGroup = GetUnitSettings("ENEMY_NPC", L["Enemy NPC Frames"]),
+		friendlyNPCGroup = AddQuestIconGroup(GetUnitSettings("FRIENDLY_NPC", L["Friendly NPC Frames"]), "FRIENDLY_NPC"),
+		enemyNPCGroup = AddQuestIconGroup(GetUnitSettings("ENEMY_NPC", L["Enemy NPC Frames"]), "ENEMY_NPC"),
 	},
 }

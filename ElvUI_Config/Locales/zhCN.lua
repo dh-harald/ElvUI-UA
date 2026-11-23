@@ -903,5 +903,10 @@ L["Count Font Size"] = "计数字体尺寸"
 --NamePlates aura fonts
 L["Stack Counter"] = "层数计数"
 
+--NamePlates quest icons
+L["Quest Icon"] = "任务图标"
+L["Hide Icon"] = "隐藏图标"
+L["QUEST_ICON_DESC"] = "骷髅: 你还需要击杀的单位. 感叹号: 会掉落你还需要收集的物品的单位 (需要pfQuest). 数字表示还剩多少."
+
 --Bags
 L["Item Count Font"] = "物品数目字体"

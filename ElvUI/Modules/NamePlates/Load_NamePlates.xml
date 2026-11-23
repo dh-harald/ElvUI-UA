@@ -1,4 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
 	<Script file="NamePlates.lua"/>
 	<Script file="StyleFilter.lua"/>
+	<Script file="QuestIcons.lua"/>
+	<Script file="QuestSourcePfQuest.lua"/>
 </Ui>

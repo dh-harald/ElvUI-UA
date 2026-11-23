@@ -903,5 +903,10 @@ L["Count Font Size"] = "Taille du texte du décompte"
 --NamePlates aura fonts
 L["Stack Counter"] = "Compteur de pile"
 
+--NamePlates quest icons
+L["Quest Icon"] = "Icône de quête"
+L["Hide Icon"] = "Masquer l'icône"
+L["QUEST_ICON_DESC"] = "Crâne : une unité que vous devez encore tuer. Point d'exclamation : une unité qui laisse tomber un objet que vous devez encore récupérer (nécessite pfQuest). Le nombre indique combien il en reste."
+
 --Bags
 L["Item Count Font"] = "Police d'équipement du compteur"

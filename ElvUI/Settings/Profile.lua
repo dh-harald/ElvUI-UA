@@ -860,6 +860,23 @@ P.nameplates = {
 			},
 			showName = true,
 			showLevel = true,
+			-- Retail ElvUI's NP_QuestIcon (NPC units only), read by
+			-- Modules/NamePlates/QuestIcons.lua.
+			questIcon = {
+				enable = true,
+				hideIcon = false,
+				position = "RIGHT",
+				size = 20,
+				xOffset = 0,
+				yOffset = 0,
+				spacing = 5,
+				font = "PT Sans Narrow",
+				fontOutline = "OUTLINE",
+				textPosition = "BOTTOMRIGHT",
+				textXOffset = 2,
+				textYOffset = 2,
+				fontSize = 12,
+			},
 		},
 		ENEMY_NPC = {
 			healthbar = {
@@ -893,6 +910,22 @@ P.nameplates = {
 			},
 			showName = true,
 			showLevel = true,
+			-- See FRIENDLY_NPC.questIcon.
+			questIcon = {
+				enable = true,
+				hideIcon = false,
+				position = "RIGHT",
+				size = 20,
+				xOffset = 0,
+				yOffset = 0,
+				spacing = 5,
+				font = "PT Sans Narrow",
+				fontOutline = "OUTLINE",
+				textPosition = "BOTTOMRIGHT",
+				textXOffset = 2,
+				textYOffset = 2,
+				fontSize = 12,
+			},
 		},
 	},
 }

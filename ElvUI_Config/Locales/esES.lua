@@ -903,5 +903,10 @@ L["Count Font Size"] = "Tamaño de Fuente del Contador"
 --NamePlates aura fonts
 L["Stack Counter"] = "Contador de acumulaciones"
 
+--NamePlates quest icons
+L["Quest Icon"] = "Icono de Misión"
+L["Hide Icon"] = "Ocultar Icono"
+L["QUEST_ICON_DESC"] = "Calavera: una unidad que aún tienes que matar. Signo de exclamación: una unidad que suelta un objeto que aún tienes que recoger (requiere pfQuest). El número indica cuántos faltan."
+
 --Bags
 L["Item Count Font"] = "Fuente del contador de objetos"

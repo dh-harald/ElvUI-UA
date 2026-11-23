@@ -903,5 +903,10 @@ L["Count Font Size"] = "Schriftart Größe der Anzahl"
 --NamePlates aura fonts
 L["Stack Counter"] = "Stapel-Zähler"
 
+--NamePlates quest icons
+L["Quest Icon"] = "Questsymbol"
+L["Hide Icon"] = "Symbol ausblenden"
+L["QUEST_ICON_DESC"] = "Totenkopf: eine Einheit, die du noch töten musst. Ausrufezeichen: eine Einheit, die einen Gegenstand fallen lässt, den du noch sammeln musst (benötigt pfQuest). Die Zahl gibt an, wie viele noch fehlen."
+
 --Bags
 L["Item Count Font"] = "Gegenstandszähler Schriftart"

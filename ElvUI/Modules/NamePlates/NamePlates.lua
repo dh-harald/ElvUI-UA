@@ -66,6 +66,9 @@ local NP = E:NewModule("NamePlates", "AceEvent-3.0")
 -- Style filters: StyleFilter.lua merges the actions of the passing filters
 -- into `frame.style`, which the elements below read while they lay out.
 --
+-- Quest icons: QuestIcons.lua, by unit name from the quest log, with item
+-- droppers from a quest source add-on (QuestSourcePfQuest.lua).
+--
 -- Not ported yet: motion type, click-through and clickable size, the elite
 -- icon, and the size animation.
 
@@ -492,6 +495,7 @@ function NP:OnCreated(plate)
 	frame.CPoints = ConstructComboPoints(frame)
 	ConstructGlow(frame)
 	ConstructTexts(frame)
+	NP:ConstructQuestIcons(frame)
 
 	MuteNative(frame)
 	frame:Hide()
@@ -909,8 +913,12 @@ local function PlaceGlows(frame, state)
 		frame.TopArrow:Show()
 	end
 	if SIDE_ARROWS[style] then
-		SetArrow(frame, "RightArrow", path, size):SetPoint("RIGHT", bar, "LEFT", -spacing, 0)
-		SetArrow(frame, "LeftArrow", path, size):SetPoint("LEFT", bar, "RIGHT", spacing, 0)
+		-- An arrow on the side of the quest icons sits past them, so the two
+		-- do not overlap; the icons stay where they are.
+		local left = spacing + NP:QuestIconReach(frame, "LEFT")
+		local right = spacing + NP:QuestIconReach(frame, "RIGHT")
+		SetArrow(frame, "RightArrow", path, size):SetPoint("RIGHT", bar, "LEFT", -left, 0)
+		SetArrow(frame, "LeftArrow", path, size):SetPoint("LEFT", bar, "RIGHT", right, 0)
 		frame.RightArrow:Show()
 		frame.LeftArrow:Show()
 	end
@@ -1535,7 +1543,11 @@ local function ConfigureLevels(frame)
 	Place(frame.HealthBar, strata, level + 2)
 	Place(frame.HealthBar.textHolder, strata, level + 3)
 	Place(frame.CPoints, strata, level + 4)
+	Place(frame.QuestIcons, strata, level + 2)
 	local i
+	for i = 1, getn(frame.QuestIcons.icons) do
+		Place(frame.QuestIcons.icons[i], strata, level + 3)
+	end
 	for i = 1, getn(frame.Buffs.icons) do
 		Place(frame.Buffs.icons[i], strata, level + 3)
 	end
@@ -1576,6 +1588,7 @@ function NP:ConfigurePlate(frame)
 	self:UpdateAuras(frame, GetTime())
 	frame.comboShown = nil
 	self:UpdateComboPoints(frame)
+	self:ConfigureQuestIcons(frame)
 	self:UpdateGlow(frame)
 	self:UpdateAlpha(frame)
 	if style and style.hide then frame:Hide() else frame:Show() end
@@ -1624,6 +1637,7 @@ function NP:RefreshPlate(frame)
 	local now = GetTime()
 	self:UpdateAuras(frame, now)
 	self:UpdateComboPoints(frame)
+	if frame.questVersion ~= self.questVersion then self:UpdateQuestIcons(frame) end
 	UpdateFlash(frame, now)
 	KeepMuted(frame)
 end
@@ -1685,8 +1699,22 @@ end
 -- A failing plate update is reported once, not on every frame.
 local reported
 
+local function Report(err)
+	if reported then return end
+	reported = true
+	local handler = geterrorhandler and geterrorhandler() or _ERRORMESSAGE
+	if handler then handler(err) end
+end
+
 local function OnUpdate()
 	NP:ScanPlates()
+	if NP.questDirty then
+		local ok, err = pcall(NP.BuildQuestObjectives, NP)
+		if not ok then
+			NP.questDirty = nil
+			Report(err)
+		end
+	end
 	NP.hasTarget = Compat.bool(UnitExists("target"))
 	NP.comboPoints = NP.hasTarget and ReadComboPoints() or 0
 	uiScale = ReadUIScale()
@@ -1697,11 +1725,7 @@ local function OnUpdate()
 	local i
 	for i = 1, getn(plates) do
 		local ok, err = pcall(NP.UpdatePlate, NP, plates[i])
-		if not ok and not reported then
-			reported = true
-			local handler = geterrorhandler and geterrorhandler() or _ERRORMESSAGE
-			if handler then handler(err) end
-		end
+		if not ok then Report(err) end
 	end
 end
 
@@ -1779,6 +1803,7 @@ function NP:Initialize()
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 	self:RegisterEvent("CHARACTER_POINTS_CHANGED")
 	self:RegisterEvent("SPELLS_CHANGED")
+	self:InitializeQuestIcons()
 	self:PLAYER_ENTERING_WORLD()
 	E.NamePlates = self
 end

@@ -156,9 +156,12 @@ Two addons ship together:
   mouseover, group, friends, guild, battleground score), combat show/hide
   toggles; style filters (NamePlates → Style Filter: rules that recolour,
   resize, flash, fade or hide a plate by its name, cast, health, level, unit
-  type, auras, combat state, your role, instance or cooldowns); sized by the
-  UI scale; enemy nameplates switched on at login; per-unit-type settings for
-  friendly/enemy players and NPCs
+  type, auras, combat state, your role, instance or cooldowns); quest icons
+  (a skull on mobs you still have to kill and a "!" on mobs that drop an
+  item you still need, with the number left; kill objectives come from the
+  quest log, item drops from pfQuest's database when pfQuest is installed);
+  sized by the UI scale; enemy nameplates switched on at login;
+  per-unit-type settings for friendly/enemy players and NPCs
 - Fonts: the General → Media default font and size, combat text and name
   fonts, and "Apply Font To All" — applied to the native Blizzard text,
   ElvUI's own text and the tooltip text

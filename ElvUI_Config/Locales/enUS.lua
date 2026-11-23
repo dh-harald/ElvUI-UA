@@ -926,5 +926,10 @@ L["Count Font Size"] = true
 --NamePlates aura fonts
 L["Stack Counter"] = true
 
+--NamePlates quest icons
+L["Quest Icon"] = true
+L["Hide Icon"] = true
+L["QUEST_ICON_DESC"] = "Skull: a unit you still have to kill. Exclamation mark: a unit that drops an item you still have to collect (needs pfQuest). The number is how many are left."
+
 --Bags
 L["Item Count Font"] = true
