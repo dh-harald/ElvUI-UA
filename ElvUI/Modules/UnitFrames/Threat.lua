@@ -52,10 +52,9 @@ local function HasAggro(unit)
 	return Banzai:GetUnitAggroByUnitName(name) == true
 end
 
+-- The colour the frame's border returns to (UnitFrames.lua).
 local function BorderColor()
-	local c = E.db and E.db.general and E.db.general.bordercolor
-	if not c then return 0, 0, 0, 1 end
-	return c.r or c[1] or 0, c.g or c[2] or 0, c.b or c[3] or 0, c.a or c[4] or 1
+	return UF:GetBorderColor()
 end
 
 local function InfoPanelShown(frame)

@@ -1456,6 +1456,22 @@ E.Options.args.unitframe = {
 					name = L["Colors"],
 					guiInline = true,
 					args = {
+					borderColor = {
+						order = 1,
+						type = "color",
+						name = L["Border Color"],
+						get = function()
+							local c = E.db.unitframe.colors.borderColor
+							return c.r, c.g, c.b
+						end,
+						set = function(_, r, g, b)
+							local c = E.db.unitframe.colors.borderColor
+							c.r, c.g, c.b = r, g, b
+							if E.UnitFrames and E.UnitFrames.Update_BorderColors then
+								E.UnitFrames:Update_BorderColors()
+							end
+						end,
+					},
 					healthGroup = {
 						order = 2,
 						type = "group",

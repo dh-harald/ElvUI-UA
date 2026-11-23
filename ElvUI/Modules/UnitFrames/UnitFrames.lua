@@ -182,7 +182,10 @@ local BORDER_COLOR = {0, 0, 0, 1}
 local HEALTH_BG_COLOR = {0.1, 0.1, 0.1, 1}
 local POWER_BG_COLOR = {0.1, 0.1, 0.1, 1}
 local DEAD_COLOR = {0.5, 0.5, 0.5}
-local INSET = 2
+-- Distance of the bars/portrait from the frame edge, and the gap between
+-- stacked bars: 1 gives real ElvUI's thin-border look (one black line around
+-- the frame and between each bar), drawn by the panel fill showing through.
+local INSET = 1
 -- Shared with the per-client portrait files (PortraitUA.lua/PortraitLegacy.lua).
 UF.INSET = INSET
 -- Fixed alpha for colors.transparentHealth -- see the defaults block
@@ -233,16 +236,44 @@ end
 -- `E.db` is built. Read at construction time only, like every other
 -- backdrop in this project -- a theme switch after a frame already
 -- exists needs a `/reload` to reach it, same as everywhere else.
+-- Unit frame borders use `unitframe.colors.borderColor`, not the general
+-- border colour, as in real ElvUI (black by default, whatever the theme).
+-- The profile colour tables carry no alpha (`{ r, g, b }`); a nil alpha
+-- renders fully transparent on UA (opaque on the legacy client), so a missing
+-- alpha is returned as 1.
+function UF:GetBorderColor()
+	local c = E.db and E.db.unitframe and E.db.unitframe.colors and E.db.unitframe.colors.borderColor
+	if not c then c = BORDER_COLOR end
+	return c.r or c[1] or 0, c.g or c[2] or 0, c.b or c[3] or 0, c.a or c[4] or 1
+end
+
+-- The panel is FILLED with the border colour, not the backdrop colour: the
+-- bars sit INSET apart on top of it, so the fill showing through the gaps is
+-- what draws the border line between Health and Power, as real ElvUI's
+-- per-bar borders do.
 local function ApplyPanelBackdrop(frame)
-	local bc = (E.db and E.db.general and E.db.general.backdropcolor) or BACKDROP_COLOR
-	local brc = (E.db and E.db.general and E.db.general.bordercolor) or BORDER_COLOR
+	local r, g, b, a = UF:GetBorderColor()
 	pcall(frame.SetBackdrop, frame, {
 		bgFile = "Interface\\Buttons\\WHITE8x8",
 		edgeFile = "Interface\\Buttons\\WHITE8x8",
 		edgeSize = 1,
 	})
-	pcall(frame.SetBackdropColor, frame, bc.r or bc[1], bc.g or bc[2], bc.b or bc[3], bc.a or bc[4])
-	pcall(frame.SetBackdropBorderColor, frame, brc.r or brc[1], brc.g or brc[2], brc.b or brc[3], brc.a or brc[4])
+	pcall(frame.SetBackdropColor, frame, r, g, b, a)
+	pcall(frame.SetBackdropBorderColor, frame, r, g, b, a)
+end
+
+-- Live update for the Border Color option: every spawned frame and its
+-- information panel.
+function UF:Update_BorderColors()
+	local r, g, b, a = self:GetBorderColor()
+	local id, frame
+	for id, frame in pairs(self.Frames) do
+		pcall(frame.SetBackdropColor, frame, r, g, b, a)
+		pcall(frame.SetBackdropBorderColor, frame, r, g, b, a)
+		if frame.InfoPanel then
+			pcall(frame.InfoPanel.SetBackdropBorderColor, frame.InfoPanel, r, g, b, a)
+		end
+	end
 end
 
 -- outline == "NONE" -> "" translation, matching the ActionBars/DataBars/
@@ -1289,14 +1320,14 @@ end
 function UF:Construct_InfoPanel(frame)
 	local panel = CreateFrame("Frame", nil, frame)
 	local bc = (E.db and E.db.general and E.db.general.backdropcolor) or BACKDROP_COLOR
-	local brc = (E.db and E.db.general and E.db.general.bordercolor) or BORDER_COLOR
 	pcall(panel.SetBackdrop, panel, {
 		bgFile = "Interface\\Buttons\\WHITE8x8",
 		edgeFile = "Interface\\Buttons\\WHITE8x8",
 		edgeSize = 1,
 	})
-	pcall(panel.SetBackdropColor, panel, bc.r or bc[1], bc.g or bc[2], bc.b or bc[3], bc.a or bc[4])
-	pcall(panel.SetBackdropBorderColor, panel, brc.r or brc[1], brc.g or brc[2], brc.b or brc[3], brc.a or brc[4])
+	-- A missing alpha is passed as 1: nil renders transparent on UA.
+	pcall(panel.SetBackdropColor, panel, bc.r or bc[1], bc.g or bc[2], bc.b or bc[3], bc.a or bc[4] or 1)
+	pcall(panel.SetBackdropBorderColor, panel, UF:GetBorderColor())
 	panel:Hide()
 	return panel
 end
@@ -2255,23 +2286,21 @@ function UF:UpdateFrame(frame)
 	local barLeft = INSET + (portraitWidth > 0 and (portraitWidth + INSET) or 0)
 	local barWidth = frame:GetWidth() - barLeft - INSET
 
-	-- Bar HEIGHTS are re-derived here, with the same formula the unit's own
-	-- Construct_* function uses (Units/Player.lua and friends: health takes the
-	-- whole frame height, minus the power bar and the 1px gap when power is on).
-	-- Recomputing it on every pass -- exactly as the widths above already were
-	-- -- is what makes `height` and `power.height` live settings instead of
-	-- construction-time-only ones; before this they were set once by
-	-- Construct_HealthBar/Construct_PowerBar and never touched again.
-	local healthHeight = settings.height
+	-- Bar HEIGHTS are re-derived on every pass, which makes `height` and
+	-- `power.height` live settings (the Construct_* functions only give a
+	-- starting size). `height` is the frame's outer height, as in real ElvUI:
+	-- the INSET border above and below the stacked bars, and the INSET gap
+	-- before each further bar, are taken out of the health bar.
+	local healthHeight = settings.height - 2 * INSET
 	if settings.power and settings.power.enable then
-		healthHeight = settings.height - settings.power.height - 1
+		healthHeight = healthHeight - settings.power.height - INSET
 	end
 	-- The information panel sits inside the frame's height, at its bottom,
 	-- as in real ElvUI (UF:GetHealthBottomOffset): the health bar gives up
 	-- the room, so a frame placed right below this one is not overlapped.
 	local infoDB = settings.infoPanel
 	if frame.InfoPanel and infoDB and infoDB.enable then
-		healthHeight = healthHeight - (infoDB.height or 20) - 1
+		healthHeight = healthHeight - (infoDB.height or 20) - INSET
 	end
 
 	-- Room the combo point bar takes at the top of the frame (ComboPoints.lua),
@@ -2301,7 +2330,7 @@ function UF:UpdateFrame(frame)
 
 	if frame.Power then
 		frame.Power:ClearAllPoints()
-		frame.Power:SetPoint("TOPLEFT", frame.Health, "BOTTOMLEFT", 0, -1)
+		frame.Power:SetPoint("TOPLEFT", frame.Health, "BOTTOMLEFT", 0, -INSET)
 		frame.Power:SetWidth(barWidth)
 		frame.Power:SetHeight(settings.power.height)
 	end
@@ -2470,9 +2499,12 @@ function UF:UpdateFrame(frame)
 		if infoDB and infoDB.enable then
 			local aboveElement = (frame.Power and settings.power and settings.power.enable) and frame.Power or frame.Health
 			frame.InfoPanel:ClearAllPoints()
-			frame.InfoPanel:SetPoint("TOPLEFT", aboveElement, "BOTTOMLEFT", 0, -1)
-			frame.InfoPanel:SetPoint("TOPRIGHT", aboveElement, "BOTTOMRIGHT", 0, -1)
-			frame.InfoPanel:SetHeight(infoDB.height or 20)
+			-- Spans the INSET gap above it and the frame's INSET border on the
+			-- other three sides, so its own 1px edge IS that line instead of
+			-- doubling it; its inner area stays `height` tall.
+			frame.InfoPanel:SetPoint("TOPLEFT", aboveElement, "BOTTOMLEFT", -INSET, 0)
+			frame.InfoPanel:SetPoint("TOPRIGHT", aboveElement, "BOTTOMRIGHT", INSET, 0)
+			frame.InfoPanel:SetHeight((infoDB.height or 20) + 2 * INSET)
 			pcall(frame.InfoPanel.SetBackdropColor, frame.InfoPanel,
 				BACKDROP_COLOR[1], BACKDROP_COLOR[2], BACKDROP_COLOR[3], infoDB.transparent and 0 or BACKDROP_COLOR[4])
 			frame.InfoPanel:Show()

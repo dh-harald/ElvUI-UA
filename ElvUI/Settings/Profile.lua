@@ -969,6 +969,7 @@ P.unitframe = {
 -- the translucent backdrop alpha, background at 35%, opaque): no portrait
 -- lies behind a power bar, so a see-through one would only show the world.
 P.unitframe.colors = {
+	borderColor = {r = 0, g = 0, b = 0},
 	power = {
 		MANA = {r = 0.31, g = 0.45, b = 0.63},
 		RAGE = {r = 0.78, g = 0.25, b = 0.25},
