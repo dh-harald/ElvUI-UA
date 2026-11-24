@@ -1,3 +1,17 @@
+# [0.16.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.15.0...v0.16.0) (2026-11-24)
+
+
+### Bug Fixes
+
+* **skins:** AuctionHouse, added support for UnderCut ([eb7fa69](https://github.com/dh-harald/ElvUI-UA/commit/eb7fa6931253de984d870182515dc39b175ac001))
+* **unitframes:** added border ([2344483](https://github.com/dh-harald/ElvUI-UA/commit/23444831a61b49ed95c62b8344a5cf5cda9d7489))
+
+
+### Features
+
+* **moveui:** start using LibSnapGrid-1.0 ([ab2224c](https://github.com/dh-harald/ElvUI-UA/commit/ab2224c227fd2576e1a7e1eaac9e3c76bff009a0))
+* **nameplates:** QuestIcons: initial commit ([a4c9bef](https://github.com/dh-harald/ElvUI-UA/commit/a4c9bef6c9f8172cd19fb1ea91b066c94bc84967))
+
 # [0.15.0](https://github.com/dh-harald/ElvUI-UA/compare/v0.14.1...v0.15.0) (2026-10-30)
 
 
